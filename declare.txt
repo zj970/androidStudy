@@ -1,0 +1,2 @@
+硬件设备：神舟Z7M-kp7sc, Inter core i7-8750H处理器，主频2.20GHz,机带RAM8.0GHz
+软件环境：Windows 10 家庭中文版, JDK1.8, Android Studio (Android 11.0(R) )
