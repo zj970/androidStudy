@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    >
+    <ImageView
+        android:id="@+id/image1"
+        android:layout_width="match_parent"
+        android:layout_height="400dp"
+        android:background="@drawable/yuyan"
+        />
+    <EditText
+        android:id="@+id/shuru"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:hint="输入你想咨询的问题"
+        android:layout_marginTop="0dp"
+        android:layout_below="@+id/image1"
+        />
+
+    <TextView
+        android:id="@+id/tip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btn_next"
+        android:layout_marginTop="0dp"
+        android:paddingTop="50dp"
+        android:text="你的答案是："
+        android:textColor="#ff4c41"
+        android:textSize="24sp" />
+
+    <Button
+        android:id="@+id/btn_next"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_below="@+id/shuru"
+        android:layout_marginTop="5dp"
+        android:paddingRight="40dp"
+        android:text="下一页"
+        android:textColor="@color/black" />
+
+</RelativeLayout>
