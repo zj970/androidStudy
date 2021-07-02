@@ -1,0 +1,39 @@
+<LinnearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/LinnearLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+    <LinnearLayout
+        android:layout_width= "match_parent"
+        android:layout_height="120dp"
+        android:background="#F5B800"
+        android:gravity="center_vertical|center_horizontal"
+        android:orientation="vertical">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal"
+            android:text="URLConnection 获取网络资源\n应用案例"
+            android:textColor="#000"
+            android:textSize="26sp"/>
+    </LinnearLayout>
+    <TextView
+        android:id="@+id/statusTV"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="5dp"
+        android:text="图片来源于荆楚理工学院校园网（点击看大图）"/>
+    <GridView
+        android:id="@+id/imageGridView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="3dp"
+        android:horizontalSpacing="3dp"
+        android:verticalSpacing="3dp"
+        android:numColumns="2">
+
+    </GridView>
+</LinnearLayout>
