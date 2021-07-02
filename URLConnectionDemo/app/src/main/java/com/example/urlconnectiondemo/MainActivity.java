@@ -12,14 +12,13 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.ImageView;
 
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
+import org.jsoup.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -36,8 +35,10 @@ public class MainActivity extends Activity {
     private ImageListAdapter adapter =null;
     private List<Bitmap> list = new ArrayList<Bitmap>();
     GridView imageGridView;
-    /** 用handler接受来自网络线程获取的Bitmap对象，然后更新主线程UI **/
-    private Handler handler = new Handler() {
+    /**
+     * 用handler接受来自网络线程获取的Bitmap对象，然后更新主线程UI
+     **/
+    private final Handler handler = new Handler() {
         @Override
         public void publish(LogRecord record) {
 
@@ -52,6 +53,7 @@ public class MainActivity extends Activity {
         public void close() throws SecurityException {
 
         }
+
         public void handleMessage(Message msg) {
             list.add((Bitmap) msg.obj);
             adapter.notifyDataSetChanged();
@@ -107,7 +109,8 @@ public class MainActivity extends Activity {
                     InputStream is = coon.getInputStream();
                     //获取图片
                     Bitmap bitmap = BitmapFactory.decodeStream(is);
-                    Message msg = Message.obtain(handler, 0, bitmap);
+                    Message msg = new Message();
+                    //msg = Message.obtain(handler, 0, bitmap);
                     msg.sendToTarget();
                 }catch (Exception e){
                     e.printStackTrace();

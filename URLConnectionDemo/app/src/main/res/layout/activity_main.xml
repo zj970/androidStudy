@@ -1,34 +1,38 @@
-<LinnearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/LinnearLayout1"
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical"
-    tools:context=".MainActivity">
-    <LinnearLayout
-        android:layout_width= "match_parent"
+    android:id="@+id/LinnearLayout1"
+    tools:context=".MainActivity"
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="120dp"
         android:background="#F5B800"
-        android:gravity="center_vertical|center_horizontal"
-        android:orientation="vertical">
+        android:gravity="center_horizontal|center_vertical"
+        android:orientation="vertical"
+        >
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:gravity="center_horizontal"
-            android:text="URLConnection 获取网络资源\n应用案例"
+            android:text="URLConnertion 获取网络资源\n应用案例"
             android:textColor="#000"
-            android:textSize="26sp"/>
-    </LinnearLayout>
+            android:textSize="26sp"
+            />
+    </LinearLayout>
     <TextView
         android:id="@+id/statusTV"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="5dp"
-        android:text="图片来源于荆楚理工学院校园网（点击看大图）"/>
+        android:text="图片来源于荆楚理工学院校园网(点击看大图)"
+        />
     <GridView
         android:id="@+id/imageGridView"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="3dp"
         android:horizontalSpacing="3dp"
@@ -36,4 +40,4 @@
         android:numColumns="2">
 
     </GridView>
-</LinnearLayout>
+</LinearLayout>
