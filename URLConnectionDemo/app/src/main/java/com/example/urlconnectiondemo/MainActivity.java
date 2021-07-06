@@ -30,7 +30,7 @@ import java.util.logging.LogRecord;
 /** 从荆楚理工学院网下载图片，展示出来 **/
 public class MainActivity extends Activity {
 
-    public final static String IMAGES_PATH = "https://www.freeimages.com/cn/search/cat";
+    public final static String IMAGES_PATH = "http://www.baidu.com";
     public final static String JCUT_ADDRESS = "http://www.jcut.edu.cn";
     private ImageListAdapter adapter =null;
     private List<Bitmap> list = new ArrayList<Bitmap>();
