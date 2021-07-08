@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+xmlns:tools="http://schemas.android.com/tools"
+android:layout_width="match_parent"
+android:layout_height="match_parent"
+android:background="#fefefe"
+tools:context=".NotepadActivity">
+
+<TextView
+    android:layout_width="match_parent"
+    android:layout_height="45dp"
+    android:gravity="center"
+    android:text="记事本"
+    android:textSize="20sp"
+    android:textColor="@android:color/white"
+    android:textStyle="bold"
+    android:background="#fb7a6a"
+    android:id="@+id/note_name"
+    />
+<ListView
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/listview"
+    android:cacheColorHint="#00000000"
+    android:divider="#B4B4B4"
+    android:dividerHeight="1dp"
+    android:fadingEdge="none"
+    android:listSelector="#00000000"
+    android:scrollbars="none"
+    android:layout_below="@id/note_name"
+    />
+<ImageView
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:src="@drawable/add"
+    android:id="@+id/add"
+    android:layout_marginBottom="30dp"
+    android:layout_alignParentBottom="true"
+    android:layout_centerHorizontal="true"
+    />
+
+</RelativeLayout>
