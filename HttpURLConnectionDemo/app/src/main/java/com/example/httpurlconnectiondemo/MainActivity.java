@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
                     tipTV.setText("用户名或密码错误，登录失败!");
                 } else {
                     intent.putExtra("userInfo", userInfo);
-                    startActivity(intent);
+                    startActivity(intent)
                 }
             } else if (msg.what == 0) {
                 tipTV.setText(String.valueOf(msg.obj));
