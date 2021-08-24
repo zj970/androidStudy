@@ -326,3 +326,24 @@ spring:
    - webjars localhost:8080/webjars/
    - public , static, /**, resources
 2. 优先级：resources>static>public
+
+
+
+
+
+### 首页定制
+
+
+
+在templates目录下的所有页面，只能通过controller来跳转！（这个需要模板引擎的支持thymeleaf）
+
+public、static等下面的index.html也可以
+
+```yaml
+#关闭默认图标
+spring:
+	mvc:
+	favicon:
+	enabled: false
+```
+
