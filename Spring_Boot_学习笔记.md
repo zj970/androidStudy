@@ -347,3 +347,382 @@ spring:
 	enabled: false
 ```
 
+1. 首页配置：
+   1. 所有页面的静态资源都需要使用thymeleaf接管；
+   2. url :  @{}
+   
+2. 页面国际化：
+   1. 我i们需要配置i18n文件
+   2. 我们如果需要在项目中进行按钮自动切换，我们需要自定义一个组件LocaleResolver
+   3. 记得将自己写的组件配置到Spring容器 @Bean
+   4. #{}
+   
+3. 登录+拦截器
+
+4. 员工列表展示
+
+   1. 提取公共页面
+
+      1. ```html
+         替换：
+         	<div th:replace="~{commons/commons::topBar}"></div>
+         ```
+
+      2. ```html
+         提取：
+         <nav class="navbar navbar-dark sticky-top bg-dark flex-md-nowrap p-0" th:fragment="topBar"></nav>
+         ```
+
+      3. ```html
+         插入(在view层多加一层)：
+         <div th:insert="~{commons/commons::sideBar(active='list.html')}"></div>
+         ```
+
+      4. 如果要传递参数，可以直接使用()传参，接受判断即可
+
+   2. 列表循环显示
+
+5. 添加员工
+
+   1. 按钮提交
+   2. 跳转到添加页面
+   3. 添加成功
+   4. 返回首页
+   
+6. CRUD搞定
+
+7. 404
+
+
+
+前端：
+
+- 模板：别人写好的，我们拿来改成自己需要的
+- 框架：组件：自己手动组合拼接！ Bootstrap,Layui,semantic-ui
+  - 栅格系统
+
+
+
+1. 前端页面
+2. 设计数据库
+3. 前端自动运行，独立化工程
+4. 数据接口如何对接：json,对象all in one!
+5. 前后端联调测试
+
+
+
+1. 有一套自己熟悉的后台模板：工作必要！X-admin
+
+2. 前端界面：至少自己能够通过前端框架，组合出来一个网站页面
+
+   -index
+
+   -about
+
+   -blog
+
+   -post
+
+   -user
+
+3. 让这个网站能够独立运行！
+
+
+
+
+
+# 知识回顾
+
+- SpringBoot是什么？
+- 微服务
+- 探究源码  自动装配原理
+- 配置 yaml
+- 多文档环境切换
+- 静态资源映射
+- Thymeleaf th:XXX
+- SpringBoot 如何扩展MVC     javaconfig
+- 如何修改SpringBoot的默认配置
+- CRUD
+- 国际化
+- 拦截器
+- 定制首页，错误页
+
+
+
+新的：
+
+- JDBC
+- Mybatis
+- Druid
+- Shiro:安全
+- Spring Security:安全
+- 异步任务~，邮件
+- Swagger
+- Dubbo+Zookeepe
+
+在yaml或者properties配置文件中的配置属性，注入Configuration容器中，首先要注册Bean,再加上@ConfigurationProperties注解表示绑定成功（参数prefix = "spring.datasources"）
+
+
+
+# DATA
+
+注意：yaml文件非常敏感缩进，层级
+
+application.yaml配置文件：
+
+```yaml	
+spring:
+  datasource:
+    username: root
+    password: admin
+    #假如时区报错了，就增加一个时区的配置serverTimezone=UTC
+    url: jdbc:mysql://localhost:3306/pet?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    #SpringBoot默认是不注入这些的，需要自己绑定
+    #druid数据源专有配置
+    initialSize: 5
+    minIdle: 5
+    maxActive: 20
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 1 FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: false
+    testOnReturn: false
+    poolPreparedStatements: true
+
+    #配置监控统计拦截的filters，stat：监控统计、log4j：日志记录、wall：防御sql注入
+    #如果允许报错，java.lang.ClassNotFoundException: org.apache.Log4j.Properity
+    #则导入log4j 依赖就行
+    filters: stat,wall,log4j
+    maxPoolPreparedStatementPerConnectionSize: 20
+    useGlobalDataSourceStat: true
+    connectionProperties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=500
+```
+
+
+
+## Mybatis
+
+整合包
+
+mybatis-spring-boot-starter
+
+
+
+M：数据和业务
+
+V：HTML
+
+C:  交接
+
+
+
+1. 导入包
+2. 配置文件
+3. Mybatis配置
+4. 编写sql
+5. service层调用dao层
+6. controller调用service层
+
+
+
+
+
+## SpringSecurity(安全)
+
+在Web开发中，安全第一位！ 过滤器，拦截器~
+
+功能需求：否
+
+做网站：安全应该在什么时候考虑？设计之初！
+
+- 漏洞，隐私泄露~
+- 架构
+  - shiro
+  - SpringSecurity
+
+认证，授权
+
+- 功能权限
+
+- 访问权限
+
+- 菜单权限
+
+- ....拦截器，过滤器；大量的原生代码~冗余
+
+  MVC -- Spring ---SpringBoot--		框架思想
+
+
+
+
+
+AOP:横切编程， 配置类
+
+
+
+### 简介
+
+Spring Security是针对Spring项目的安全框架，也是Spring Boot底层安全模块默认的技术选型，他可以实现强大的Web安全控制，对于安全控制，我们仅需要引入 spring-bbot-sarter-security模块,进行少量的配置，即可实现强大的安全管理！
+
+记住几个类：
+
+- WebSecurityConfigurerAdapter:自定义Secuity策略
+- AuthenticationManagerBuilder:自定义认证策略
+- @EnableWebSecurity:开启WedSecurity模式，  @Enablexxxx开启某个功能
+
+Spring Security的主要目标是“认证”和“授权”（访问控制）。
+
+“认证”（Authentication）
+
+“授权”（Authorization）
+
+这个概念是通用的，而不是只在Spring Security中存在。
+
+
+
+
+
+## Shiro
+
+- 什么是Shiro?
+  - Apache Shiro是一个Java的安全（权限）框架。
+  - Shiro可以非常容易开发足够好的应用，其不仅可以用在JavaSE环境，也可以用在JavaEE环境。
+  - Shiro可以完成，认证，授权，加密，会话管理，Web集成，缓存等。
+  - 下载地址：http://shiro.apache.org/
+
+1. 导入依赖
+
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <project xmlns="http://maven.apache.org/POM/4.0.0"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+       <parent>
+           <artifactId>SpringBootShiro</artifactId>
+           <groupId>org.example</groupId>
+           <version>1.0-SNAPSHOT</version>
+       </parent>
+       <modelVersion>4.0.0</modelVersion>
+   
+       <artifactId>hello-shiro</artifactId>
+   
+       <properties>
+           <maven.compiler.source>8</maven.compiler.source>
+           <maven.compiler.target>8</maven.compiler.target>
+       </properties>
+   
+       <dependencies>
+           <dependency>
+               <groupId>org.apache.shiro</groupId>
+               <artifactId>shiro-core</artifactId>
+               <version>1.8.0</version>
+           </dependency>
+   
+           <dependency>
+               <groupId>org.slf4j</groupId>
+               <artifactId>jcl-over-slf4j</artifactId>
+               <version>2.0.0-alpha5</version>
+           </dependency>
+   
+           <dependency>
+               <groupId>org.slf4j</groupId>
+               <artifactId>slf4j-log4j12</artifactId>
+               <version>2.0.0-alpha5</version>
+           </dependency>
+   
+           <dependency>
+               <groupId>log4j</groupId>
+               <artifactId>log4j</artifactId>
+               <version>1.2.17</version>
+           </dependency>
+   
+   
+       </dependencies>
+   
+   </project>
+   ```
+
+2. 配置文件
+
+   1. log4j.properties
+
+      ```properties
+      log4j.rootLogger=INFO, stdout
+      
+      log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+      log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+      log4j.appender.stdout.layout.ConversionPattern=%d %p [%c] - %m %n
+      
+      # General Apache libraries
+      log4j.logger.org.apache=WARN
+      
+      # Spring
+      log4j.logger.org.springframework=WARN
+      
+      # Default Shiro logging
+      log4j.logger.org.apache.shiro=INFO
+      
+      # Disable verbose logging
+      log4j.logger.org.apache.shiro.util.ThreadContext=WARN
+      log4j.logger.org.apache.shiro.cache.ehcache.EhCache=WARN
+      ```
+
+   2. shiro.ini
+
+      ```ini
+      [users]
+      # user 'root' with password 'secret' and the 'admin' role
+      root = secret, admin
+      # user 'guest' with the password 'guest' and the 'guest' role
+      guest = guest, guest
+      # user 'presidentskroob' with password '12345' ("That's the same combination on
+      # my luggage!!!" ;)), and role 'president'
+      presidentskroob = 12345, president
+      # user 'darkhelmet' with password 'ludicrousspeed' and roles 'darklord' and 'schwartz'
+      darkhelmet = ludicrousspeed, darklord, schwartz
+      # user 'lonestarr' with password 'vespa' and roles 'goodguy' and 'schwartz'
+      lonestarr = vespa, goodguy, schwartz
+      
+      # -----------------------------------------------------------------------------
+      # Roles with assigned permissions
+      #
+      # Each line conforms to the format defined in the
+      # org.apache.shiro.realm.text.TextConfigurationRealm#setRoleDefinitions JavaDoc
+      # -----------------------------------------------------------------------------
+      [roles]
+      # 'admin' role has all permissions, indicated by the wildcard '*'
+      admin = *
+      # The 'schwartz' role can do anything (*) with any lightsaber:
+      schwartz = lightsaber:*
+      # The 'goodguy' role is allowed to 'drive' (action) the winnebago (type) with
+      # license plate 'eagle5' (instance specific id)
+      goodguy = winnebago:drive:eagle5
+      ```
+
+      Spring Secutiry~类似
+
+```java
+//获取当前的用户对象 Subject
+Subject currentUser = SecurityUtils.getSubject();
+//通过当前用户拿到Session
+Session session = currentUser.getSession();
+currentUser.isAuthenticated();//认证
+currentUser.getPrincipal();//获得当前用户的认证
+currentUser.hasRole("schwartz");//是否拥有这个角色
+currentUser.isPermitted("lightsaber:wield");//获得当前权限，根据参数不同，产生不同的效果
+   //注销
+        //all done - log out!
+        currentUser.logout();
+
+```
+
+SpringBoot中集成
+
+
+
+
+
