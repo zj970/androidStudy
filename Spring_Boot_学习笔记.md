@@ -196,6 +196,8 @@ class MyPro02ApplicationTests {
 }
 ```
 
+
+
 ```
 @PropertySource(value = "classpath:zj.properties")
 //加载指定的配置文件
@@ -312,6 +314,8 @@ private static final String[] CLASSPATH_RESOURCE_LOCATIONS = { "classpath:/META-
       "classpath:/resources/", "classpath:/static/", "classpath:/public/" };
 //5个可识别静态资源位置
 ```
+
+
 
 ```yaml
 spring:
@@ -723,6 +727,225 @@ currentUser.isPermitted("lightsaber:wield");//获得当前权限，根据参数�
 SpringBoot中集成
 
 
+
+
+
+
+
+# 任务
+
+异步任务~
+
+定时任务~ 表达式
+
+邮件发送~
+
+```
+TaskScheduler 任务调度者
+TaskExecutor 任务执行者
+
+@EnableAsync    //开启异步注解功能
+@EnableScheduling   //开启定时功能的注解
+
+@Scheduled //什么时候执行
+```
+
+cron:
+
+- 计划任务，是任务在约定的时间执行已经计划好的工作，这是表面的意思。在Linux中，我们经常用到 cron 服务器来完成这项工作。cron服务器可以根据配置文件约定的时间来执行特定的任务。
+
+  ```java
+  //30 15 10 * * ? 每天10点15分30秒执行 一次
+  //30 0/5 10,18 * * ? 每天10点和18点，每个5分钟执行一次
+  //0 15 10 ? * 1-6 每个月的周一到周六10点15分执行一次
+  ```
+
+
+
+# 分布式Dubbo + Zookeeper + SpringBoot
+
+|阿里云|腾讯云|华为云   140~  3000~
+
+
+
+RPC
+
+HTTP SpringCloud
+
+RPC两个核心模块：通讯、序列化。
+
+序列化：数据传输需要转换（Netty框架）
+
+Apache Dubbo:是一款搞性能的、轻量级的开源java RPC框架，它提供了三大核心能力：==面向接口的远程方法调用==，==智能容错和负载均衡==，==以及服务自动注册和发现==。
+
+
+
+
+
+zookeeper:	注册中心
+
+dubbo-admin:是一个监控管理后台，查看我们注册了哪些服务，哪些服务被消费了
+
+Dubbo:	jar包 	
+
+
+
+```properties
+       <!--导入依赖-->
+        <!--dubbo-->
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-spring-boot-starter</artifactId>
+            <version>3.0.2.1</version>
+        </dependency>
+        <!--zookeeper_zkclient-->
+        <!-- https://mvnrepository.com/artifact/com.github.sgroschupf/zkclient -->
+        <dependency>
+            <groupId>com.github.sgroschupf</groupId>
+            <artifactId>zkclient</artifactId>
+            <version>0.1</version>
+        </dependency>
+
+
+        <!--日志会冲突-->
+        <!--引入zookeeper-->
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-framework</artifactId>
+            <version>5.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-recipes</artifactId>
+            <version>5.1.0</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.zookeeper/zookeeper -->
+        <dependency>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+            <version>3.7.0</version>
+        </dependency>
+
+        <!--排除这个slf4j-log4j12-->
+        <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-log4j12 -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>2.0.0-alpha5</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.2</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.curator/curator-x-discovery -->
+        <dependency>
+            <groupId>org.apache.curator</groupId>
+            <artifactId>curator-x-discovery</artifactId>
+            <version>5.1.0</version>
+        </dependency>
+```
+
+步骤：
+
+前提：	zookeeper服务已开启
+
+1. 提供者提供服务
+   1. 导入依赖
+   2. 配置注册中心的地址，以及服务发现名，和要扫描的包
+   3. 在想要被注册的服务上面~增加一个注解@DubboService
+2. 消费者如何消费
+   1. 导入依赖
+   2. 配置注册中心的地址，配置自己的服务名
+   3. 从远程注入服务！@DubboReference
+
+
+
+
+
+
+
+
+
+
+
+# 回顾
+
+架构
+
+- 三层架构 + MVC
+    架构　－－＞　解耦
+
+- 开发架构
+    	Spring
+    		IOC  AOP
+    		IOC： 控制反转
+    		AOP： 切面(本质，动态代理)
+    		为了解决什么？不影响业务本来的情况下，实现动态增加功能，大量应用在日志，事务......等
+    		Spring是一个轻量级的java开源框架，容器
+    		目的： ==解决企业开发的复杂性问题==
+    		配置文件比较复杂
+    	SpringBoot
+    		SpringBoot并不是新东西，就是Spring的升级版
+    		新一代JavaEE的开发标准，开箱即用
+    		自动装配了很多底层逻辑
+    		特性：==约定大于配置==
+
+-   微服务架构--> 新架构
+    模块化、功能化。
+    用户、支付、签到、娱乐.....
+    人多余多：一台服务器解决不了；横向解决;增加服务器
+
+    假设A服务器占用98%资源，B服务器只占用了10%。==负载均衡==
+        
+
+将原来的整体项目，分成模块化，用户就是一个单独的项目，签到也是一个单独的项目，项目和项目之间需要通信，如何通信？---RPC
+ 用户非常多，而签到十分少|  给用户多 一点服务器，给签到少一点服务器！
+
+微服务架构问题？
+
+分布式架构会遇到的四个核心问题？
+
+1. 这么多服务，客户端改如何去访问？
+2. 这么多服务，服务之间如何进行通信？
+3. 这么多服务 ，如何治理？
+4. 服务器挂了，怎么办？
+
+
+
+解决方案：
+
+​	SpringCloud,是一套生态，就是来解决以上分布式架构的4个问题
+
+​	想使用SpringCloud，必须要掌握SpringBoot,因为SpringCloud是基于SpringBoot;
+
+
+
+- SpringCloud NetFlix 
+
+1. Api网关，zuul组件
+2. Feign --> httpClient ---> http的通信方式，同步并阻塞
+3. 服务注册与发现，Eureka
+4. 熔断机制，Hystrix
+
+2018年年底，NetFlix宣布无限期停止维护。生态不再维护，就会脱结
+
+- Apache Dubbo zookeeper,第二套解决系统
+  - API：没有
+  - Dubbo是一个搞性能的基于Java实现的RPC通信框架！
+  - 服务注册与发现，zookeeper:动物园管理者(Hadoop,Hive)
+- SpringCloud Alibaba 一站式解决方案
+- 服务网格：下一代微服务标准 ，Server Mesh
+  - 代表解决方案:	istio
+
+==解决的问题==
+
+1. API网关，服务路由
+2. HTTP，RPC，异步调用
+3. 服务注册与发现，高可用
+4. 熔断机制，服务降级
+
+==网络是不可靠的==
 
 
 
