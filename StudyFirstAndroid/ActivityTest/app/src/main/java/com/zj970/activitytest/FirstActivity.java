@@ -1,12 +1,14 @@
 package com.zj970.activitytest;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -49,6 +51,39 @@ public class FirstActivity extends AppCompatActivity {
         return true;
     }
 
+    /**
+     * 这里不支持back键返回获取
+     * 由于我们是使用startActivityForResult()方法来启动SecondActivity的，
+     * 在SecondActivity被销毁之后回调上一个活动的onActivityResult()方法，
+     * 因此我们需要在FirstActivity中重写onActivityResult()方法来得到返回的数据
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+
+        switch (requestCode) {
+            case 1:
+                if (resultCode == RESULT_OK) {
+                    String returnedData = data.getStringExtra("data_return");
+                    Log.d(TAG, returnedData);
+                }
+                break;
+            default:
+        }
+        super.onActivityResult(requestCode, resultCode, data);
+        /**
+         * onActivityResult()方法带有三个参数
+         * 第一个参数requestCode,即我们在启动活动时传入的请求码
+         * 第二个参数resultCode,即我们在返回数据时传入的处理结果
+         * 第三个参数data,即携带着返回数据的Intent
+         *
+         * 由于在上一个活动中有坑你待用startActivityForResult()方法来启动很多不同的活动，
+         * 每个活动返回的数据都会回调到onActivityResult()这个方法中，
+         * 所以首先要检查的时requestCode的值来判断数据来源，确定数据来源是SecondActivity返回的之后，
+         * 再拖过resultCode的值判断处理结果是否成功
+         * 最后从data中将值取出来
+         */
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);//调用父类的OnCreate方法
@@ -58,6 +93,9 @@ public class FirstActivity extends AppCompatActivity {
 
         Button button_1 = findViewById(R.id.button_1);//fingViewById 返回的是View 对象，向下转型将它转换为 Button对象
         Button button_2 = findViewById(R.id.button_2);
+
+        Button button_5 = findViewById(R.id.button_5);
+
         button_2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -85,12 +123,39 @@ public class FirstActivity extends AppCompatActivity {
                 //Intent intent = new Intent(FirstActivity.this,SecondActivity.class);
                 //startActivity(intent);
                 //隐式Intent
-                Intent intent = new Intent("aom.zj970.activitytest.ACTION_START");
+/*                Intent intent = new Intent("aom.zj970.activitytest.ACTION_START");
                 intent.addCategory("android.intent.category.MY_CATEGORY");
+                startActivity(intent);*/
+/*                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse("http://www.baidu.com"));
+                startActivity(intent);*/
+
+                //向下一个活动传递数据
+                /**
+                 * 这里我们还是使用显示Intent的方式来启动SecondActivity,
+                 * 并通过putExtra()方法接收两个参数，第一个参数是键，用于后面从Inteent中取值，第二个参数才是真正要传递的数据
+                 *
+                 */
+                String data = "Hello SecondActivity,I am FirstActivity";
+                Intent intent = new Intent(FirstActivity.this,SecondActivity.class);
+                intent.putExtra("extra_data",data);
                 startActivity(intent);
             }
         });
-
+        /**
+         * 返回数据给上一个活动
+         */
+        button_5.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /**
+                 * 这里使用startActivityForResult()方法来启动SecondActivity,
+                 * 请求码只要是唯一值就可以
+                 */
+                Intent intent = new Intent(FirstActivity.this, SecondActivity.class);
+                startActivityForResult(intent,1);
+            }
+        });
 
     }
 }

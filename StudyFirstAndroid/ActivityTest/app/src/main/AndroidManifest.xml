@@ -19,7 +19,6 @@
         <activity android:name=".SecondActivity">
             <intent-filter>
                 <action android:name="aom.zj970.activitytest.ACTION_START"/>
-
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.MY_CATEGORY"/>
             </intent-filter>
@@ -29,7 +28,6 @@
                 android:label="This is FirstActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
-
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
