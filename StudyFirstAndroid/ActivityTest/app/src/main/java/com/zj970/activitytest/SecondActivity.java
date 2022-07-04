@@ -47,25 +47,27 @@ public class SecondActivity extends AppCompatActivity {
 
         });
 
-        button_3.setOnClickListener(v -> {
-
-            /**
-             * 首先制定了Intent的action是Intent.ACTION.VIEW,这是一个Android系统内置的动作，其常量值为 android.intent.action.VIEW。
-             * 然后通过Uri.parse()方法。将一个网址自负床解析成一个Uri对象，再调用Intent的setData()方法把这个Uri对象传递进去
-             */
-            Intent intent1 = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.baidu.com"));//这里无法实现选择浏览器操作
-            Intent chooser = Intent.createChooser(intent1, "Choose Your Browser");
-            if (intent1.resolveActivity(getPackageManager()) != null) {
-                startActivity(chooser);
+        button_3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /**
+                 * 除了Http协议外，我们还可以指定很多其他的协议
+                 * 比如geo表示显示地理位置、tel表示拨打电话
+                 */
+                Intent intent_3 = new Intent(Intent.ACTION_DIAL);
+                intent_3.setData(Uri.parse("tel:10086"));
+                startActivity(intent_3);
             }
-            //intent.setData(Uri.parse("https://www.baidu.com"));
         });
     }
 
     /**
-     * 用户在SecondActivity中并不是通过点击按钮，
+     * 用户在SecondActivity中并不是通过点击按钮
      * 而是通过按下Back键回到FirstActivity
      * 数据返回通过重写onBackPressed()方法
+     *
+     * 这里返回键生效必须是有 startActivityForResult(intent,1);
+     * 通过startActivityForResult()方法才能生效，回传数据
      */
     @Override
     public void onBackPressed() {

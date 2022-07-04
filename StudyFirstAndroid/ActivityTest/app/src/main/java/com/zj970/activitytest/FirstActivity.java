@@ -28,7 +28,7 @@ public class FirstActivity extends AppCompatActivity {
     }
 
     /**
-     * 重写 onOptionsItemSelected()
+     * 重写 onOptionsItemSelected() 实现菜单
      * @param item
      * @return
      */
