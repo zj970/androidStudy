@@ -1,5 +1,6 @@
 package com.zj970.activitytest;
 
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.util.Log;
@@ -9,7 +10,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
 //每个新建的活动都要去AndroidManifest.xml中注册
-public class SecondActivity extends AppCompatActivity {
+public class SecondActivity extends BaseActivity {
     private static final String TAG = "SecondActivity";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,5 +76,24 @@ public class SecondActivity extends AppCompatActivity {
         intent.putExtra("data_return","Hello FirstActivity,I am SecondActivity");
         setResult(RESULT_OK,intent);
         finish();
+    }
+
+    //TODO:启动活动的最佳写法
+
+    /**
+     * 我们在SecondActivity中添加了一个actionStart()方法，=
+     * 在这个方法中完成了Intent的构建，另外所有SecondActivity中需要的数据都是通过actionStart()方法的参数传递过来的
+     * 然后把它们存储到Inten中，最后调用startActivity()方法中启动SecondActivity
+     *
+     * 这样写的好处是 SecondActivity所需要的数据在方法参数中
+     * @param context
+     * @param data1
+     * @param data2
+     */
+    public static void actionStart(Context context,String data1,String data2){
+        Intent intent = new Intent(context,SecondActivity.class);
+        intent.putExtra("param1",data1);
+        intent.putExtra("param2",data2);
+        context.startActivity(intent);
     }
 }
