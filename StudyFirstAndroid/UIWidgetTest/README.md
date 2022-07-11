@@ -85,7 +85,7 @@ Android控件的使用规律：给控件定义一个id，再指定控件的高�
             android:hint="Type something there"/>
 ```
 
-&emsp;不过，随着输入的内容不断增多，EditText会被不断地拉长，这时由于EditText的高度是指定的是wrap_content,因此它总能包含住里面的内容，但是输入内容过多时，界面就变得非常难看
+&emsp;&emsp;不过，随着输入的内容不断增多，EditText会被不断地拉长，这时由于EditText的高度是指定的是wrap_content,因此它总能包含住里面的内容，但是输入内容过多时，界面就变得非常难看
 
 我们可以使用 android:maxLines 属性来解决这个问题
 
@@ -101,8 +101,7 @@ Android控件的使用规律：给控件定义一个id，再指定控件的高�
 
 ## 1.4 ImageView
 
-&emsp;&emsp;ImageView 是用于在界面上展示图片的一个控件，它可以让我们的程序界面变得更加丰富多彩。  
-学习这个控件需要提前准备一些图片，这些图片通常放在 ”drawable“ 开头的目录下的。
+&emsp;&emsp;ImageView 是用于在界面上展示图片的一个控件，它可以让我们的程序界面变得更加丰富多彩。学习这个控件需要提前准备一些图片，这些图片通常放在 ”drawable“ 开头的目录下的。
 
 ```xml
 <ImageView
@@ -125,13 +124,12 @@ Android控件的使用规律：给控件定义一个id，再指定控件的高�
 
 ```
 
-&emsp;&emsp;旋转的进度条表明我们的程序正在加载数据，那么数据总有加载完的时候。此时需要Android控件的可见属性。  
-所有的Android控件都具有这个属性，可以通过android:visibility进行指定，可选值有3种：
+&emsp;&emsp;旋转的进度条表明我们的程序正在加载数据，那么数据总有加载完的时候。此时需要Android控件的可见属性。所有的Android控件都具有这个属性，可以通过android:visibility进行指定，可选值有3种：
 - visible 表示控件是可见的，这个值是默认值，不指定的时候就是可见的
 - invisible 表示控件不可见，但它仍然占据原来的位置和大小，只是变为透明状态了。
 - gone 不仅不可见，而且不再占用任何屏幕空间
 
-我们还可以通过代码来设置控件的可见性，使用的是setVisibility()方法，可以传入View.VISIBLE、View.INVISIBLE和View.GONE这三种值  
+&emsp;&emsp;我们还可以通过代码来设置控件的可见性，使用的是setVisibility()方法，可以传入View.VISIBLE、View.INVISIBLE和View.GONE这三种值  
 另外我们还可以给ProgressBar指定不同的样式，通过style属性可以将它指定成水平进度条
 
 ```xml
@@ -144,19 +142,29 @@ Android控件的使用规律：给控件定义一个id，再指定控件的高�
 ```
 ## 1.6 AlertDialog
 
-AlertDialog 可以在当前的界面弹出一个对话框，这个对话框是置顶于所有界面元素之上的，能够屏蔽掉其他控件的交互能力，因此 AlertDialog 一般都是用于提示一些非常重要的内容或者警告信息。比如为了防止用户误删重要内容，在删除之前弹出一个确认对话框
+&emsp;&emsp;AlertDialog 可以在当前的界面弹出一个对话框，这个对话框是置顶于所有界面元素之上的，能够屏蔽掉其他控件的交互能力，因此 AlertDialog 一般都是用于提示一些非常重要的内容或者警告信息。比如为了防止用户误删重要内容，在删除之前弹出一个确认对话框
 
 ```
-AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
-        dialog.setTitle("This is Dialog");
-        dialog.setMessage("Something important.");
-        dialog.setCancelable(false);
+/**
+     * 展示AlertDialog的使用
+     */
+    public void button_AlertDialog(){
+        AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);//1. 实例化AlertDialog
+        dialog.setTitle("This is Dialog");//2. 设置标题
+        dialog.setMessage("Something important.");//3. 设置内容
+        dialog.setCancelable(false);//4. 可否取消的属性
+        /**
+         * 确定按钮点击事件
+         */
         dialog.setPositiveButton("OK", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
 
             }
         });
+        /**
+         * 取消按钮点击事件
+         */
         dialog.setNegativeButton("Cancle", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -164,5 +172,176 @@ AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
             }
         });
         dialog.show();
+    }
+
 ```
 首先通过AlertDialog.Builder创建一个AlertDialog实例，然后可以为这个对话框设置标题、内容、可否取消等属性，接下来调用setPositiveButton()方法为对话框设置确定点击按钮的点击事件，调用setNegativeButton()方法设置取消按钮点击事件，最后调用show()方法将对话框显示出来
+
+## 1.7 ProgressDialog
+
+ProgressDialog 和 AlertDialog有点类似，都可以弹出一个对话框，都能屏蔽掉其他控件的交互能力。不同的是，ProgressDialog会在对话框中显示一个进度条，一般用于表示当前操作比较耗时，让用户耐心地等待。它的用法噶和AlertDialog也比较相似
+
+```
+/**
+     * 展示ProgressDialog的使用
+     */
+    public void buttonProgressDialog(){
+        ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+        progressDialog.setTitle("This is ProgressDialog");
+        progressDialog.setMessage("Loading...");
+        progressDialog.setCancelable(true);
+        progressDialog.show();
+    }
+```
+&emsp;&emsp;可以看到，这里也是先构建一个ProgressDialog对象，然后同样可以设置标题、内容、可否取消等属性，最后也是通过调用show()方法将ProgressDialog显示出来。  
+
+&emsp;&emsp;注意：如果在setCancelable()中传入了false,表示ProgressDialog是不能通过Back键取消掉的，这时你就一定要在代码中做好控制，当数据加载完成后必须调用ProgressDialog的dismiss()方法来关闭对话框，否则ProgressDialog将会一直存在。
+
+---
+
+# 2. 详解4种基本布局
+
+&emsp;&emsp;一个丰富的界面总是要由很多个控件组成的，那我们如何才能让各个控件都有条不紊地摆放在界面上，而不是乱糟糟的呢？这就需要借助布局来实现了。布局是一种可用于放置很多控件的容器，它可以按照一定的规律调整内部控件的位置，从而编写出精美的界面。
+
+![img.png](img.png)
+
+## 2.1 线性布局
+
+&emsp;&emsp;LinearLayout又称作线性布局，是一种非常常用的布局。正如它的名字所描述的一样，这个布局会将它所包含的控件在线性方向依次排列。既然是线性排列，不止一个方向，之前所有的控件都是在垂直方向上排列，这是由于我们通过指定了android:orientation属性指定了排列方向是vertical，如果指定的是horizontal，控件就会在水平方向上排列了。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".LayoutPractice">
+    <Button
+            android:id="@+id/button_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Button 1"
+            android:textAllCaps="false"
+            android:textSize="28sp"/>
+    <Button
+            android:id="@+id/button_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Button 2"
+            android:textAllCaps="false"
+            android:textSize="28sp"/>
+    <Button
+            android:id="@+id/button_3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Button 3"
+            android:textAllCaps="false"
+            android:textSize="28sp"/>
+
+</LinearLayout>
+```
+
+&emsp;&emsp;我们在LinearLayout中添加了3个Button，每个Button的长和宽都是wrap_content，并指定了排列方向是vertical。控件在垂直方向依次排列。
+
+&emsp;&emsp;将android:orientation属性的值改成了horizontal，这就意味着要让LinearLayout中的控件在水平方向上依次排列。当然如果不指定android:orientation属性的值，默认的排列方向就是horizontal。
+
+&emsp;&emsp;这里需要注意，如果LinearLayout的排列方向是horizontal，内部的控件就绝对不能将宽度指定为match_parent，因为这样的话，单独一个控件就会将整个水平方向占满，其他的控件就没有可放置的位置了。同样的道理,如果是LinearLayout的排列方向是vertical,内部的控件就不能将高度指定为match_parent。
+
+&emsp;&emsp;首先来看android:layout_gravity属性，它和我们上一节中学到的android:gravity属性看起来有些相似，这两个属性有什么区别呢？其实从名字就可以看出，android:gravity用于指定文字在控件中的对齐方式，而android:layout_gravity用于指定控件在布局中的对齐方式。android:layout_gravity的可选值和android:gravity差不多，但是需要注意，当LinearLayout的排列方向是horizontal时，只有垂直方向上的对齐方式才会生效，因为此时水平方向上的长度是不固定的，每添加一个控件，水平方向上的长度都会改变，因而无法指定该方向上的对齐方式。同样的道理，当LinearLayout的排列方向是vertical时，只有水平方向的对齐方式才会生效。 
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".LayoutPractice">
+    <Button
+            android:id="@+id/button_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Button 1"
+            android:layout_gravity="top"
+            android:textAllCaps="false"
+            android:textSize="28sp"/>
+    <Button
+            android:id="@+id/button_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Button 2"
+            android:layout_gravity="center_vertical"
+            android:textAllCaps="false"
+            android:textSize="28sp"/>
+    <Button
+            android:id="@+id/button_3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Button 3"
+            android:layout_gravity="bottom"
+            android:textAllCaps="false"
+            android:textSize="28sp"/>
+</LinearLayout>
+```
+
+&emsp;&emsp;接下来我们学习下LinearLayout中的另一个重要属性——android:layout_weight。这个属性允许我们使用比例的方式来指定控件的大小，它在手机屏幕的适配性方面可以起到非常重要的作用。比如我们正在编写一个消息发送界面，需要一个文本编辑框和一个发送按钮。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".LayoutPractice">
+  <EditText
+          android:id="@+id/input_message"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:text="Type something"/>
+  <Button
+          android:id="@+id/send"
+          android:layout_width="0dp"
+          android:layout_height="wrap_content"
+          android:layout_weight="1"
+          android:text="Send"
+          android:textAllCaps="false"/>
+</LinearLayout>
+```
+&emsp;&emsp;你会发现这里竟然将EditText和Button的宽度都指定成了0dp，这样文本编辑框和按钮还能显示出来吗？不用担心，由于我们使用了android:layout_weight属性，此时控件的宽度就不应该再由android:layout_width来决定，这里指定成0dp是一种比较规范的写法。另外，dp是Android中用于指定控件大小，间距等属性的单位。
+
+&emsp;&emsp;然后在EditText和Button里都将android:layout_weight属性的值都设定为1，这表示EditText和Button将在水平方向平分宽度。
+
+&emsp;&emsp;为什么将android:layout_weight属性的值同时指定为1就会平分屏幕宽度呢？其实原理也很简单，系统会先把LinearLayout下所有指定的layout_weight值相加，得到一个总值，然后每个控件所占大小的比列就是用该控件的layout_weight值除以刚才算出的总值。因此如果想让EditText占据屏幕宽度的3/5，Button占据屏幕宽度的2/5，只需要将EditText的layout_weight改为3，Button的layout_weight的值改成2就可以了.
+
+我们还可以通过指定部分控件的layout_weight值来实现更好的效果。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".LayoutPractice">
+    <EditText
+            android:id="@+id/input_message"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Type something"/>
+    <Button
+            android:id="@+id/send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Send"
+            android:textAllCaps="false"/>
+</LinearLayout>
+```
+&emsp;&emsp;这里我们仅指定了EditText的android:layout_weight属性，并且Button的宽度改回wrap_content。这表示Button的宽度仍然按照wrap_content来计算，而EditText则会占满屏幕所有的剩余空间。使用这种方式编写的界面，不仅会在各种屏幕的适配方面会非常好，而且看起来也更加舒服。 

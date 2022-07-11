@@ -1,6 +1,8 @@
 package com.zj970.uiwidgettest;
 
+import android.app.ProgressDialog;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Process;
 import android.util.Log;
 import android.view.View;
@@ -13,6 +15,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private Button button;
     private Button buttonChangeImage;
+    private Button buttonToPractice;
     private TextView text_view;
     private EditText edit_text;
     private ImageView imageView;
@@ -30,6 +33,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         buttonChangeImage = findViewById(R.id.changeImage);
         buttonChangeImage.setOnClickListener(this);
+
+        buttonToPractice = findViewById(R.id.to_layout_practice);
+        buttonToPractice.setOnClickListener(this::onClick);
     }
 
     /**
@@ -43,11 +49,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.button:
                 //TODO： 实现button的响应事件
                 button_OnClick();
+                button_AlertDialog();
                 break;
 
             case R.id.changeImage:
                 //TODO: 实现button_ChangeImage的响应事件
                 button_ChangeImage();
+                buttonProgressDialog();
+            case R.id.to_layout_practice:
+                //TODO: 实现buttonToPractice的响应事件
+                toNext();
+                break;
             default:
                 break;
         }
@@ -70,6 +82,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //Toast ---> 消息
         Toast.makeText(MainActivity.this, edit_text_toString, Toast.LENGTH_LONG).show();
         //----<弹窗
+
+    }
+
+    /**
+     * 展示AlertDialog的使用
+     */
+    public void button_AlertDialog(){
         AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);//1. 实例化AlertDialog
         dialog.setTitle("This is Dialog");//2. 设置标题
         dialog.setMessage("Something important.");//3. 设置内容
@@ -95,6 +114,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         dialog.show();
     }
 
+    /**
+     * 点击按钮实现图片的切换
+     */
     private void button_ChangeImage(){
         //TODO: 实现点击button_change_image 按钮将图片img_1 和 img_2 替换
         imageView = findViewById(R.id.image_view);
@@ -118,4 +140,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             isImage_1 = true;
         }
     }
+
+    /**
+     * 展示ProgressDialog的使用
+     */
+    public void buttonProgressDialog(){
+        ProgressDialog progressDialog = new ProgressDialog(MainActivity.this);
+        progressDialog.setTitle("This is ProgressDialog");
+        progressDialog.setMessage("Loading...");
+        progressDialog.setCancelable(true);
+        progressDialog.show();
+    }
+
+    /**
+     * 跳转到 activity_layout_practice
+     */
+    public void toNext(){
+        Intent intent = new Intent(MainActivity.this,LayoutPractice.class);
+        startActivity(intent);
+    }
+
+
 }

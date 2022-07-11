@@ -29,8 +29,16 @@
                 android:id="@+id/changeImage"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginLeft="50dp"
+                android:layout_marginLeft="25dp"
                 android:text="ChangeImage"
+                android:textAllCaps="false"/>
+
+        <Button
+                android:id="@+id/to_layout_practice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="25dp"
+                android:text="ToNext"
                 android:textAllCaps="false"/>
     </LinearLayout>
 
