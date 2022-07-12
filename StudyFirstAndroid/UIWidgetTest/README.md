@@ -345,3 +345,189 @@ ProgressDialog 和 AlertDialog有点类似，都可以弹出一个对话框，�
 </LinearLayout>
 ```
 &emsp;&emsp;这里我们仅指定了EditText的android:layout_weight属性，并且Button的宽度改回wrap_content。这表示Button的宽度仍然按照wrap_content来计算，而EditText则会占满屏幕所有的剩余空间。使用这种方式编写的界面，不仅会在各种屏幕的适配方面会非常好，而且看起来也更加舒服。 
+
+## 2.2 相对布局
+
+&emsp;&emsp;RelativeLayout又称做相对布局，也是一种非常常用的布局。和LinearLayout的排列规则不同，RelativeLayout显得更加随意一些，它可以通过相对定位的方式让控件出现在布局的任何位置。也正因为如此，RelativeLayout中的属性非常多，不过这些属性都是有规律可循的，其实并 并不难理解和记忆。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".RelativeLayoutPractice">
+    <Button
+            android:id="@+id/button1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentTop="true"
+            android:textAllCaps="false"
+            android:text="Button 1"/>
+    <Button
+            android:id="@+id/button2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:textAllCaps="false"
+            android:text="Button 2"/>
+    <Button
+            android:id="@+id/button3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textAllCaps="false"
+            android:text="Button 3"/>
+    <Button
+            android:id="@+id/button4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:text="Button 4"
+            android:textAllCaps="false"/>
+    <Button
+            android:id="@+id/button5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:text="Button 5"
+            android:textAllCaps="false"/>
+
+</RelativeLayout>
+```
+
+&emsp;&emsp;我们让Button 1和父布局的左上角对齐，Button 2和父布局的右上角对齐，Button 3居中对齐，Button 4和父布局的左下角对齐，Button 5和父布局的右下角对齐。虽然android:layout_alignParentLeft、android:layout_alignParentRight、android:layout_alignParentTop、android:layout_alignParentBottom、android:layout_centerInParent这几个属性虽然没有接触过，但是见名明义。
+
+上面例子中的每个控件都是相对于父布局进行定位的。也可以相对于控件进行定位。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".RelativeLayoutPractice">
+  <Button
+          android:id="@+id/button3"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_centerInParent="true"
+          android:textAllCaps="false"
+          android:text="Button 3"/>
+    <Button
+            android:id="@+id/button1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/button3"
+            android:layout_toLeftOf="@+id/button3"
+            android:textAllCaps="false"
+            android:text="Button 1"/>
+    <Button
+            android:id="@+id/button2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/button3"
+            android:layout_toRightOf="@+id/button3"
+            android:textAllCaps="false"
+            android:text="Button 2"/>
+    <Button
+            android:id="@+id/button4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/button3"
+            android:layout_toLeftOf="@+id/button3"
+            android:text="Button 4"
+            android:textAllCaps="false"/>
+    <Button
+            android:id="@+id/button5"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/button3"
+            android:layout_toRightOf="@+id/button3"
+            android:text="Button 5"
+            android:textAllCaps="false"/>
+
+</RelativeLayout>
+```
+&emsp;&emsp;这次代码稍微复杂一点，不过仍然有规律可循。android:layout_above属性可以让一个控件位于另外一个控件的上方，需要为这个属性指定相对控件id的引用，这里我们填入了@+id/button3，表示让该控件位于Button 3的上方。其他属性也都是相似的，android:layout_below表示让一个控件位于另一个控件的下方，android:layout_toLeftOf表示让一个控件位于另一个控件的左侧，android:layout_toRightOf表示让一个控件位于另一个控件的右侧。注意，当一个控件去引用另一个控件的id时，该控件一定要定义在引用控件的后面，不然会出现找不到id的情况。
+
+&emsp;&emsp;RelativeLayout中还有另外一组相对于控件进行定位的属性，android:layout_alignLeft表示让一个控件的左边缘和另一个控件的左边缘对齐，android:layout_alignRight表示让一个控件的右边缘和另一个控件的右边缘对齐。此外，还有android:layout_alignTop和android:layout_alignBottom，道理都是一样。
+
+## 2.3 帧布局
+
+&emsp;&emsp;FrameLayout又称作帧布局，它相比前面两种布局就简单太多了，因此它的应用场景也少了很多。这种布局没有方便的定位方式，所有的控件都会默认摆放在布局的左上角。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".FrameLayoutPractice">
+    <TextView
+            android:id="@+id/text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="This is TextView"
+            android:textColor="@color/black"
+            android:textSize="28sp"/>
+    <ImageView
+            android:id="@+id/image_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/img_1"/>
+</FrameLayout>
+```
+
+可以看到，文字和图片都是位于布局的左上角。由于ImageView是在TextView之后添加的，因此图片压在了文字上面。当然除了这种默认效果之外，我们还可以使用layout_gravity属性来指定控件在布局中的对齐方式，和LinearLayout的方式相同。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".FrameLayoutPractice">
+    <TextView
+            android:id="@+id/text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="This is TextView"
+            android:layout_gravity="left"
+            android:textColor="@color/black"
+            android:textSize="28sp"/>
+    <ImageView
+            android:id="@+id/image_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:src="@drawable/img_1"/>
+</FrameLayout>
+```
+我们指定TextView在FrameLayout中居左对齐，ImageView居中对齐，总体来说，FrameLayout由于定位的方式的欠缺，导致它的应用场景也比较少。
+
+## 2.4 百分比布局
+
+&emsp;&emsp;前面介绍的3种布局都是从Android 1.0 版本中就开始支持了，一直沿用到现在，可以说是满足了绝大多数场景的界面设计需求。不过只有LinearLayout支持使用layout_weight属性来事项按比例指定控件大小的功能，其他两种都不支持。比如说,如果想用RelativeLayout来实现让两个按钮按比例平分的效果，则是比较困难的。
+
+&emsp;&emsp;为此，Android引入了一种全新的布局方式来解决此问题——百分比布局。在这种布局中，我们可以不再使用wrap_content、match_parent等方式来指定控件的大小，而是允许直接指定控件在布局中所占的百分比，这样的话就可以轻轻松松实现平分布局甚至是任意比例分割布局的效果。
+
+&emsp;&emsp;由于LinearLayout本身已经支持按比例指定控件的大小了，因此百分比布局只为FrameLayout和RelativeLayout进行功能扩展，提供了PercentFrameLayout和PercentRelativeLayout。这两个全新布局需要在build.gradle中添加依赖，打开app/build.gradle文件
+
+```groovy
+dependencies{
+  implementation 'androidx.percentlayout:percentlayout:1.0.0'
+}
+```
+由于使用的Android studio版本较高，不使用原书的 com.android.support:percent:24.2.1，修改布局时，不仅需要修改button设置，还需要设置头tag
+> <android.percentlayout.widget.PercentFrameLayout xmlns:app="http://schems.android.com/apk/res-auto"
+
+而且每次修改gradle文件后都需要Sync Now，同步一下工程。

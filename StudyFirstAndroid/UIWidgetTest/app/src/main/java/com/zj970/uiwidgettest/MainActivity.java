@@ -3,7 +3,6 @@ package com.zj970.uiwidgettest;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Process;
 import android.util.Log;
 import android.view.View;
 import android.widget.*;
@@ -156,7 +155,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * 跳转到 activity_layout_practice
      */
     public void toNext(){
-        Intent intent = new Intent(MainActivity.this,LayoutPractice.class);
+        Intent intent = new Intent(MainActivity.this, LinearLayoutPractice.class);
         startActivity(intent);
     }
 
