@@ -6,11 +6,39 @@
         android:layout_height="match_parent"
         tools:context=".PercentPractice">
 
-   <!-- <Button
+    <Button
             android:id="@+id/button7"
-            android:text="Button 1"
             android:layout_gravity="left|top"
-            app:layout_widthPercent="50%"/>
-            app:layout_heightPercent="50%"/>-->
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="东"
+            app:layout_widthPercent="50%"
+            app:layout_heightPercent="50%"/>
+
+
+    <Button
+            android:id="@+id/button8"
+            android:layout_gravity="right|top"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="西"
+            app:layout_widthPercent="50%"
+            app:layout_heightPercent="50%"/>
+    <Button
+            android:id="@+id/button9"
+            android:layout_gravity="left|bottom"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="南"
+            app:layout_widthPercent="50%"
+            app:layout_heightPercent="50%"/>
+    <Button
+            android:id="@+id/button10"
+            android:layout_gravity="right|bottom"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="北"
+            app:layout_widthPercent="50%"
+            app:layout_heightPercent="50%"/>
 
 </androidx.percentlayout.widget.PercentFrameLayout>

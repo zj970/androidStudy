@@ -531,3 +531,52 @@ dependencies{
 > <android.percentlayout.widget.PercentFrameLayout xmlns:app="http://schems.android.com/apk/res-auto"
 
 而且每次修改gradle文件后都需要Sync Now，同步一下工程。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.percentlayout.widget.PercentFrameLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".PercentPractice">
+
+    <Button
+            android:id="@+id/button7"
+            android:layout_gravity="left|top"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="东"
+            app:layout_widthPercent="50%"
+            app:layout_heightPercent="50%"/>
+
+
+    <Button
+            android:id="@+id/button8"
+            android:layout_gravity="right|top"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="西"
+            app:layout_widthPercent="50%"
+            app:layout_heightPercent="50%"/>
+    <Button
+            android:id="@+id/button9"
+            android:layout_gravity="left|bottom"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="南"
+            app:layout_widthPercent="50%"
+            app:layout_heightPercent="50%"/>
+    <Button
+            android:id="@+id/button10"
+            android:layout_gravity="right|bottom"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="北"
+            app:layout_widthPercent="50%"
+            app:layout_heightPercent="50%"/>
+
+</androidx.percentlayout.widget.PercentFrameLayout>
+```
+
+这里之所以能使用app前缀的属性是因为刚才定义了app的命名空间。

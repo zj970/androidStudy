@@ -15,7 +15,7 @@ public class LinearLayoutPractice extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_layout_practice);
+        setContentView(R.layout.activity_linear_layout_practice);
 
         send =  findViewById(R.id.send);
 
