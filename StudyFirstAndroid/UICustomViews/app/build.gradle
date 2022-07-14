@@ -9,7 +9,7 @@ android {
     defaultConfig {
         applicationId "com.zj970.uicustomviews"
         minSdkVersion 21
-        targetSdkVersion 32
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
 
