@@ -240,3 +240,248 @@ public class MainActivity extends AppCompatActivity {
 ```
 
 &emsp;&emsp;可以看到，这里添加了一个initFruits()方法，用于初始化所有的水果数据。在Fruit类的构造函数中将水果的名字和对应的图片id传入，然后把创建好的对象添加到水果列表中。另外我们使用了一个for循环将所有的水果数据添加了两遍，这是因为如果只添加一遍的话，数据不足以充满整个屏幕。接着在onCreate()方法中创建了FruitAdapter对象，并将FruitAdapter作为适配器传递给ListView,这样就可以定制ListView界面了。
+
+# 提升ListView的运行效率
+
+&emsp;&emsp;之所以说这个ListView这个控件很难用，就是因为它有很多细节可以优化，其中运行效率就是很重要的一点。目前我们ListView的运行效率是很低的，因为在FruitAdapter的getView()方法中，每次都会将布局重新加载了一遍，当ListView快速滚动的时候，这就会成为性能的瓶颈。仔细观察会发现，getView()方法中还有一个converView参数，这个参数用于将之前加载好的布局进行缓存，以便之后可以进行重用。修改FruitAdapter中的代码。
+
+```java
+package com.zj970.listview.adapter;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import com.zj970.listview.R;
+import com.zj970.listview.entity.Fruit;
+
+import java.util.List;
+
+/**
+ * 自定义适配器，继承ArrayAdapter
+ */
+public class FruitAdapter extends ArrayAdapter<Fruit> {
+    private int resourceId;
+
+    /**
+     * Constructor
+     *
+     * @param context  The current context.
+     * @param resource The resource ID for a layout file containing a TextView to use when
+     *                 instantiating views.
+     * @param objects  The objects to represent in the ListView.
+     */
+    public FruitAdapter(@NonNull Context context, int resource, @NonNull List<Fruit> objects) {
+        super(context, resource, objects);
+        this.resourceId = resource;
+    }
+
+    @NonNull
+    @Override
+    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        Fruit fruit = getItem(position);//获得当前项的Fruit示例
+/*        View view = LayoutInflater.from(getContext()).inflate(resourceId,parent,false);
+        ImageView fruitImage = view.findViewById(R.id.fruit_image);
+        TextView fruitName = view.findViewById(R.id.fruit_name);
+        fruitImage.setImageResource(fruit.getImageId());
+        fruitName.setText(fruit.getName());*/
+        View view;
+        if (convertView == null){
+            view = LayoutInflater.from(getContext()).inflate(resourceId,parent,false);
+        }
+        else  {
+            view = convertView;
+        }
+        ImageView fruitImage = view.findViewById(R.id.fruit_image);
+        TextView fruitName = view.findViewById(R.id.fruit_name);
+        fruitImage.setImageResource(fruit.getImageId());
+        fruitName.setText(fruit.getName());
+        return view;
+    }
+}
+
+```
+
+&ensp;&emsp;可以看到，我们在getView()方法中进行了判断，如果convertView为null，则使用LayoutInflater去加载布局，如果不为null则直接对convertView进行重用。这样就大大提升了ListView的运行效率，在快速滚动的时候也可以表现出更好的性能。
+
+&ensp;&emsp;不过，目前我们这份代码还是可以继续优化的，虽然现在已经不会去重复去加载布局，但是每次在getView()方法中还是会调用View的findViewById()方法来获取一次控件的实例。我们可以借助一个ViewHolder来对这不放呢性能进行优化，修改FruitAdapter中的代码
+
+```java
+package com.zj970.listview.adapter;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import com.zj970.listview.R;
+import com.zj970.listview.entity.Fruit;
+import java.util.List;
+
+/**
+ * 自定义适配器，继承ArrayAdapter
+ */
+public class FruitAdapter extends ArrayAdapter<Fruit> {
+    private int resourceId;
+
+    /**
+     * Constructor
+     *
+     * @param context  The current context.
+     * @param resource The resource ID for a layout file containing a TextView to use when
+     *                 instantiating views.
+     * @param objects  The objects to represent in the ListView.
+     */
+    public FruitAdapter(@NonNull Context context, int resource, @NonNull List<Fruit> objects) {
+        super(context, resource, objects);
+        this.resourceId = resource;
+    }
+
+    @NonNull
+    @Override
+    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+        Fruit fruit = getItem(position);//获得当前项的Fruit示例
+/*        View view = LayoutInflater.from(getContext()).inflate(resourceId,parent,false);
+        ImageView fruitImage = view.findViewById(R.id.fruit_image);
+        TextView fruitName = view.findViewById(R.id.fruit_name);
+        fruitImage.setImageResource(fruit.getImageId());
+        fruitName.setText(fruit.getName());*/
+        View view;
+/*        if (convertView == null) {
+            view = LayoutInflater.from(getContext()).inflate(resourceId, parent, false);
+        } else {
+            view = convertView;
+        }
+        ImageView fruitImage = view.findViewById(R.id.fruit_image);
+        TextView fruitName = view.findViewById(R.id.fruit_name);
+        fruitImage.setImageResource(fruit.getImageId());
+        fruitName.setText(fruit.getName());
+       */
+        ViewHolder viewHolder;
+        if (convertView == null){
+            view = LayoutInflater.from(getContext()).inflate(resourceId,parent,false);
+            viewHolder = new ViewHolder();
+            viewHolder.fruitImage = view.findViewById(R.id.fruit_image);
+            viewHolder.fruitName = view.findViewById(R.id.fruit_name);
+
+            view.setTag(viewHolder);
+        }else{
+            view = convertView;
+            viewHolder = (ViewHolder) view.getTag();
+        }
+        viewHolder.fruitImage.setImageResource(fruit.getImageId());
+        viewHolder.fruitName.setText(fruit.getName());
+
+        return view;
+    }
+
+    class ViewHolder{
+        ImageView fruitImage;
+        TextView fruitName;
+    }
+}
+
+```
+
+我们新增了一个内部类ViewHolder，用于对空降的实例进行缓存。当convertView为null的时候，创建一个ViewHolder对象，并将控件的实例都存放在ViewHolder里，然后调用View的setTag()方法，把ViewHolder重新取出。这样所有控件的实例都缓存在了ViewHolder里，就没有必要每次都通过findViewById()方法来获取控件实例了。
+
+# ListView的点击事件
+
+$emsp;$emsp;话说回来，ListView的滚动毕竟只是满足了我们视觉上的效果，可是如果ListView中的子项不能点击的话，这个控件就没有什么实际的用途了。因此，本小节我们就来学习一下ListView如何才能响应用户的点击事件。修改MainActivity 
+
+```java
+package com.zj970.listview;
+
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Toast;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import com.zj970.listview.adapter.FruitAdapter;
+import com.zj970.listview.entity.Fruit;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+
+/*    private String[] data = {"Apple","Banana","Orange","Watermelon","Pear","Grape","Pineapple","Strawberry","Cherry","Mango",
+            "Apple","Banana","Orange","Watermelon","Pear","Grape","Pineapple","Strawberry","Cherry","Mango"};
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(MainActivity.this, android.R.layout.simple_list_item_1,data);
+        ListView listView = findViewById(R.id.list_view);
+        listView.setAdapter(adapter);
+    }*/
+
+    /**
+     * Initialize the fruit container
+     */
+    private List<Fruit> fruitList = new ArrayList<>();
+
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        initFruits();
+        FruitAdapter adapter = new FruitAdapter(MainActivity.this,R.layout.fruit_item,fruitList);
+        ListView listView = findViewById(R.id.list_view);
+        listView.setAdapter(adapter);
+
+        //增加点击事件
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Fruit fruit = fruitList.get(position);
+                Toast.makeText(MainActivity.this, fruit.getName(), Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    /**
+     * 初始化水果
+     */
+    private void initFruits(){
+        for (int i = 0; i < 2; i++) {
+            Fruit apple = new Fruit("Apple",R.drawable.apple_pic);
+            fruitList.add(apple);
+            Fruit banana = new Fruit("Banana",R.drawable.banana_pic);
+            fruitList.add(banana);
+            Fruit orange = new Fruit("Orange",R.drawable.orange_pic);
+            fruitList.add(orange);
+            Fruit watermelon = new Fruit("Watermelon",R.drawable.watermelon_pic);
+            fruitList.add(watermelon);
+            Fruit pear = new Fruit("Pear",R.drawable.pear_pic);
+            fruitList.add(pear);
+            Fruit grape = new Fruit("Grape",R.drawable.grape_pic);
+            fruitList.add(grape);
+            Fruit pineapple = new Fruit("Pineapple",R.drawable.pineapple_pic);
+            fruitList.add(pineapple);
+            Fruit strawberry = new Fruit("Strawberry",R.drawable.strawberry_pic);
+            fruitList.add(strawberry);
+            Fruit cherry = new Fruit("Cherry",R.drawable.cherry_pic);
+            fruitList.add(cherry);
+            Fruit mango = new Fruit("Mango",R.drawable.mango_pic);
+            fruitList.add(mango);
+        }
+    }
+}
+```
+
+&emsp;&emsp;可以看到，我们使用setOnItemClickListener()方法为ListView注册了一个监听器，当用户点击了ListView中的任何一个子项时，就会回调onItemClick()方法。在这个方法中可以通过position参数判断出用户点击的是哪一个子项，然后获取到相应的水果，并通过Toast将水果的名字显示出来。
