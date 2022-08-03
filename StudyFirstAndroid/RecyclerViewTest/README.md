@@ -272,4 +272,121 @@ public class MainActivity extends AppCompatActivity {
 
 ![img_1.png](img_1.png#pic_center)
 
-&emsp;&emsp;你可以用手指在水平方向上滑动来查看屏幕外的数据。为什么ListView很难或者根本无法实现的效果在RecyclerView上这么轻松就能实现了呢？这主要得益于RecycleView出色的设计。ListView的布局排列是由自身去管理的，而RecyclerView则将这个工作交给了LayoutManager，LayoutManager中制定出各种不同排列方式的布局了。除了LinearLayoutManager之外，RecyclerView还给我们提供了GridLayoutManager和StaggeredGridLayoutManager这两种内置的布局排列方式，GridLayoutManager可用于实现网络布局，StaggeredGridLayoutManager可以用于实现瀑布流布局。这里实现瀑布流布局。
+&emsp;&emsp;你可以用手指在水平方向上滑动来查看屏幕外的数据。为什么ListView很难或者根本无法实现的效果在RecyclerView上这么轻松就能实现了呢？这主要得益于RecycleView出色的设计。ListView的布局排列是由自身去管理的，而RecyclerView则将这个工作交给了LayoutManager，LayoutManager中制定出各种不同排列方式的布局了。除了LinearLayoutManager之外，RecyclerView还给我们提供了GridLayoutManager和StaggeredGridLayoutManager这两种内置的布局排列方式，GridLayoutManager可用于实现网络布局，StaggeredGridLayoutManager可以用于实现瀑布流布局。
+
+&emsp;&emsp;这里实现瀑布流布局。首先更改一下fruit_item.xml中的代码，如下所示：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_margin="5dp"
+              android:orientation="vertical">
+
+    <ImageView
+            android:id="@+id/fruit_image"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"/>
+
+    <TextView
+            android:id="@+id/fruit_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="left"
+            android:layout_marginLeft="10dp"/>
+
+</LinearLayout>
+```
+
+&emsp;&emsp;这里做了几处小的调整，首先将LinearLayout的宽度由100dp改成了match_parent，因为瀑布流布局的宽度应该是根据布局的列数来自动适配的，而不是一个固定值。另外我们使用了layout_margin属性来让子项之间互留一点间距，这样就不至于所有子项都紧贴在一起。还有就是将TextView的对齐属性改成了居左对齐，因为待会我们会将文字的长度变长，如果还是居中显示就会感觉怪怪的。紧接着修改MainActivity中的代码
+
+```java
+package com.zj970.recyclerviewtest;
+
+/*import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;*/
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
+import com.zj970.recyclerviewtest.Adapter.FruitAdapter;
+import com.zj970.recyclerviewtest.entity.Fruit;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class MainActivity extends AppCompatActivity {
+    /**
+     * Initialize the fruit container
+     */
+    private List<Fruit> fruitList = new ArrayList<>();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        initFruits();
+        RecyclerView recyclerView = findViewById(R.id.recycler_view);
+        StaggeredGridLayoutManager layoutManager = new StaggeredGridLayoutManager(3,StaggeredGridLayoutManager.VERTICAL);
+        //LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        //linearLayoutManager.setOrientation(LinearLayoutManager.HORIZONTAL);
+        //recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setLayoutManager(layoutManager);
+        FruitAdapter fruitAdapter = new FruitAdapter(fruitList);
+        recyclerView.setAdapter(fruitAdapter);
+    }
+
+    /**
+     * 初始化水果
+     */
+    private void initFruits(){
+        for (int i = 0; i < 2; i++) {
+            Fruit apple = new Fruit(getRandomLangthName("Apple"),R.drawable.apple_pic);
+            fruitList.add(apple);
+            Fruit banana = new Fruit(getRandomLangthName("Banana"),R.drawable.banana_pic);
+            fruitList.add(banana);
+            Fruit orange = new Fruit(getRandomLangthName("Orange"),R.drawable.orange_pic);
+            fruitList.add(orange);
+            Fruit watermelon = new Fruit(getRandomLangthName("Watermelon"),R.drawable.watermelon_pic);
+            fruitList.add(watermelon);
+            Fruit pear = new Fruit(getRandomLangthName("Pear"),R.drawable.pear_pic);
+            fruitList.add(pear);
+            Fruit grape = new Fruit(getRandomLangthName("Grape"),R.drawable.grape_pic);
+            fruitList.add(grape);
+            Fruit pineapple = new Fruit(getRandomLangthName("Pineapple"),R.drawable.pineapple_pic);
+            fruitList.add(pineapple);
+            Fruit strawberry = new Fruit(getRandomLangthName("Strawberry"),R.drawable.strawberry_pic);
+            fruitList.add(strawberry);
+            Fruit cherry = new Fruit(getRandomLangthName("Cherry"),R.drawable.cherry_pic);
+            fruitList.add(cherry);
+            Fruit mango = new Fruit(getRandomLangthName("Mango"),R.drawable.mango_pic);
+            fruitList.add(mango);
+        }
+    }
+
+    private String getRandomLangthName(String name){
+        Random random = new Random();
+        int length = random.nextInt(20)+1;
+        StringBuffer buffer = new StringBuffer();
+        for (int i = 0; i < length; i++) {
+            buffer.append(name);
+        }
+        return buffer.toString();
+    }
+}
+```
+
+&emsp;&emsp;首先，在onCreate()方法中，我们创建了一个StaggeredGridLayoutManager的实例。StaggeredGridLayoutManager的构造函数接收两个参数，第一个是用于指定布局的列数，传入3表示会把布局分为3列；第二个参数用于指定布局的排列方向，传入StaggeredGridLayoutManager.VERTICAL表示会让布局纵向排列，最后再把创建好的实例设置到RecyclerView当中就可以了，就是这么简单！
+
+&emsp;&emsp;没错，仅仅修改了一行代码，我们就已经成功实现瀑布流布局的效果了。不过由于瀑布流布局需要各个子项的高度不一致才能看出明显的效果，为此我又使用了一个小技巧。这里我们把眼光聚焦再getRandomLengthName()这个方法上，这个方法使用了Random对象来创造一个1到20之间的随机数，然后将参数中传入的字符串重复随机遍。在initFruits()方法中，每个水果的名字都改成调用getRandomLengthName()方法上，这样就保证各水果名字的长短差距比较大，子项的高度也就各不相同了。效果图如下所示：
+
+![img_2.png](img_2.png)
+
+## RecyclerView的点击事件
+
+&emsp;&emsp;和ListView一样，RecyclerView也必须能影响点击事件才可以，不然的话就没什么实际的用途了。不过不同于ListView的是，RecyclerView并没有提供类似于setOnItemClickListener()这样的注册监听器方法
