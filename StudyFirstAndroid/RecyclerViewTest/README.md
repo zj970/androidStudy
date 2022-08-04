@@ -389,4 +389,96 @@ public class MainActivity extends AppCompatActivity {
 
 ## RecyclerView的点击事件
 
-&emsp;&emsp;和ListView一样，RecyclerView也必须能影响点击事件才可以，不然的话就没什么实际的用途了。不过不同于ListView的是，RecyclerView并没有提供类似于setOnItemClickListener()这样的注册监听器方法
+&emsp;&emsp;和ListView一样，RecyclerView也必须能影响点击事件才可以，不然的话就没什么实际的用途了。不过不同于ListView的是，RecyclerView并没有提供类似于setOnItemClickListener()这样的注册监听器方法，而是需要我们自己给子项具体的View去注册点击事件，相比于ListView来说，实现起来要复杂一些。那么你可能就有疑问了，为什么RecyclerView在各方面的设计都要优先于ListView，偏偏在点击事件上的处理并不人性化，setOnItemClickListener()方法注册的是子项的点击事件，但如果我是点击的是子项里具体的某一个按钮呢？虽然ListView也是能做到的，但是实现起来就相对比较麻烦了。为此，RecyclerView干脆直接摈弃了子项点击事件的监听器，所有的点击事件都由具体的View去注册，就再没有这个困扰了。下面我们来具体学习一下如何在RecyclerView中注册点击事件，修改FruitAdapter中的代码，如下所示：
+
+```java
+package com.zj970.recyclerviewtest.Adapter;
+
+/*import android.support.annotation.NonNull;
+import android.support.v7.widget.RecyclerView;*/
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+import com.zj970.recyclerviewtest.R;
+import com.zj970.recyclerviewtest.entity.Fruit;
+
+import java.util.List;
+
+public class FruitAdapter extends RecyclerView.Adapter<FruitAdapter.ViewHolder> {
+
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        View fruitView;
+        ImageView fruitImage;
+        TextView fruitName;
+
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            fruitView = itemView;
+            fruitImage = itemView.findViewById(R.id.fruit_image);
+            fruitName = itemView.findViewById(R.id.fruit_name);
+        }
+    }
+
+    /**
+     * 水果集合
+     */
+    private List<Fruit> mFruitList;
+
+    public FruitAdapter(List<Fruit> fruitList) {
+        this.mFruitList = fruitList;
+    }
+
+
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
+        View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.fruit_item, viewGroup, false);
+        final ViewHolder viewHolder = new ViewHolder(view);
+        viewHolder.fruitView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int position = viewHolder.getAdapterPosition();
+                Fruit fruit = mFruitList.get(position);
+                Toast.makeText(v.getContext(),"You clicekd view "+fruit.getName(),Toast.LENGTH_SHORT).show();
+            }
+        });
+        viewHolder.fruitImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int position = viewHolder.getAdapterPosition();
+                Fruit fruit = mFruitList.get(position);
+                Toast.makeText(v.getContext(),"You clicekd image "+fruit.getName(),Toast.LENGTH_SHORT).show();
+            }
+        });
+        return viewHolder;
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
+        Fruit fruit = mFruitList.get(i);
+        viewHolder.fruitName.setText(fruit.getName());
+        viewHolder.fruitImage.setImageResource(fruit.getImageId());
+    }
+
+    @Override
+    public int getItemCount() {
+        return mFruitList.size();
+    }
+}
+
+```
+
+&emsp;&emsp;我们先是修改了ViewHolder,在ViewHolder中添加了fruitView变量来保存子项最外层布局的实例，然后在onCreateViewHolder()方法中注册点击事件就可以了。这里分别为最外层布局和ImageView都注册了点击事件，RecyclerView的强大之处也在这里，它可以轻松实现子项中任意控件或布局的点击事件。我们在两个点击事件中先获取了用户点击的position，然后通过position拿到相应的Fruit实例，再用Toast分别弹出两种不同的内容以示区别。现在重新运行代码，并点击香蕉的图片部分和菠萝文字部分，效果如图所示，由于TextView并没有注册点击事件，因此点击文字这个事件会被子项的最外层布局捕捉到。
+
+<figure>
+<img src="img_3.png" width="886">
+<img src="img_4.png" width="886">
+</figure>
+
+![img_3.png](img_3.png)
+![img_4.png](img_4.png)
