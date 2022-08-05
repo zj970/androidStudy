@@ -168,3 +168,153 @@ Msg类中只有两个字段，content表示消息的内容，type表示消息的
 </LinearLayout>
 ```
 这里我们收到的消息聚左对齐，发出的消息居右对齐，并且分别使用message_left.9.png和message_right.9.png作为背景图，你可能会有些疑惑，怎么能让收到的消息和发出的消息都放在同一个布局中？不用担心，还记得我们前面学过的可见属性吗？只要稍后在代码中根据消息的类型来决定隐藏和显示哪种消息就可以了。接下来需要创建RecyclerView的适配器类，新建类MsgAdapter,代码如下所示：
+
+```java
+package com.zj970.uibestpractice.adapter;
+
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+import com.zj970.uibestpractice.R;
+import com.zj970.uibestpractice.entity.Msg;
+
+import java.util.List;
+
+public class MsgAdapter extends RecyclerView.Adapter<MsgAdapter.ViewHolder> {
+    private List<Msg> mMsgList;
+    static class ViewHolder extends RecyclerView.ViewHolder{
+        LinearLayout leftLayout;
+        LinearLayout rightLayout;
+
+        TextView leftMsg;
+        TextView rightMsg;
+
+        public ViewHolder(View v){
+            super(v);
+            leftLayout = v.findViewById(R.id.left_layout);
+            rightLayout = v.findViewById(R.id.right_layout);
+            leftMsg = v.findViewById(R.id.left_msg);
+            rightMsg = v.findViewById(R.id.right_msg);
+        }
+
+    }
+    public MsgAdapter(List<Msg> msgList){
+        mMsgList = msgList;
+    }
+    
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.msg_item,parent,false);
+        return new ViewHolder(view);
+    }
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        Msg msg = mMsgList.get(position);
+        if (msg.getType() == Msg.TYPE_RECEIVED){
+            //如果是收到的消息，则显示左边的消息布局，将右边的消息布局隐藏
+            holder.leftLayout.setVisibility(View.VISIBLE);
+            holder.rightLayout.setVisibility(View.GONE);
+            holder.leftMsg.setText(msg.getContent());
+        }else if (msg.getType()==Msg.TYPE_SENT){
+            //如果是发出的消息，则显示左边的消息布局，将左边的消息布局隐藏
+            holder.rightLayout.setVisibility(View.VISIBLE);
+            holder.leftLayout.setVisibility(View.GONE);
+            holder.rightMsg.setText(msg.getContent());
+        }
+    }
+
+    /**
+     * Returns the total number of items in the data set held by the adapter.
+     *
+     * @return The total number of items in this adapter.
+     */
+    @Override
+    public int getItemCount() {
+        return mMsgList.size();
+    }
+}
+
+```
+以上代码你应该非常熟悉了，和我们学习RecyclerView那一节的代码基本上是一样的，只不过在onBindViewHolder()方法中增加了对消息类型的判断。如果这条消息是收到的，则显示左边的消息布局，如果这条消息是发出的，则显示右边的消息布局。最后修改MainActivity中的代码，来为RecyclerView初始化一些数据，并给发送按钮加入事件响应，代码如下：
+
+```java
+package com.zj970.uibestpractice;
+
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.zj970.uibestpractice.adapter.MsgAdapter;
+import com.zj970.uibestpractice.entity.Msg;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+
+    private List<Msg> msgList = new ArrayList<>();
+    private EditText inputText;
+    private Button send;
+    private RecyclerView msgRecyclerView;
+    private MsgAdapter adapter;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        initMsg();//初始化消息
+        inputText = findViewById(R.id.input_text);
+        send = findViewById(R.id.send);
+        msgRecyclerView = findViewById(R.id.msg_recycler_view);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
+        msgRecyclerView.setLayoutManager(layoutManager);
+        adapter = new MsgAdapter(msgList);
+        msgRecyclerView.setAdapter(adapter);
+        send.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String content = inputText.getText().toString();
+                if (!"".epuals(content)){
+                    Msg msg = new Msg(content,Msg.TYPE_SENT);
+                    msgList.add(msg);
+                    adapter.notifyItemInserted(msgList.size() -1);//当有新消息时，刷新ListView中的显示
+                    msgRecyclerView.scrollToPosition(msgList.size() - 1);//将ListView定位到最后一行
+                    inputText.setText("");//清空输入框的内容
+                }
+            }
+        });
+
+    }
+
+
+    /**
+     * 初始化消息
+     */
+    private void initMsg(){
+        Msg msg1 = new Msg("Hello guy.",Msg.TYPE_RECEIVED);
+        msgList.add(msg1);
+        Msg msg2 = new Msg("Hello!Who is that?",Msg.TYPE_SENT);
+        msgList.add(msg2);
+        Msg msg3 = new Msg("This is Tom.Nice talking to you.",Msg.TYPE_RECEIVED);
+        msgList.add(msg3);
+    }
+}
+```
+&emsp;&emsp;在initMsgs()方法中我们先初始化了几条数据用于在RecyclerView中显示。然后在发送按钮的点击事件里获取了EditText中的内容，如果内容不为null则创建一个新的msg对象，并把它添加到msgList列表中去。之后又调用了适配器的notifyItemInserted()方法，用于通知列表有新的数据插入，这样新增的一条消息才能够在RecyclerView中显示。接着调用RecyclerView中的scrollToPosition()方法将输入的内容填空。
+
+&emsp;&emsp;这样所有的工作就能完成了。运行结果如下
+
+![img_5.png](img_5.png)
+
+# 小结与点评
+
+&emsp;&emsp;本章从Android中的一些常见控件开始入手，依次介绍了基本布局的用法，自定义控件的方法，ListView的详细用法以及RecyclerView的使用，基本已经将重要的UI知识全部覆盖了。想想在开始的时候我说不推荐使用可视化的编辑工具，而是应该全部使用XML的方式来编写界面，现在你是不是已经感受使用XML非常简单了呢？以后不论面对多么复杂的界面，我希望都可以信心满满，因为真正了解界面编写的原理之后，时没有什么能够难到我们的。

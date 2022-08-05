@@ -85,7 +85,17 @@ public class MsgAdapter extends RecyclerView.Adapter<MsgAdapter.ViewHolder> {
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
         Msg msg = mMsgList.get(position);
-        //if ()
+        if (msg.getType() == Msg.TYPE_RECEIVED){
+            //如果是收到的消息，则显示左边的消息布局，将右边的消息布局隐藏
+            holder.leftLayout.setVisibility(View.VISIBLE);
+            holder.rightLayout.setVisibility(View.GONE);
+            holder.leftMsg.setText(msg.getContent());
+        }else if (msg.getType()==Msg.TYPE_SENT){
+            //如果是发出的消息，则显示左边的消息布局，将左边的消息布局隐藏
+            holder.rightLayout.setVisibility(View.VISIBLE);
+            holder.leftLayout.setVisibility(View.GONE);
+            holder.rightMsg.setText(msg.getContent());
+        }
     }
 
     /**
@@ -95,6 +105,6 @@ public class MsgAdapter extends RecyclerView.Adapter<MsgAdapter.ViewHolder> {
      */
     @Override
     public int getItemCount() {
-        return 0;
+        return mMsgList.size();
     }
 }
