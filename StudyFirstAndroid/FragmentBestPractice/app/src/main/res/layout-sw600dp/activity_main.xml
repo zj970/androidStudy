@@ -4,6 +4,12 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
+    <fragment
+            android:id="@+id/news_title_fragment"
+            android:name="com.zj970.fragmentbestpractice.fragment.NewsTitleFragment"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
     <FrameLayout
             android:id="@+id/news_content_layout"
             android:layout_width="0dp"

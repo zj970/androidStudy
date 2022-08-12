@@ -203,3 +203,311 @@ public class NewsContentActivity extends AppCompatActivity {
 ```
 子项的布局也非常简单，只有一个TextView。仔细观察TextView，会发现其中有几个属性是我们之前没有见过,android:padding表示给控件的周围加上补白，这样不至于让文本内容会紧靠在边缘上。android:singleLine设置为true表示让这个TextView只能单行显示。android:ellipsize用于设定当文本的内容超出控件宽度时，文本的缩略方式，这里指定在尾部进行缩略。既然新闻列表和子项的布局都已经创建好了，那么接下来我们就需要一个用于展示新闻列表的地方。这里新建NewsTitleFragment作为展示新闻列表的碎片，代码如下：
 
+```java
+package com.zj970.fragmentbestpractice.fragment;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import com.zj970.fragmentbestpractice.R;
+
+public class NewsTitleFragment extends Fragment {
+    private boolean isTwoPane;
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.news_title_frag,container,false);
+        return view;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (getActivity().findViewById(R.id.news_content_layout) != null){
+            isTwoPane = true;//可以找到news_content_layout 布局时，为双页模式
+        }else{
+            isTwoPane = false;//找不到news_content_layout布局时，为单页模式
+        }
+    }
+}
+
+```
+
+可以看到，NewsTitleFragment中并没有多少代码，在onCreateView()方法中加载了news_title_frag布局，在onActivityCreated()方法，这个方法通过活动中能否找到一个id为news_content_layout的View来判断当前是双页模式还是单页模式，所以我们需要这个id为new_content_layout的View只有双页模式的时候出现，借助刚刚学过的限定符。首先修改activity_main.xml中的代码，如下所示：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    <fragment
+            android:id="@+id/news_title_fragment"
+            android:name="com.zj970.fragmentbestpractice.fragment.NewsTitleFragment"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+</FrameLayout>
+```
+上述代码表示，在单页模式下，只会加载一个新闻标题的碎片，然后新建layout-600dp文件夹，在这个文件夹下再新建一个activity_main.xml文件，代码如下：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    <fragment
+            android:id="@+id/news_title_fragment"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"/>
+    <FrameLayout
+            android:id="@+id/news_content_layout"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="3">
+        <fragment
+                android:id="@+id/news_content_fragment"
+                android:name="com.zj970.fragmentbestpractice.fragment.NewsContentFragment"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+    </FrameLayout>
+
+</LinearLayout>
+```
+
+可以看出，在双页模式下我们同时引入了两个碎片，并将新闻内容的碎片放在了一个FrameLayout布局下，而这个布局的id正是news_content_layout。因此，能够找到这个布局就是双页模式，否则就是单页模式。现在我们还需要在NewsTitleFragment中通过RecyclerView将新闻列表展示出来。我们在NewsTitleFragment中新建一个内部类NewsAdapter作为RecyclerView的适配器，如下所示：
+
+```java
+package com.zj970.fragmentbestpractice.fragment;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.RecyclerView;
+import com.zj970.fragmentbestpractice.NewsContentActivity;
+import com.zj970.fragmentbestpractice.R;
+import com.zj970.fragmentbestpractice.entity.News;
+
+import java.util.List;
+
+public class NewsTitleFragment extends Fragment {
+    private boolean isTwoPane;
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.news_title_frag,container,false);
+        return view;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (getActivity().findViewById(R.id.news_content_layout) != null){
+            isTwoPane = true;//可以找到news_content_layout 布局时，为双页模式
+        }else{
+            isTwoPane = false;//找不到news_content_layout布局时，为单页模式
+        }
+    }
+
+
+    class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.ViewHolder>{
+        private List<News> mNewsList;
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.news_item,parent,false);
+            final ViewHolder viewHolder = new ViewHolder(view);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    News news = mNewsList.get(viewHolder.getAdapterPosition());
+                    if (isTwoPane){
+                        //如果是双页模式，则刷新NewsContentFragment中的内容
+                        NewsContentFragment newsContentFragment = (NewsContentFragment) getFragmentManager().findFragmentById(R.id.news_content_fragment);
+                        newsContentFragment.refresh(news.getTitle(),news.getContent());
+                    }else {
+                        //如果是单页模式，则直接启动NewsContentActivity
+                        NewsContentActivity.actionStart(getActivity(),news.getTitle(),news.getContent());
+                    }
+                }
+            });
+            return viewHolder;
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            News news = mNewsList.get(position);
+            holder.newsTitleText.setText(news.getTitle());
+        }
+
+        @Override
+        public int getItemCount() {
+            return mNewsList.size();
+        }
+
+        public NewsAdapter(List<News> newsList){
+            this.mNewsList = newsList;
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            TextView newsTitleText;
+            public ViewHolder(@NonNull View itemView) {
+                super(itemView);
+                newsTitleText = itemView.findViewById(R.id.news_title);
+            }
+        }
+    }
+}
+
+```
+&emsp;&emsp;RecyclerView的用法已经相当熟练了，需要注意的是我们都是将适配器写成一个独立的类，其实也可以写成内部类的，这里写成内部类的好处是可以直接访问NewsTitleFragment的变量，比如isTwoPane。观察一下onCreateViewHolder()方法中注册的点击事件，首先获取到了点击项的News实例，然后通过isTwoPane变量来判断当前是单页还是双页模式，如果是单页模式就启动一个新的活动去显示新闻内容，如果是双页模式就更新新闻内容碎片的数据。仙子啊就差向RecyclerView中填充数据了。修改NewsTitleFragment代码。如下所示：
+
+```java
+package com.zj970.fragmentbestpractice.fragment;
+
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.zj970.fragmentbestpractice.NewsContentActivity;
+import com.zj970.fragmentbestpractice.R;
+import com.zj970.fragmentbestpractice.entity.News;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class NewsTitleFragment extends Fragment {
+    private boolean isTwoPane;
+
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (getActivity().findViewById(R.id.news_content_layout) != null){
+            isTwoPane = true;//可以找到news_content_layout 布局时，为双页模式
+        }else{
+            isTwoPane = false;//找不到news_content_layout布局时，为单页模式
+        }
+    }
+
+
+    class NewsAdapter extends RecyclerView.Adapter<NewsAdapter.ViewHolder>{
+        private List<News> mNewsList;
+
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.news_item,parent,false);
+            final ViewHolder viewHolder = new ViewHolder(view);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    News news = mNewsList.get(viewHolder.getAdapterPosition());
+                    if (isTwoPane){
+                        //如果是双页模式，则刷新NewsContentFragment中的内容
+                        NewsContentFragment newsContentFragment = (NewsContentFragment) getFragmentManager().findFragmentById(R.id.news_content_fragment);
+                        newsContentFragment.refresh(news.getTitle(),news.getContent());
+                    }else {
+                        //如果是单页模式，则直接启动NewsContentActivity
+                        NewsContentActivity.actionStart(getActivity(),news.getTitle(),news.getContent());
+                    }
+                }
+            });
+            return viewHolder;
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            News news = mNewsList.get(position);
+            holder.newsTitleText.setText(news.getTitle());
+        }
+
+        @Override
+        public int getItemCount() {
+            return mNewsList.size();
+        }
+
+        public NewsAdapter(List<News> newsList){
+            this.mNewsList = newsList;
+        }
+
+        class ViewHolder extends RecyclerView.ViewHolder {
+            TextView newsTitleText;
+            public ViewHolder(@NonNull View itemView) {
+                super(itemView);
+                newsTitleText = itemView.findViewById(R.id.news_title);
+            }
+        }
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.news_title_frag,container,false);
+        RecyclerView newsTitleRecyclerView = view.findViewById(R.id.news_title_recycle_view);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
+        newsTitleRecyclerView.setLayoutManager(layoutManager);
+        NewsAdapter adapter = new NewsAdapter(getNews());
+        newsTitleRecyclerView.setAdapter(adapter);
+        return view;
+    }
+
+    private List<News> getNews(){
+        List<News> newsList = new ArrayList<>();
+        for (int i = 0; i <= 50; i++) {
+            News news = new News();
+            news.setTitle("This is news title "+i);
+            news.setContent(getRandomLengthContent("This is news content "+i));
+        }
+        return newsList;
+    }
+
+    private String getRandomLengthContent(String content){
+        Random random = new Random();
+        int length = random.nextInt(20)+1;
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            builder.append(content);
+        }
+        return builder.toString();
+    }
+}
+
+```
+
+&emsp;&emsp;可以看到，在onCreateView()方法中添加了RecyclerView标准的使用方法，在碎片中使用RecyclerView和在活动中使用几乎是一摸一样。另外这里调用了getNews()方法来初始化50条模拟新闻数据，同样使用了一个getRandomLengthContent()方法来随机生成模拟新闻的长度，以保证每条新闻的内容差距比较大。
+
+- 手机上效果图：
+
+![img.png](img.png)
+
+![img_1.png](img_1.png)
+
+- 平板效果图
+
+![img_2.png](img_2.png)
+
+# 小结与总结
+
+&emsp;&emsp;首先我们掌握了碎片的常见用法，随后又学习了碎片生命周期的相关内容以及动态加载布局的技巧。
