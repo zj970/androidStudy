@@ -334,5 +334,3 @@ public class MyBroadcastReceiver extends BroadcastReceiver {
 
 </manifest>
 ```
-
-可以看到，这里让MyBroadcastReceiver接收一条值为com.zj970.broadcasttest.MY_BROADCAST的广播，因此待会儿在发送广播的时候，我们就需要
