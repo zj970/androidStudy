@@ -128,3 +128,37 @@ public class MainActivity extends AppCompatActivity {
 双击文件就会下载：
 
 ![img_2.png](img_2.png)
+
+### 6.2.2 从文件中读取数据
+
+&emsp;&emsp;类似于将数据存储到文件中，Context类还提供了一个openFileInput()方法，用于从文件中读取数据。这个方法要比openFIleOutput()简单一些，它只接收一个参数，即要读取的文件名，然后系统会自动去到/data/data/<package_nem>files/目录下去加载这个文件，并返回一个FileInputStream对象，得到这个对象之后再通过java流的方式就可以将数据取出来了。下面是示例代码
+
+```
+public String load(){
+    FileInputStream in = null;
+    BUfferedReader reader = null;
+    StringBuuilder content = new StringBulder();
+    try {
+        in = openFileInput("data");
+        reader = new BufferedReader(new InputStreamReader(in));
+        String line = "";
+        while ((line = reader.readLine()) != null){
+        content.append(line);
+        }
+     } catch (IOException e){
+        e.printStrackTrace();
+     } finally {
+        if (reader != null){
+            try {
+                reader.close();
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+        
+     }
+     return content.toString();
+     
+}
+        
+```
