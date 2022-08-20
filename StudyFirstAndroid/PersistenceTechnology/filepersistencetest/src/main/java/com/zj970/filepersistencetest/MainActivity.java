@@ -1,7 +1,9 @@
 package com.zj970.filepersistencetest;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.widget.EditText;
+import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -19,6 +21,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         edit = findViewById(R.id.edit);
+        String inputText = load();
+        if (!TextUtils.isEmpty(inputText)){
+            edit.setText(inputText);
+            edit.setSelection(inputText.length());
+            Toast.makeText(this,"Restoring succeeded",Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override
@@ -46,5 +54,10 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+    }
+
+    public String load(){
+        StringBuilder content = new StringBuilder();
+        return  content.toString();
     }
 }
