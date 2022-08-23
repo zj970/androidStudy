@@ -1,3 +1,4 @@
 rootProject.name = "DatabaseTest"
 include ':app'
 include ':filepersistencetest'
+include ':sharedpreferencestest'
