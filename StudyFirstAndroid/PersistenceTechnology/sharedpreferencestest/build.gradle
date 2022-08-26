@@ -3,13 +3,13 @@ plugins {
 }
 
 android {
-    compileSdkVersion 31
-    buildToolsVersion "33.0.0"
+    compileSdkVersion 28
+    buildToolsVersion '28.0.2'
 
     defaultConfig {
         applicationId "com.example.sharedpreferencestest"
         minSdkVersion 22
-        targetSdkVersion 31
+        targetSdkVersion 28
         versionCode 1
         versionName "1.0"
 

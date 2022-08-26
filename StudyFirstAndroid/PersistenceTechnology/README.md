@@ -337,7 +337,6 @@ public class MainActivity extends AppCompatActivity {
 &emsp;&emsp;使用SharedPreferences来存储数据是非常简单的，不过下面还有更好的消息，其实从SharedPreferences文件中读取数据会更加简单。SharedPreferences对象中提供了一系列的get方法，用于对存储的数据进行读取，每种get方法都对应了SharedPreferences.Editor中的一种put方法，比如读取一个布尔型数据就使用getBoolean()方法，读取一个字符串就使用getString()方法。这些get方法都接收两个参数，第一个参数是键，传入存储数据时使用的键就可以得到相应的值了；第二个参数是默认值，即表示当传入的键找不到对应的值会以什么样的默认值进行返回。在上述基础上修改activity_main.xml
 
 ```xml
-
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
@@ -358,4 +357,52 @@ public class MainActivity extends AppCompatActivity {
             android:text="Rstore Dat"/>
 </LinearLayout>
 ```
-这里增加了一个还原数据的按钮
+这里增加了一个还原数据的按钮，我们希望通过点击这个按钮来从SharedPreferences文件中读取数据。修改MainActivity中的代码
+
+```java
+package com.example.sharedpreferencestest;
+
+import android.content.SharedPreferences;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+
+public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Button saveButton = findViewById(R.id.save_data);
+        saveButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SharedPreferences.Editor editor = getSharedPreferences("data",MODE_PRIVATE).edit();
+                editor.putString("name","Tom");
+                editor.putInt("age",19);
+                editor.putBoolean("married",false);
+                editor.apply();
+            }
+        });
+
+        Button restoreData = findViewById(R.id.restore_data);
+        restoreData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SharedPreferences preferences = getSharedPreferences("data",MODE_PRIVATE);
+                String name = preferences.getString("name","");
+                int age = preferences.getInt("age",0);
+                boolean morried = preferences.getBoolean("married",false);
+                Log.d(TAG, "name: "+name);
+                Log.d(TAG, "age"+age);
+                Log.d(TAG, "morried is " + morried);
+            }
+        });
+    }
+}
+```
+&emsp;&emsp;可以看到，我们在还原数据按钮的点击事件中首先通过getSharedPreferences()方法得到了SharePreferences对象，然后分别调用它的getString()、getInt()和getBoolean()方法，去获取前面所存储的姓名、年龄和是否已婚，如果没有找到相应的值，就会使用方法中传入的默认值来代替，最后用Log将这些值打印出来。
+
+SharePreferences存储确实要比文本存储简单方便了许多，应用场景也多了不少，比如很多应用程序的偏好设置功能其实都使用到了SharePreferences技术。那么下面就编写一个记住密码的功能，通过这个例子能够加深你对sharedPreferences的理解。 
