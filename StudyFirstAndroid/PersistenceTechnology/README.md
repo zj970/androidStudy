@@ -406,3 +406,5 @@ public class MainActivity extends AppCompatActivity {
 &emsp;&emsp;可以看到，我们在还原数据按钮的点击事件中首先通过getSharedPreferences()方法得到了SharePreferences对象，然后分别调用它的getString()、getInt()和getBoolean()方法，去获取前面所存储的姓名、年龄和是否已婚，如果没有找到相应的值，就会使用方法中传入的默认值来代替，最后用Log将这些值打印出来。
 
 SharePreferences存储确实要比文本存储简单方便了许多，应用场景也多了不少，比如很多应用程序的偏好设置功能其实都使用到了SharePreferences技术。那么下面就编写一个记住密码的功能，通过这个例子能够加深你对sharedPreferences的理解。 
+
+### 6.3.3 实现记住密码功能
