@@ -4,11 +4,11 @@ plugins {
 
 android {
     compileSdkVersion 28
-    buildToolsVersion '28.0.2'
+    buildToolsVersion '28.0.3'
 
     defaultConfig {
-        applicationId "com.example.sharedpreferencestest"
-        minSdkVersion 22
+        applicationId "com.zj970.broadcastbestpractice"
+        minSdkVersion 21
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
@@ -27,12 +27,14 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
     dependenciesInfo {
-        includeInApk true
-        includeInBundle true
+        includeInApk false
+        includeInBundle false
     }
+    ndkVersion '21.1.6352462'
 }
 
 dependencies {
+
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'com.google.android.material:material:1.2.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
