@@ -409,4 +409,148 @@ SharePreferences存储确实要比文本存储简单方便了许多，应用场�
 
 ### 6.3.3 实现记住密码功能
 
-&emsp;&emsp;既然是实现记住密码的功能，那么我们就不需要从头去写了，因为在上一章中的最佳实践部分已经编写过一个登录界面了，有可以重用的代码为什么不用呢？
+&emsp;&emsp;既然是实现记住密码的功能，那么我们就不需要从头去写了，因为在上一章中的最佳实践部分已经编写过一个登录界面了，有可以重用的代码为什么不用呢？修改activity_login.xml中的代码，如下所示：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="60dp">
+        <TextView
+                android:layout_width="90dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:textSize="18sp"
+                android:text="Account: "/>
+        <EditText
+                android:id="@+id/account"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_gravity="center_vertical"/>
+    </LinearLayout>
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="60dp">
+        <TextView
+                android:layout_width="90dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:textSize="18sp"
+                android:text="Password: "/>
+        <EditText
+                android:id="@+id/password"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_gravity="center_vertical"
+                android:inputType="textPassword"/>
+    </LinearLayout>
+
+    <Button
+            android:id="@+id/login"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="Login"
+            android:textAllCaps="false"/>
+    <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        <CheckBox
+                android:id="@+id/remember_pass"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+        <TextView android:layout_height="wrap_content"
+                  android:layout_width="wrap_content"
+                  android:textSize="18sp"
+                  android:text="Remember password"/>
+
+    </LinearLayout>
+</LinearLayout>
+```
+
+&emsp;&emsp;这里使用到了这个一个新控件了CheckBox。这是一个复选框框架，用户可以通过点击的方式来进行选中和取消，我们就使用这个控件来表示用户是否需要记住密码。然后修改LoginActivity中的代码，如下所示：
+
+```java
+package com.example.broadcastbestpractice;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.view.View;
+import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.EditText;
+import android.widget.Toast;
+import com.zj970.broadcastbestpractice.R;
+
+public class LoginActivity extends BaseActivity {
+
+    private EditText accountEidt;
+    private EditText passwordEdit;
+    private Button login;
+    private SharedPreferences pref;
+    private SharedPreferences.Editor editor;
+    private CheckBox rememberPass;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_login);
+        pref = PreferenceManager.getDefaultSharedPreferences(this);
+        accountEidt = findViewById(R.id.account);
+        passwordEdit = findViewById(R.id.password);
+        rememberPass = findViewById(R.id.remember_pass);
+        login = findViewById(R.id.login);
+        boolean isRemember = pref.getBoolean("remember_password",false);
+        if (isRemember){
+            //将账号和密码都设置到文本框中
+            String account = pref.getString("account","");
+            String password = pref.getString("password","");
+            accountEidt.setText(account);
+            rememberPass.setText(password);
+            rememberPass.setChecked(true);
+        }
+        login.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String account = accountEidt.getText().toString();
+                String password = passwordEdit.getText().toString();
+                
+                //默认账户是admin密码是123456
+                if (account.equals("admin") && password.equals("123456")){
+                    editor = pref.edit();
+                    if (rememberPass.isChecked()){
+                        //检查复选框是否被选中
+                        editor.putBoolean("remember_password",true);
+                        editor.putString("account",account);
+                        editor.putString("password",password);
+                    } else {
+                        editor.clear();
+                    }
+                    editor.apply();
+                    Intent intent = new Intent(LoginActivity.this,MainActivity.class);
+                    startActivity(intent);
+                    finish();
+                }else {
+                    Toast.makeText(LoginActivity.this, "account or password is invalid", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+}
+```
+
+&emsp;&emsp;可以看到，这里首先在onCreate()方法中获取到了SharedPreferences对象，然后调用它的getBoolean()方法去获取remember_password这个键对应的值。一开始当然不存在对应的值了，所以会使用默认值false，这样就什么都不会发生。接着在登录成功之后，会调用CheckBox的isChecked()方法来检查复选框是否被选中，如果被选中了，则表示用户想要记住密码，这时将remember_password设置为true，然后把account和password对应的值都存入到SharedPreferences文件当中并提交。如果没有被选中，就简单地调用一下clear()方法，将SharedPreferences文件的数据全部清除掉。
+
+&emsp;&emsp;当用户选中了记住密码复选框，并成功登录一次之后，remember_password键对应的值时true了，这个时候如果再重新启动登录界面，就会从SharePreferences文件中保存的账号和密码都读取出来，并填充到文本输入框中，然后把记住密码复选框选中，这样就完成了记住密码功能了。现在重新运行一下程序，可以看到界面上多出了一个记住密码复选框。然后输入账号，密码。选中记住密码复选框，点击登录。就会跳转到MainActivity。接着在MainActivity中发出一条强制下线广播，会让程序重新回到登录界面，此时账号密码都已经自动填充到界面
