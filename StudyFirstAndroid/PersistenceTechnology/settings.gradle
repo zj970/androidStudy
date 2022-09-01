@@ -1,5 +1,4 @@
-rootProject.name = "DatabaseTest"
-include ':app'
-include ':filepersistencetest'
+rootProject.name = "PersistenceTechnology"
 include ':sharedpreferencestest'
 include ':BroadcastBestPractice'
+include ':filepersistencetest'
