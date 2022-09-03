@@ -4,15 +4,15 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Toast;
-import com.zj970.broadcastbestpractice.R;
 
 public class LoginActivity extends BaseActivity {
-
+    private static final String TAG = "LoginActivity";
     private EditText accountEidt;
     private EditText passwordEdit;
     private Button login;
@@ -35,7 +35,8 @@ public class LoginActivity extends BaseActivity {
             String account = pref.getString("account","");
             String password = pref.getString("password","");
             accountEidt.setText(account);
-            rememberPass.setText(password);
+            passwordEdit.setText(password);
+            Log.d(TAG, "onCreate: "+password);
             rememberPass.setChecked(true);
         }
         login.setOnClickListener(new View.OnClickListener() {
