@@ -12,6 +12,7 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/BroadcastBestPractice" />
+            <option value="$PROJECT_DIR$/databasetest" />
             <option value="$PROJECT_DIR$/filepersistencetest" />
             <option value="$PROJECT_DIR$/sharedpreferencestest" />
           </set>

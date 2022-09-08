@@ -565,4 +565,17 @@ public class LoginActivity extends BaseActivity {
 
 &emsp;&emsp;Android为了让我们能够更加方便地管理数据库，专门提供了一个SQLiteOpenHelper帮助类，借助这个类就可以非常简单地对数据库进行创建和升级。SQLiteOpenHelper是一个抽象类，这意味着我们如果要使用它的话，就需要创建一个自己的帮助类去继承它。SQLiteOpenHelper中有两个抽象方法，分别是onCreate()和onUpgrade()，我们必须在自己的帮助类里面重写这两个方法，然后分别在这两个方法中去实现创建、升级数据库的逻辑。SQLiteOpenHelper中还有两个非常重要的实例方法：getReadableDatabase()和getWritableDatabase()。这两个方法都可以创建或打开一个现有的数据库（如果数据库已存在则直接打开，否则就创建一个新的数据库），并返回一个可对数据库进行读写操作的对象。不同的是，当数据库不可写入的时候（如磁盘空间已满），getReadableDatabase()方法返回的对象将以只读的方法打开数据库，而getWritableDatabase()方法则将出现异常。
 
-&emsp;&emsp;SQLiteOpenHelper中有两个构造方法可供重写，一般使用参数少一点的那个构造方法即可。这个构造方法中接收4个参数，第一个参数是Context，必须要有它才能对数据库进行操作。第二个参数是数据库名，创建数据库时使用的就是这里指定的名称。第三个参数允许我们在查询数据的时候返回一个自定义的Cursor
+&emsp;&emsp;SQLiteOpenHelper中有两个构造方法可供重写，一般使用参数少一点的那个构造方法即可。这个构造方法中接收4个参数，第一个参数是Context，必须要有它才能对数据库进行操作。第二个参数是数据库名，创建数据库时使用的就是这里指定的名称。第三个参数允许我们在查询数据的时候返回一个自定义的Cursor，一般都是传入null。第四个参数表示当前数据库的版本号，可用于对数据库进行升级操作。构建出SQLiteOpenHelper的实例之后，再调用它的getReadableDatabase()或getWritableDatabase()方法就能创建数据库了。数据文件会存放在/data/data/<package name>/databases/目录下。此时，重写的onCreate()方法也会得到执行，所以通常会在这里去处理一些创建表的逻辑。
+
+&emsp;&emsp;这里我们希望创建一个名为BookStore.db的数据库，然后在这个数据库中新建一张Book表，表中有id(主键)、作者、价格、页数和书名等列。创建数据库表当然还是需要用建表语句的，这里也是要考虑一下你的SQL基本功，Book表的建表语句如下所示：
+
+```sql
+create table Book(
+    id integer primary key auto_increment,
+    author text,
+    price real,
+    pages integer,
+    name text
+)
+```
+&emsp;&emsp;只要你对SQL方面的知识稍微了解一些，上面的建表语句应该不难。SQLite不像其他的数据库拥有众多复杂的数据类型，它的数据类型很简单，integer表示整型,real表示浮点型,text表示文本类型,blob表示二进制类型。另外，上述建表语句中我们还使用了primary key 将id列设为主键，并用autoincrement关键字表示id列是自增长的。

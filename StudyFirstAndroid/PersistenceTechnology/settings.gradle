@@ -2,3 +2,4 @@ rootProject.name = "PersistenceTechnology"
 include ':sharedpreferencestest'
 include ':BroadcastBestPractice'
 include ':filepersistencetest'
+include ':databasetest'
