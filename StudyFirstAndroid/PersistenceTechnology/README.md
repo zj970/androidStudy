@@ -273,7 +273,7 @@ public class MainActivity extends AppCompatActivity {
 
 - PreferenceManager类中的getDefaultSharedPreferences()方法
 
-&emso;&emsp;这是一个静态的方法，它接收一个Context参数，并自动使用当前应用程序的包名作为前缀来命名SharedPreferences文件。得到了SharedPreferences对象之后，就可以开始向SharedPreferences文件中存储数据了，主要分为3步实现。
+&emsp;&emsp;这是一个静态的方法，它接收一个Context参数，并自动使用当前应用程序的包名作为前缀来命名SharedPreferences文件。得到了SharedPreferences对象之后，就可以开始向SharedPreferences文件中存储数据了，主要分为3步实现。
 
 1. 调用SharedPreferences对象的edit()方法来获取一个SharedPreferences.Editor对象。
 2. 向SharedPreferences.Editor对象中添加数据，比如添加一个布尔型数据就使用putBoolean()方法，添加一个字符串则使用putString()方法，以此类推。
@@ -578,4 +578,42 @@ create table Book(
     name text
 )
 ```
-&emsp;&emsp;只要你对SQL方面的知识稍微了解一些，上面的建表语句应该不难。SQLite不像其他的数据库拥有众多复杂的数据类型，它的数据类型很简单，integer表示整型,real表示浮点型,text表示文本类型,blob表示二进制类型。另外，上述建表语句中我们还使用了primary key 将id列设为主键，并用autoincrement关键字表示id列是自增长的。
+&emsp;&emsp;只要你对SQL方面的知识稍微了解一些，上面的建表语句应该不难。SQLite不像其他的数据库拥有众多复杂的数据类型，它的数据类型很简单，integer表示整型,real表示浮点型,text表示文本类型,blob表示二进制类型。另外，上述建表语句中我们还使用了primary key 将id列设为主键，并用autoincrement关键字表示id列是自增长的。新建MyDatabaseHelper类继承自SQLiteOpenHelper,代码如下：
+
+```java
+package com.example.databasetest;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.widget.Toast;
+import androidx.annotation.Nullable;
+
+import java.util.concurrent.Callable;
+
+public class MyDatabaseHelper extends SQLiteOpenHelper {
+    public static final String CREATE_BOOK = "create table Book ("
+            +"id integer primary key autoincrement,"
+            +"author text,"
+            +"price real,"
+            +"name text)";
+    private Context mContext;
+
+    public MyDatabaseHelper(@Nullable Context context, @Nullable String name, @Nullable SQLiteDatabase.CursorFactory factory, int version) {
+        super(context, name, factory, version);
+        mContext = context;
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL(CREATE_BOOK);
+        Toast.makeText(mContext, "Create succeeded", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
+    }
+}
+
+```
