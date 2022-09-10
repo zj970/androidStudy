@@ -617,3 +617,48 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
 }
 
 ```
+
+&emsp;&emsp;可以看到，我们把建表语句定义成了一个字符串常量，然后在onCreate()方法中又调用了SQLiteDatabase的execSQL()方法去执行这条建表语句，并弹出一个Toast提示创建成功，这样就可以保证在数据库创建完成的同时还能成功创建Book表。现在修改activity_main,xml中的代码，如下所示：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    <Button android:id="@+id/create_database"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Create database"/>
+</LinearLayout>
+```
+&emsp;&emsp;布局文件很简单，就是加入了一个按钮，用于创建数据库。最后修改MainActivity中的代码，如何所示：
+
+```java
+package com.example.databasetest;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+
+public class MainActivity extends Activity {
+    private MyDatabaseHelper dbHelper;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        dbHelper = new MyDatabaseHelper(this,"BookStore.db",null,1);
+        Button createDatabase = findViewById(R.id.create_database);
+        createDatabase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dbHelper.getWritableDatabase();
+            }
+        });
+    }
+}
+```
+
+&emsp;&emsp;这里我们在onCreate()方法中创建了一个MyDatabaseHelper对象，并且通过构造函数的参数将数据库名指定为BookStore.db这个数据库，于是会创建该数据库并调用MyDatabaseHelper中的onCreate()方法，这样Book表也就得到了创建，然后会弹出一个Toast提示创建成功。再次点Create database按钮时，会发现此时已经存在BookStore.db数据库了，因此不会再创建一次。此时BookStore.db文件，Book表无法通过File Explorer看到。因此这次我们准备
