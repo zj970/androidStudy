@@ -661,4 +661,13 @@ public class MainActivity extends Activity {
 }
 ```
 
-&emsp;&emsp;这里我们在onCreate()方法中创建了一个MyDatabaseHelper对象，并且通过构造函数的参数将数据库名指定为BookStore.db这个数据库，于是会创建该数据库并调用MyDatabaseHelper中的onCreate()方法，这样Book表也就得到了创建，然后会弹出一个Toast提示创建成功。再次点Create database按钮时，会发现此时已经存在BookStore.db数据库了，因此不会再创建一次。此时BookStore.db文件，Book表无法通过File Explorer看到。因此这次我们准备换一种查看方式，使用adb shell来对数据库和表的创建情况进行检查。adb是Android SDk 中自带的一个调试工具，使用这个工具可以直接对连接在电脑上的手机或模拟器进行调试操作。它存放在sdk的platform-tools目录下，如果想要在命令行中使用这个工具，就需要先把它的路径配置到环境变量里。然后输入adb shell 进入设备的控制台，cd到应用的安装目录databases/下使用ls查看该目录的文件，这个目录下出现了两个数据库文件，一个正是我们创建的BookStore.db，而另一个BookStore.db-journal则是为了让数据库能够支持事务而产生的临时日志文件，通常情况下这个文件的大小都是0字节。接下来借助sqlite命令打开数据库，只需要输入sqlite3，后面加入数据库名即可。这时就已经打开了BookStore.db数据库，现在就可以对这个数据库中
+&emsp;&emsp;这里我们在onCreate()方法中创建了一个MyDatabaseHelper对象，并且通过构造函数的参数将数据库名指定为BookStore.db这个数据库，于是会创建该数据库并调用MyDatabaseHelper中的onCreate()方法，这样Book表也就得到了创建，然后会弹出一个Toast提示创建成功。再次点Create database按钮时，会发现此时已经存在BookStore.db数据库了，因此不会再创建一次。此时BookStore.db文件，Book表无法通过File Explorer看到。因此这次我们准备换一种查看方式，使用adb shell来对数据库和表的创建情况进行检查。adb是Android SDk 中自带的一个调试工具，使用这个工具可以直接对连接在电脑上的手机或模拟器进行调试操作。它存放在sdk的platform-tools目录下，如果想要在命令行中使用这个工具，就需要先把它的路径配置到环境变量里。然后输入adb shell 进入设备的控制台，cd到应用的安装目录databases/下使用ls查看该目录的文件，这个目录下出现了两个数据库文件，一个正是我们创建的BookStore.db，而另一个BookStore.db-journal则是为了让数据库能够支持事务而产生的临时日志文件，通常情况下这个文件的大小都是0字节。接下来借助sqlite命令打开数据库，只需要输入sqlite3，后面加入数据库名即可。这时就已经打开了BookStore.db数据库，现在就可以对这个数据库中的表进行管理了。首先来看一下目前数据库中有哪些表，输入table命令，如图所示
+
+![img_5.png](img_5.png)
+
+![img_6.png](img_6.png)
+
+此时数据库中有两张表（此处无root且手机无sqlite3），android_metadata表是每个数据库中都会自动生成的，不用管它。而另外一张Book表就是我们在MyDatabaseHelper中创建的，还可以通过.schema命令来查看他们的建表命令。之后键入.exit或.quit命令可以退出数据库的编辑，再键入exit命令就可以退出设备控制台了。
+
+### 6.4.2 升级数据库
+

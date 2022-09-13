@@ -6,8 +6,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.widget.Toast;
 import androidx.annotation.Nullable;
 
-import java.util.concurrent.Callable;
-
 public class MyDatabaseHelper extends SQLiteOpenHelper {
     public static final String CREATE_BOOK = "create table Book ("
             +"id integer primary key autoincrement,"
