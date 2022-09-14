@@ -671,3 +671,4 @@ public class MainActivity extends Activity {
 
 ### 6.4.2 升级数据库
 
+&emsp;&emsp;如果你够仔细，一定会发现MyDatabaseHelper中还有一个空方法呢！onUpgrade()方法是用于对数据库进行升级的，它在整个数据库的当中起着非常重要的作用。目前DatabaseTest项目中已经有一张Book表用于存放于输的各种详细数据，如果我们想再加一张Category表中有id(主键)、分类名和分类代码这
