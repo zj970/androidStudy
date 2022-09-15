@@ -671,4 +671,134 @@ public class MainActivity extends Activity {
 
 ### 6.4.2 升级数据库
 
-&emsp;&emsp;如果你够仔细，一定会发现MyDatabaseHelper中还有一个空方法呢！onUpgrade()方法是用于对数据库进行升级的，它在整个数据库的当中起着非常重要的作用。目前DatabaseTest项目中已经有一张Book表用于存放于输的各种详细数据，如果我们想再加一张Category表中有id(主键)、分类名和分类代码这
+&emsp;&emsp;如果你够仔细，一定会发现MyDatabaseHelper中还有一个空方法呢！onUpgrade()方法是用于对数据库进行升级的，它在整个数据库的当中起着非常重要的作用。目前DatabaseTest项目中已经有一张Book表用于存放于输的各种详细数据，如果我们想再加一张Category表中有id(主键)、分类名和分类代码这几个列，那么建表语句就就写成：
+
+```sql
+create table Category(
+    id integer primary key auto_increment,
+    category_name text,
+    categpry_code integer
+)
+```
+接下来我们将这条建表语句添加到MyDatabaseHelper中，代码如下所示：
+
+```java
+package com.example.databasetest;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.widget.Toast;
+import androidx.annotation.Nullable;
+
+public class MyDatabaseHelper extends SQLiteOpenHelper {
+    public static final String CREATE_BOOK = "create table Book ("
+            +"id integer primary key autoincrement,"
+            +"author text,"
+            +"price real,"
+            +"name text)";
+
+    public static final String CREATE_CATEGORY = "create table Category (" +
+            "id integer primary key autoincrement," +
+            "author text," +
+            "pages integer," +
+            "name text )";
+
+    private Context mContext;
+
+    public MyDatabaseHelper(@Nullable Context context, @Nullable String name, @Nullable SQLiteDatabase.CursorFactory factory, int version) {
+        super(context, name, factory, version);
+        mContext = context;
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL(CREATE_BOOK);
+        db.execSQL(CREATE_CATEGORY);
+        Toast.makeText(mContext, "Create succeeded", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+
+    }
+}
+
+```
+
+&emsp;&emsp;看上去好像都挺对的？现在我们重新运行一下程序，并点击Create database按钮，竟然没有弹出创建成功的提示。当然，也可以通过adb工具到数据库中再去检查一下，这样你会更加地确定Category表没有创建成功！其实没有创建成功的原因不难思考，因为此时BookStore.db数据库已经存在了，之后不管我们怎样点击Create database按钮，MyDatabaseHelper中的onCreate()方法都不会再次执行，此时新添加的表也就无法得到创建了。解决这个问题的办法也非常简单，只需要将程序卸载掉，然后重新运行，这是BookStore.db数据库已经不存在，如果点击Create database按钮，MyDatabaseHelper中的onCreate()方法就会执行，这时Category表就可以创建成功了。不过，通过卸载程序的方式来新增一张表的方法过于极端，其实我们只需要巧妙地御用SQLiteOpenHelper的升级功能就可以轻松解决这个问题。修改MyDatabaseHelper中的代码：
+
+```java
+package com.example.databasetest;
+
+import android.content.Context;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.widget.Toast;
+import androidx.annotation.Nullable;
+
+public class MyDatabaseHelper extends SQLiteOpenHelper {
+    public static final String CREATE_BOOK = "create table Book ("
+            +"id integer primary key autoincrement,"
+            +"author text,"
+            +"price real,"
+            +"name text)";
+
+    public static final String CREATE_CATEGORY = "create table Category (" +
+            "id integer primary key autoincrement," +
+            "author text," +
+            "pages integer," +
+            "name text )";
+
+    private Context mContext;
+
+    public MyDatabaseHelper(@Nullable Context context, @Nullable String name, @Nullable SQLiteDatabase.CursorFactory factory, int version) {
+        super(context, name, factory, version);
+        mContext = context;
+    }
+
+    @Override
+    public void onCreate(SQLiteDatabase db) {
+        db.execSQL(CREATE_BOOK);
+        db.execSQL(CREATE_CATEGORY);
+        Toast.makeText(mContext, "Create succeeded", Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        db.execSQL("drop table if exists Book");
+        db.execSQL("drop table if exists Category");
+        onCreate(db);
+    }
+}
+
+```
+
+可以看到，我们再onUpgrade()方法中执行了两条DROP语句，如果发现数据库中已经存在Book表或Category表了，就将这两张表删除掉，然后再调用onCreate()方法重新创建。这里先将已经存在的表删除掉，因为如果在创建表时发现这张表已经存在了，就会直接报错。接下来的问题就是如何让onUpgrade()方法能供执行了，还记得SQLiteOpenHelper的构造方法里接收的第四个参数吗？它表示当前数据库的版本号，之前我们传入的是1，现在只要传入一个比1大的数，就可以让onUpgrade()方法得到执行了，修改MainActivity中的代码，如下：
+
+```java
+package com.example.databasetest;
+
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+
+public class MainActivity extends Activity {
+    private MyDatabaseHelper dbHelper;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        dbHelper = new MyDatabaseHelper(this,"BookStore.db",null,2);
+        Button createDatabase = findViewById(R.id.create_database);
+        createDatabase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dbHelper.getWritableDatabase();
+            }
+        });
+    }
+}
+```
+这里将数据库版本号指定为2，表示我们对数据库进行升级了。现在重新运行程序，并点击Create database按钮，这时就会再次弹出创建成功的提示。为了验证一下Category表是不是已经创建成功了，我们在adb shell中打开BookStore.db数据库，然后键入.table命令（这里效果图也是没有）。
