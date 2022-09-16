@@ -802,3 +802,7 @@ public class MainActivity extends Activity {
 }
 ```
 这里将数据库版本号指定为2，表示我们对数据库进行升级了。现在重新运行程序，并点击Create database按钮，这时就会再次弹出创建成功的提示。为了验证一下Category表是不是已经创建成功了，我们在adb shell中打开BookStore.db数据库，然后键入.table命令（这里效果图也是没有）。
+
+###  6.4.3 添加数据
+
+&emsp;&emsp;现在你已经掌握了创建和升级数据库的方法，接下来就该学习一下如何对表中的数据进行操作了。其实我们可以对数据进行的操作无非有4种，即CRUD。其中C代表(Create)，R代表查询(Retriece)
