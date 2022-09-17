@@ -805,4 +805,79 @@ public class MainActivity extends Activity {
 
 ###  6.4.3 添加数据
 
-&emsp;&emsp;现在你已经掌握了创建和升级数据库的方法，接下来就该学习一下如何对表中的数据进行操作了。其实我们可以对数据进行的操作无非有4种，即CRUD。其中C代表(Create)，R代表查询(Retriece)
+&emsp;&emsp;现在你已经掌握了创建和升级数据库的方法，接下来就该学习一下如何对表中的数据进行操作了。其实我们可以对数据进行的操作无非有4种，即CRUD。其中C代表(Create)，R代表查询(Retrieve)，U代表更新(Update)，D代表删除(Delete)。每一种操作又各自对应了一种SQL命令，如果你比较熟悉SQL语言的话，一定会知道添加数据时使用insert，查询数据时使用select，更新数据时使用update，删除数据时使用delete。而Android提供了一系列辅助性方法打，使得在Android中即使不去编写SQL语句，也能轻松完成所有的CRUD操作。前面我们已经知道，调用SQLiteOpenHelper的getReadableDatabase()方法或getWritableDatabase()方法是可以用于创建和升级数据库的，不仅如此，这两个方法还都会返回一个SQliteDatabase对象，借助这个对象就可可以对数据进行CRUD操作了。首先学习一下如何向数据库中添加数据，SQLiteDatabase中提供了一个insert()方法，这个方法就是专门用于添加数据的。它接收3个参数，第一个参数时表名，，我们希望向哪张表中添加数据，这里就传入该表的名字。第二个参数用于在未指定添加数据的情况下给某些可为空的列自动赋值，一般我们用不到这个功能，直接传入null即可。第三个参数是一个ContValues对象，它提供了一些列的put()方法重载，用于向ContentValues中添加数据，只需要将表中的每个列名以及相应的待添加数据传入即可，首先修改activity_main.xml中的代码，如下所示：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    <Button android:id="@+id/create_database"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Create database"/>、
+    <Button
+            android:id="@+id/add_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add data"
+            android:textAllCaps="false"/>
+</LinearLayout>
+```
+可以看到，我们在布局文件中又新增了一个按钮，稍后就会在这个按钮的点击事件里编写添加数据的逻辑，接着修改MainActivity中的代码：
+
+```java
+package com.example.databasetest;
+
+import android.app.Activity;
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+
+public class MainActivity extends Activity {
+    private MyDatabaseHelper dbHelper;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        dbHelper = new MyDatabaseHelper(this,"BookStore.db",null,2);
+        Button createDatabase = findViewById(R.id.create_database);
+        createDatabase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dbHelper.getWritableDatabase();
+            }
+        });
+
+        Button addData = findViewById(R.id.add_data);
+        addData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SQLiteDatabase database = dbHelper.getWritableDatabase();
+                ContentValues values = new ContentValues();
+
+                //开始组装第一条数据
+                values.put("name","The Da Vinci Code");
+                values.put("author","Dan Brown");
+                values.put("pages",454);
+                values.put("price",16.96);
+                database.insert("Book",null,values); //插入第一条数据
+                values.clear();
+                //开始组装第二条数据
+                values.put("name","The Lost Symbol");
+                values.put("author","Dan Brown");
+                values.put("pages",510);
+                values.put("price",19.95);
+                database.insert("Book",null,values); //插入第二条数据
+            }
+        });
+    }
+}
+```
+
+&emsp;&emsp;在添加数据按钮的点击事件里面，我们先获取到了SQLiteDatabase对象，然后使用ContentValues来对要添加的数据进行组装。如果你比较细心的话就会发现，这里只对Book表中的其中四列的数据进行了封装，id那一列并没有给它赋值。这是因为在前面创建表的时候，我们就给id列设置为了自增长了。它的值会在入库的时候自动生成，所以不需要手动给他赋值了。接下来就调用了insert()方法将数据添加到表中，注意我们这里实际上添加了两台哦数据，上述代码使用了ConttentValues分别组装了两次不同的内容，并调用两次inser()方法。
