@@ -888,3 +888,30 @@ public class MainActivity extends Activity {
 
 &emsp;&emsp;那么接下来我们仍然是在DatabaseTest项目的基础上修改，看一下更新数据的具体用法。比如说刚才添加到数据库里的第一本书，由于过了畅销季，卖的不是很火了，现在需要通过降低价格的方式来吸引到更多的顾客，我们应该怎么操作呢？首先修改activity_main.xml中的代码。
 
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    <Button android:id="@+id/create_database"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Create database"/>、
+    <Button
+            android:id="@+id/add_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add data"
+            android:textAllCaps="false"/>
+
+    <Button
+            android:id="@+id/update_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Update data"
+            android:textAllCaps="false"/>
+    
+</LinearLayout>
+```
