@@ -11,13 +11,13 @@ public class MyDatabaseHelper extends SQLiteOpenHelper {
             +"id integer primary key autoincrement,"
             +"author text,"
             +"price real,"
+            +"pages integer,"
             +"name text)";
 
     public static final String CREATE_CATEGORY = "create table Category (" +
             "id integer primary key autoincrement," +
-            "author text," +
-            "pages integer," +
-            "name text )";
+            "category_name text," +
+            "category_code integer )";
 
     private Context mContext;
 

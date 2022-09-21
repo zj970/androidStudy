@@ -22,4 +22,18 @@
             android:text="Update data"
             android:textAllCaps="false"/>
 
+    <Button
+            android:id="@+id/delete_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Detele data"
+            android:textAllCaps="false"/>
+
+    <Button
+            android:id="@+id/query_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Query data"
+            android:textAllCaps="false"/>
+
 </LinearLayout>

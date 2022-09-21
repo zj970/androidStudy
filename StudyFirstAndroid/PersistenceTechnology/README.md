@@ -882,6 +882,10 @@ public class MainActivity extends Activity {
 
 &emsp;&emsp;在添加数据按钮的点击事件里面，我们先获取到了SQLiteDatabase对象，然后使用ContentValues来对要添加的数据进行组装。如果你比较细心的话就会发现，这里只对Book表中的其中四列的数据进行了封装，id那一列并没有给它赋值。这是因为在前面创建表的时候，我们就给id列设置为了自增长了。它的值会在入库的时候自动生成，所以不需要手动给他赋值了。接下来就调用了insert()方法将数据添加到表中，注意我们这里实际上添加了两台哦数据，上述代码使用了ConttentValues分别组装了两次不同的内容，并调用两次insert()方法。
 
+![img_8.png](img_8.png)
+
+
+
 ### 6.4.4 更新数据
 
 &emsp;&emsp;学习完了如何向表中添加数据，接下来我们看看怎样才能修改表中已有的数据。SQLiteDatabase中也提供了一个非常好用的update()方法，用于对数据进行更新，这个方法接收4个参数，第一个参数和insert()方法一样，也是表名，在这里指定去更新那张表里的数据。第二个参数是ContentValues对象，要把更新数据在这里组装进去。第三、四个参数用于约束更新某一行或某几行中的数据，不指定的话默认就是更新所有行。
@@ -915,3 +919,393 @@ public class MainActivity extends Activity {
     
 </LinearLayout>
 ```
+
+布局文件中的代码已经非常简单了，就是添加了一个用于更新数据的按钮。然后修改MainActivity中的代码，如下所示：
+
+```java
+package com.example.databasetest;
+
+import android.app.Activity;
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+
+public class MainActivity extends Activity {
+    private MyDatabaseHelper dbHelper;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        dbHelper = new MyDatabaseHelper(this,"BookStore.db",null,2);
+
+        //创建数据库
+        Button createDatabase = findViewById(R.id.create_database);
+        createDatabase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dbHelper.getWritableDatabase();
+            }
+        });
+        //添加数据
+        Button addData = findViewById(R.id.add_data);
+        addData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SQLiteDatabase database = dbHelper.getWritableDatabase();
+                ContentValues values = new ContentValues();
+
+                //开始组装第一条数据
+                values.put("name","The Da Vinci Code");
+                values.put("author","Dan Brown");
+                values.put("pages",454);
+                values.put("price",16.96);
+                database.insert("Book",null,values); //插入第一条数据
+                values.clear();
+                //开始组装第二条数据
+                values.put("name","The Lost Symbol");
+                values.put("author","Dan Brown");
+                values.put("pages",510);
+                values.put("price",19.95);
+                database.insert("Book",null,values); //插入第二条数据
+            }
+        });
+        //更新数据
+        Button updateData = findViewById(R.id.update_data);
+        updateData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SQLiteDatabase db = dbHelper.getWritableDatabase();
+                ContentValues values = new ContentValues();
+                values.put("price",10.99);
+                db.update("Book",values,"name = ?",new String[]{"The Da Vinci Code"});
+            }
+        });
+    }
+}
+```
+&emsp;&emsp;这里在更新数据按钮的点击事件里构建了一个ContentValues对象，并且只给它指定了一组数据，说明我们只是想把价格这一列的数据更新成10.99。然后调用了SQLiteDatabase的update()方法去执行具体的更新操作，可以看到，这里使用了第三、第四个参数来指定具体更新哪几行。第三个参数对应的是SQL语句的where部分，表示根性所有name等于?的行，而?是一个占位符，可以通过第四个参数提供的一个字符串数组为第三个参数中的每个占位指定相应的内容。因此上述代码想表达的意图是将名字是The Da Vinci Code的这本书的价格改成10.99。
+
+![img_7.png](img_7.png)
+
+### 6.4.5 删除数据
+&emsp;&emsp;SQLiteDatabase中提供了一个delete()方法，专门用于删除数据，这个方法接收3个参数，第一个参数仍然是表名，第二、第三个参数又是用于约束删除某一行或某几行的数据，不指定的话默认就i是删除所有行。修改activity_main.xml中的代码:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    <Button android:id="@+id/create_database"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Create database"/>、
+    <Button
+            android:id="@+id/add_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add data"
+            android:textAllCaps="false"/>
+
+    <Button
+            android:id="@+id/update_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Update data"
+            android:textAllCaps="false"/>
+
+    <Button
+            android:id="@+id/delete_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Detele data"
+            android:textAllCaps="false"/>
+
+</LinearLayout>
+```
+仍然是在布局文件中添加了一个按钮，用于删除数据，然后修改MainActivity中的代码，如下所示：
+
+```java
+package com.example.databasetest;
+
+import android.app.Activity;
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+
+public class MainActivity extends Activity {
+    private MyDatabaseHelper dbHelper;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        dbHelper = new MyDatabaseHelper(this,"BookStore.db",null,5);
+
+        //创建数据库
+        Button createDatabase = findViewById(R.id.create_database);
+        createDatabase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dbHelper.getWritableDatabase();
+            }
+        });
+        //添加数据
+        Button addData = findViewById(R.id.add_data);
+        addData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SQLiteDatabase database = dbHelper.getWritableDatabase();
+                ContentValues values = new ContentValues();
+
+                //开始组装第一条数据
+                values.put("name","The Da Vinci Code");
+                values.put("author","Dan Brown");
+                values.put("pages",454);
+                values.put("price",16.96);
+                database.insert("Book",null,values); //插入第一条数据
+                values.clear();
+                //开始组装第二条数据
+                values.put("name","The Lost Symbol");
+                values.put("author","Dan Brown");
+                values.put("pages",510);
+                values.put("price",19.95);
+                database.insert("Book",null,values); //插入第二条数据
+            }
+        });
+        //更新数据
+        Button updateData = findViewById(R.id.update_data);
+        updateData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SQLiteDatabase db = dbHelper.getWritableDatabase();
+                ContentValues values = new ContentValues();
+                values.put("price",10.99);
+                db.update("Book",values,"name = ?",new String[]{"The Da Vinci Code"});
+            }
+        });
+        //删除数据
+        Button deleteData = findViewById(R.id.delete_data);
+        deleteData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SQLiteDatabase db = dbHelper.getWritableDatabase();
+                db.delete("Book","pages > ?",new String[]{"500"});
+            }
+        });
+    }
+}
+```
+可以看到，我们在删除按钮的点击事件里指明去删除Book表中的数据，并且通过第二、第三个参数来指定仅删除哪些页数超过500的书。当然这个需求很奇怪，这里也仅仅是为了做个测试。你可以先查看一下当前Book表中的数据，其中The Lost Symbol这本书的页数超过了500页，也就是当我们点击删除按钮时，这条记录应该会被删除，执行效果如下
+
+- 先查询 
+
+![img_9.png](img_9.png)
+
+- 点击删除按钮
+
+![img_10.png](img_10.png)
+
+### 6.4.6 查询数据
+
+&emsp;&emsp；我们都知道SQL 的全程是Structured Query Language,翻译成中文就是结构化查询语言。它的大部分功能都体现在”查“这个字上，而”增删改“至十四其中的一小部分功能。由于SQL查询设计的内容实在是太多了，这里只会介绍Android上的查询功能。SQLiteDatabase中还提供了query()方法用于对数据进行查询。这个方法的参数非常复杂，最短的一个方法重载也需要传入7个参数。那我们就先来看一下这7个参数各自的含义吧。第一个参数不用说，当然还是表名，表示我们希望从那张表中查询数据。第二个参数用于志峰去查询哪几列，如果不指定查询所有列。第三、第四个参数用于约束查询某一行或某几行的数据，不指定则默认查询所有行的数据。第五个参数用于指定需要去group by 的列，不指定则表示不对查询结果进行group by操作。第六个参数用于对group by之后的数据进行进一步与的过滤，不指定则不过滤。第七个参数用于指定查询结果的排序方式，不指定就表示使用默认的排序方式。更多详细内容可以参照下表：
+
+<table>
+    <tr align="center">
+        <td>query()方法参数</td>
+        <td>对应SQL部分</td>
+        <td>描述</td>
+    </tr>
+    <tr align="center">
+        <td>table</td>
+        <td>from table_name</td>
+        <td>指定查询的表名</td>
+    </tr>
+    <tr align="center">
+        <td>columns</td>
+        <td>select column1,column2</td>
+        <td>指定查询的列名</td>
+    </tr>
+    <tr align="center">
+        <td>selection</td>
+        <td>where column = value</td>
+        <td>指定where的约束条件</td>
+    </tr>
+    <tr align="center">
+        <td>selectionArgs</td>
+        <td>-</td>
+        <td>为where中的占位符提供具体的值</td>
+    </tr>
+    <tr align="center">
+        <td>groupBy</td>
+        <td>group by column</td>
+        <td>指定需要group by的列</td>
+    </tr>
+    <tr align="center">
+        <td>having</td>
+        <td>having column = value</td>
+        <td>对group by后的结果进一步约束</td>
+    </tr>
+    <tr align="center">
+        <td>orderBy</td>
+        <td>order by column1,column2</td>
+        <td>指定查询结果的排序方式</td>
+    </tr>
+</table>
+
+
+&emsp;&emsp;虽然query()方法参数非常多，但是我们不必为每一条查询语句都指定所有的参数，多数情况下只需要传入少数几个参数就可完成操作了。调用query()方法后会返回一个Cursor对象，查询到的所有数据都将从这个对象中取出。修改activity_main.xml中的代码
+
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    <Button android:id="@+id/create_database"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Create database"/>、
+    <Button
+            android:id="@+id/add_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add data"
+            android:textAllCaps="false"/>
+
+    <Button
+            android:id="@+id/update_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Update data"
+            android:textAllCaps="false"/>
+
+    <Button
+            android:id="@+id/delete_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Detele data"
+            android:textAllCaps="false"/>
+
+    <Button
+            android:id="@+id/query_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Query data"
+            android:textAllCaps="false"/>
+
+</LinearLayout>
+```
+然后修改MainActivity中的代码
+
+```java
+package com.example.databasetest;
+
+import android.app.Activity;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+
+public class MainActivity extends Activity {
+    private static final String TAG = "MainActivity";
+    private MyDatabaseHelper dbHelper;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        dbHelper = new MyDatabaseHelper(this,"BookStore.db",null,5);
+
+        //创建数据库
+        Button createDatabase = findViewById(R.id.create_database);
+        createDatabase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                dbHelper.getWritableDatabase();
+            }
+        });
+        //添加数据
+        Button addData = findViewById(R.id.add_data);
+        addData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SQLiteDatabase database = dbHelper.getWritableDatabase();
+                ContentValues values = new ContentValues();
+
+                //开始组装第一条数据
+                values.put("name","The Da Vinci Code");
+                values.put("author","Dan Brown");
+                values.put("pages",454);
+                values.put("price",16.96);
+                database.insert("Book",null,values); //插入第一条数据
+                values.clear();
+                //开始组装第二条数据
+                values.put("name","The Lost Symbol");
+                values.put("author","Dan Brown");
+                values.put("pages",510);
+                values.put("price",19.95);
+                database.insert("Book",null,values); //插入第二条数据
+            }
+        });
+        //更新数据
+        Button updateData = findViewById(R.id.update_data);
+        updateData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SQLiteDatabase db = dbHelper.getWritableDatabase();
+                ContentValues values = new ContentValues();
+                values.put("price",10.99);
+                db.update("Book",values,"name = ?",new String[]{"The Da Vinci Code"});
+            }
+        });
+        //删除数据
+        Button deleteData = findViewById(R.id.delete_data);
+        deleteData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SQLiteDatabase db = dbHelper.getWritableDatabase();
+                db.delete("Book","pages > ?",new String[]{"500"});
+            }
+        });
+
+        //查询数据
+        Button queryData = findViewById(R.id.query_data);
+        queryData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SQLiteDatabase db = dbHelper.getWritableDatabase();
+                Cursor cursor = db.query("Book",null,null,null,null,null,null);
+                if (cursor.moveToFirst()){
+                    do {
+                        //遍历Cursor对象取出数据并打印
+                        String name = cursor.getString(cursor.getColumnIndex("name"));
+                        String author = cursor.getString(cursor.getColumnIndex("author"));
+                        int pages = cursor.getInt(cursor.getColumnIndex("pages"));
+                        double price = cursor.getDouble(cursor.getColumnIndex("price"));
+                        Log.d(TAG, "Book name is: "+name);
+                        Log.d(TAG, "Book author is: "+author);
+                        Log.d(TAG, "Book pages is: "+pages);
+                        Log.d(TAG, "Book price is: "+price);
+                    } while (cursor.moveToNext());
+                    cursor.close();
+                }
+            }
+        });
+    }
+}
+```
+&emsp;&emsp;可以看到，我们首先在查询的点击事件里面调用了SQLiteDatabase中的query()方法去查询数据，这里只使用到了第一个参数，后面全为null。表示希望查到这张表中的所有数据。查询完后就得到了一个Cursor对象，接着我们调用它的moveToFirst()方法将数据的指针移动到第一行的位置，然后进行了一个循环当中，去遍历查询到的每一行数据，在这个循环中可以通过Cursor的getColumnIndex()方法获取到某一列在表中对应的位置索引，然后将这个索引传入到相应的取值方法中，就可以得到从数据库中读取到的数据了。然后通过Log.d打印出来，效果如下：
+
+![img_11.png](img_11.png)
