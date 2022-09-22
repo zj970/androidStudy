@@ -1309,3 +1309,5 @@ public class MainActivity extends Activity {
 &emsp;&emsp;可以看到，我们首先在查询的点击事件里面调用了SQLiteDatabase中的query()方法去查询数据，这里只使用到了第一个参数，后面全为null。表示希望查到这张表中的所有数据。查询完后就得到了一个Cursor对象，接着我们调用它的moveToFirst()方法将数据的指针移动到第一行的位置，然后进行了一个循环当中，去遍历查询到的每一行数据，在这个循环中可以通过Cursor的getColumnIndex()方法获取到某一列在表中对应的位置索引，然后将这个索引传入到相应的取值方法中，就可以得到从数据库中读取到的数据了。然后通过Log.d打印出来，效果如下：
 
 ![img_11.png](img_11.png)
+
+### 6.4.7  使用SQL操作数据库
