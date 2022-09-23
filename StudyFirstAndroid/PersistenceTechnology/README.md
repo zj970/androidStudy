@@ -1310,4 +1310,4 @@ public class MainActivity extends Activity {
 
 ![img_11.png](img_11.png)
 
-### 6.4.7  使用SQL操作数据库
+### 6.4.7 使用SQL操作数据库
