@@ -1311,3 +1311,9 @@ public class MainActivity extends Activity {
 ![img_11.png](img_11.png)
 
 ### 6.4.7 使用SQL操作数据库
+
+&emsp;&emsp;虽然Android已经给我们提供很多方便的API用于操作数据库，不过总会有一些人不习惯去使用这些辅助性的方法，而是更加青睐于直接使用SQL来操作数据库。这种人一般都属于SQL大牛，Android充分考虑到了这样的编程习惯，同样提供了一系列的方法，使得可以直接通过SQL来操作数据库。
+
+- 添加数据的方法如下
+
+> db.execSQL("insert into Book(name,author,pages,price)  )
