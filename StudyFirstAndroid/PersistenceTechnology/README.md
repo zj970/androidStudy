@@ -1316,4 +1316,20 @@ public class MainActivity extends Activity {
 
 - 添加数据的方法如下
 
-> db.execSQL("insert into Book(name,author,pages,price)  )
+> db.execSQL("insert into Book(name,author,pages,price) values(?,?,?,?)",new String[]{"The Da Vinci Code","Dan Brown","454","16.96"});
+
+- 更新数据的方法如下
+
+> db.execSQL("Update Book set price = ? where name = ? ", new String[] {"10.99","The Da Vinci Code"});
+
+- 删除数据的方法如下
+
+> db.execSQL("delete form Book where pages > ? ",new String[]{"500"});
+
+- 查询数据的方法如下
+
+> db.rawQuery("select * from Book",null);
+
+&emsp;&emsp;可以看到，除了查询数据的时候调用的是SQLiteDatabase的rawQuery()方法，其他的操作都是调用的execSQL()方法。
+
+## 6.5 使用LitePal操作数据库
