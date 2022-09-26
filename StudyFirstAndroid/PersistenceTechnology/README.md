@@ -1333,3 +1333,7 @@ public class MainActivity extends Activity {
 &emsp;&emsp;可以看到，除了查询数据的时候调用的是SQLiteDatabase的rawQuery()方法，其他的操作都是调用的execSQL()方法。
 
 ## 6.5 使用LitePal操作数据库
+
+### 6.5.1 LitePal简介
+
+&emsp;&emsp;如今，开源的热潮让所有Android开发者都大大受益，Github上面有成百上千的优秀Android 开源项目，很多之前我们要写很久才能实现的功能，使用开源库可能短短几分钟就能实现了。除此之外，公司的代码非常强调稳定性，而我们自己写出来的代码往往越复杂就越容易出现问题。相反。开源项目的代码是经过时间验证的，通常比我们自己的代码要稳定得多得多。因此，现在有很多公司为了追求开发效率以及项目稳定性，都会使用开源库。LitePal是一款开源的Android数据库开源框架，它采用了对象关系映射(ORM)的模式，并将我们平时最常的数据库功能进行了封装，使得不用编写一行SQL语句就可以完成各种建表和增删改查的操作，LitePal的项目主页上也有详细的使用文档，地址是:https://github.com/LitePalFramework/LitePal
