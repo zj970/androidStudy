@@ -3,6 +3,8 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        jcenter()
+        maven {url 'https://jitpack.io'}
     }
     dependencies {
         classpath "com.android.tools.build:gradle:4.2.0"
@@ -16,6 +18,8 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        jcenter()
+        maven {url 'https://jitpack.io'}
     }
     tasks.withType(JavaCompile) {
         options.encoding = "UTF-8"
