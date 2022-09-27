@@ -36,4 +36,7 @@ dependencies {
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    // https://mvnrepository.com/artifact/io.openharmony.tpc.thirdlib/LitePal
+    //implementation 'io.openharmony.tpc.thirdlib:LitePal:1.0.2'
+    implementation 'org.litepal.guolindev:core:3.2.3'
 }

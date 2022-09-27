@@ -1337,3 +1337,60 @@ public class MainActivity extends Activity {
 ### 6.5.1 LitePal简介
 
 &emsp;&emsp;如今，开源的热潮让所有Android开发者都大大受益，Github上面有成百上千的优秀Android 开源项目，很多之前我们要写很久才能实现的功能，使用开源库可能短短几分钟就能实现了。除此之外，公司的代码非常强调稳定性，而我们自己写出来的代码往往越复杂就越容易出现问题。相反。开源项目的代码是经过时间验证的，通常比我们自己的代码要稳定得多得多。因此，现在有很多公司为了追求开发效率以及项目稳定性，都会使用开源库。LitePal是一款开源的Android数据库开源框架，它采用了对象关系映射(ORM)的模式，并将我们平时最常的数据库功能进行了封装，使得不用编写一行SQL语句就可以完成各种建表和增删改查的操作，LitePal的项目主页上也有详细的使用文档，地址是:https://github.com/LitePalFramework/LitePal
+
+### 6.5.2 配置LitePal
+
+&emsp;&emsp;那么怎样才能在项目中使用开源库呢？过去的方式比较复杂。通常需要下载开源库的jar包或者源码，然后再集成到我们的项目中。而现在就简单得多了，大多数得开源项目都会将版本提交到jcenter上，我们只需要在app/build.gradle文件中声明该开源库的引用就可以了。因此，要使用LitePal的第一步，就是编辑app/build.gradle文件，在dependencies闭包中添加如下内容：
+
+``` groovy
+dependencies {
+
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'com.google.android.material:material:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
+    testImplementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+    // https://mvnrepository.com/artifact/io.openharmony.tpc.thirdlib/LitePal
+    //implementation 'io.openharmony.tpc.thirdlib:LitePal:1.0.2'
+    implementation 'org.litepal.guolindev:core:3.2.3'
+}
+```
+
+添加的这一行声明中，前面部分是固定的，最后3.2。3是版本号的意思，最新的版本可以在LitePal的项目主页去看。这样我们就把LitePal成功引入到当前项目中了，接下来需要配置litepal.xml文件。右击app/src/main 目录-> new -> Directory，创建一个assets目录，然后在assets目录下再新建一个litepal.xml文件，接着编辑litepal.xml中的代码：
+
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<litepal>
+    <dname value="BookStore"></dname>
+    <version value="1"></version>
+    <list></list>
+</litepal>
+```
+其中，<dname>标签用于指定数据库名，<version>标签用于指定数据库版本号，<list>用于指定所有的映射模型，我们稍后就会用到，最后还需要再配置一下LitePalApplication，修改AndroidManifest.xml中的代码，如下所示：
+
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.zj970.litepaltest">
+
+    <application
+            android:name="org.litepal.LitePalApplication"
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/Theme.PersistenceTechnology">
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+```
