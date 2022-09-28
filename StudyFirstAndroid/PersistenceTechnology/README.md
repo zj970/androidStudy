@@ -1394,3 +1394,8 @@ dependencies {
 
 </manifest>
 ```
+
+这里我们将项目的application配置为org.litepal.LitePalApplication，这样才能让Litepal的所有功能都可以正常工作。关于application的作用，将在13章进行学习。
+
+### 6.5.3 创建和升级数据库
+&emsp;&emsp;我们之前创建数据库是通过自定义一个类继承自SQLiteOpenHelper，然后在onCreate()方法中编写建表语句来实现。而使用LitePal就不用那么麻烦。首先赋值activity_main.xml文件过来。
