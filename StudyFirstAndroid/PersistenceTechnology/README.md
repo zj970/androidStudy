@@ -1399,3 +1399,75 @@ dependencies {
 
 ### 6.5.3 创建和升级数据库
 &emsp;&emsp;我们之前创建数据库是通过自定义一个类继承自SQLiteOpenHelper，然后在onCreate()方法中编写建表语句来实现。而使用LitePal就不用那么麻烦。首先赋值activity_main.xml文件过来。
+
+&emsp;&emsp;刚才在介绍的时候已经说过，LitePal采取的是对象关系映射(ORM)的模式，那么什么是对象呢?简单点说，我们使用的编程语言是面向对象语言，而使用的数据库则是关系型数据库，那么将面对对象的语言和面向关系的数据库之间建立一种映射关系，这就是关系映射了。
+
+&emsp;&emsp;不过你可千万不要小看对象关系映射模式，它赋予了我们一个强大的功能，就是可以用面向对象的思维来操作数据库，而不用再和SQL语句打交道了，不信的话我们现在就来体验一下。比如在6.4.1小节中，为了创建一张Book表，需要先分析表中去执行这条建表语句，但是，使用LitePal你就可以面向对象的思维来实现同样的功能，定义一个Book类，代码如下：
+
+```java
+package com.zj970.litepaltest.entity;
+
+public class Book {
+    private int id;
+    private String author;
+    private double price;
+    private int pages;
+    private String name;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public int getPages() {
+        return pages;
+    }
+
+    public void setPages(int pages) {
+        this.pages = pages;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+
+```
+
+&emsp;&emsp;这是一个典型的Java bean ,在Book类中我们定义了id,author,price,pages,name这几个字段，并生成相应的getter和setter方法。Book类就是数据库中Book表，而类中的每一个字段分别对应了表中的每一个列。这就是对象关系映射最直观的体验，接下来我们还需要将Book类添加到映射模型列表中，修改litepal.xml中的代码
+
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<litepal>
+    <dname value="BookStore"></dname>
+    <version value="1"></version>
+    <list>
+        <mapping calss="com.zj970.litepaltest.entity.Book">
+
+        </mapping>
+    </list>
+</litepal>
+```

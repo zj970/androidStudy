@@ -2,5 +2,9 @@
 <litepal>
     <dname value="BookStore"></dname>
     <version value="1"></version>
-    <list></list>
+    <list>
+        <mapping calss="com.zj970.litepaltest.entity.Book">
+
+        </mapping>
+    </list>
 </litepal>
