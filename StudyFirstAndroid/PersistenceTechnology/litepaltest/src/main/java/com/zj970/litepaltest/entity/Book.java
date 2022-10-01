@@ -1,6 +1,8 @@
 package com.zj970.litepaltest.entity;
 
-public class Book {
+import org.litepal.crud.LitePalSupport;
+
+public class Book extends LitePalSupport {
     private int id;
     private String author;
     private double price;

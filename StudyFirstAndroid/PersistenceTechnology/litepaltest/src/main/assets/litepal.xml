@@ -1,10 +1,11 @@
-<?xml version="1.0" encoding="utf-8" ?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <litepal>
-    <dname value="BookStore"></dname>
-    <version value="1"></version>
+    <!--数据库名字-->
+    <dbname value="BookStore"/>
+    <!--数据库版本-->
+    <version value="2"/>
+    <!--数据库对象-->
     <list>
-        <mapping calss="com.zj970.litepaltest.entity.Book">
-
-        </mapping>
+        <mapping class="com.zj970.litepaltest.entity.Book"></mapping>
     </list>
 </litepal>
