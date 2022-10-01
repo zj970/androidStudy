@@ -1471,3 +1471,32 @@ public class Book {
     </list>
 </litepal>
 ```
+
+这里使用<mapping>标签来声明我们需要配置的映射模型类，注意一定要使用完整的类名。不管有多少模型类需要映射，都使用同样的方式配置在<list>标签下即可。现在只要进行任意一次数据库的操，BookStore.db数据库应该就会自动创建出来。修改MainActivity中的代码：
+
+```java
+package com.zj970.litepaltest;
+
+import android.view.View;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import org.litepal.tablemanager.Connector;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        Button createDatabase = findViewById(R.id.create_database);
+        createDatabase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Connector.getDatabase();
+            }
+        });
+    }
+}
+```
