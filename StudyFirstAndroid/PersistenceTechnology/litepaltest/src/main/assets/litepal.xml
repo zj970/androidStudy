@@ -3,9 +3,10 @@
     <!--数据库名字-->
     <dbname value="BookStore"/>
     <!--数据库版本-->
-    <version value="2"/>
+    <version value="3"/>
     <!--数据库对象-->
     <list>
         <mapping class="com.zj970.litepaltest.entity.Book"></mapping>
+        <mapping class="com.zj970.litepaltest.entity.Category"></mapping>
     </list>
 </litepal>

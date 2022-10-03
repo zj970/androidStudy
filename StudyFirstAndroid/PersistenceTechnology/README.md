@@ -1407,7 +1407,7 @@ dependencies {
 ```java
 package com.zj970.litepaltest.entity;
 
-public class Book {
+public class Book extends LitePalSupport{
     private int id;
     private String author;
     private double price;
@@ -1472,7 +1472,7 @@ public class Book {
 </litepal>
 ```
 
-这里使用<mapping>标签来声明我们需要配置的映射模型类，注意一定要使用完整的类名。不管有多少模型类需要映射，都使用同样的方式配置在<list>标签下即可。现在只要进行任意一次数据库的操，BookStore.db数据库应该就会自动创建出来。修改MainActivity中的代码：
+这里使用<mapping>标签来声明我们需要配置的映射模型类(需要继承LitePalSupport)，注意一定要使用完整的类名。不管有多少模型类需要映射，都使用同样的方式配置在<list>标签下即可。现在只要进行任意一次数据库的操，BookStore.db数据库应该就会自动创建出来。修改MainActivity中的代码：
 
 ```java
 package com.zj970.litepaltest;
@@ -1500,3 +1500,341 @@ public class MainActivity extends AppCompatActivity {
     }
 }
 ```
+其中，调用Connector.getDatabase()方法就是一次简单的数据库操作，只要点击一下按钮，数据库就会自动创建完成了。运行一下程序，然后点击Create database按钮，接着通过adb shell查看一下数据库创建情况，并使用.schema命令查看建表语句。
+
+![img_12.png](img_12.png)
+
+&emsp;&emsp;可以看到，这里有3张表的建表语句，其中android_metadata表仍然不用管，table_schema表是LitePal内部使用的，我们也可以直接忽视，Book表就是根据我们定义的Book类以及类中的字段来自动生成的。
+
+&emsp;&emsp;在6.4.2节中使用SQLiteOpenHelper来升级数据库，虽然升级成功，但是升级数据库的时候我们需要把之前的表drop掉，然后再重新创建才行。这其实是一个非常严重的问题，因为会造成数据丢失，每升级一次数据库，之前表中的数据就全改了。而使用LitePal来升级数据库非常简单，你完全不用思考任何逻辑，只需要改你想修改的任何内容，然后将版本号加1就行了。比如我们想要向Book表中添加一个press（出版社）列,直接修改Book类中的代码，添加一个press字段即可，如下所示：
+
+```java
+package com.zj970.litepaltest.entity;
+
+import org.litepal.crud.LitePalSupport;
+
+public class Book extends LitePalSupport {
+    private int id;
+    private String author;
+    private double price;
+    private int pages;
+    private String name;
+    private String press;
+
+    public String getPress() {
+        return press;
+    }
+
+    public void setPress(String press) {
+        this.press = press;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getAuthor() {
+        return author;
+    }
+
+    public void setAuthor(String author) {
+        this.author = author;
+    }
+
+    public double getPrice() {
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    public int getPages() {
+        return pages;
+    }
+
+    public void setPages(int pages) {
+        this.pages = pages;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+
+```
+与此同时，我们还想再添加一张Category表，那么只需要再新建一个Category类就可以了，代码如下：
+
+```java
+package com.zj970.litepaltest.entity;
+
+public class Category extends LitePalSupport  {
+
+    private int id;
+    private String categoryName;
+    private int categoryCode;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getCategoryName() {
+        return categoryName;
+    }
+
+    public void setCategoryName(String categoryName) {
+        this.categoryName = categoryName;
+    }
+
+    public int getCategoryCode() {
+        return categoryCode;
+    }
+
+    public void setCategoryCode(int categoryCode) {
+        this.categoryCode = categoryCode;
+    }
+}
+
+```
+改完了所有我们想要改的东西，只需要记得将版本号加1就行了。当然由于这里还添加了一个新的模型类，因此也需要将它添加到映射模型列表中。修改litepal.xml中的代码，如下所示：
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<litepal>
+    <!--数据库名字-->
+    <dbname value="BookStore"/>
+    <!--数据库版本-->
+    <version value="3"/>
+    <!--数据库对象-->
+    <list>
+        <mapping class="com.zj970.litepaltest.entity.Book"></mapping>
+        <mapping class="com.zj970.litepaltest.entity.Category"></mapping>
+    </list>
+</litepal>
+```
+现在重新运行一下程序：
+![img_13.png](img_13.png)
+
+可以看到，book表中新增了一个press列，category表也创建成功了，当然LitePal还自动帮我们做了一项非常重要的工作，就是保留之前 表中的所有数据，这样就再也不用担心数据丢失的问题了。
+
+### 6.5.4 使用LitePal添加数据
+
+&emsp;&emsp;体验了使用LitePal来创建和升级数据库，是不是感觉有一些小震撼了，不过LitePal所提供的强大功能还远不止于此，首先回顾一下之前添加数据的方法，我们需要创建出一个ContentValues对象，然后将所有要添加的数据put到这个ContentValues对象中，最后再调用SQLiteDatabase的insert()方法将数据添加到数据库表当中。而使用LItePal来添加数据，这些操作可以简单到让你惊叹！我们只需要创建出模型类的实例，再将所有要存储的数据设置号，最后调用一下save()方法就可以了。
+
+&emsp;&emsp;因为LitePal进行表管理操作时不需要模型类有任何的继承结构，但是进行CRUD操作时就不行了，必须要继承自LitePaLSupport类才行，接着我们修改MainActivity中的代码，如下所示：
+
+```java
+package com.zj970.litepaltest;
+
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import com.zj970.litepaltest.entity.Book;
+import org.litepal.tablemanager.Connector;
+
+public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        //创建数据库
+        Button createDatabase = findViewById(R.id.create_database);
+        createDatabase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Connector.getDatabase();
+            }
+        });
+
+        //增加数据
+        Button addData = findViewById(R.id.add_data);
+        addData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Book book = new Book();
+                book.setName("The Da Vinci Code");
+                book.setAuthor("Dan Brown");
+                book.setPages(454);
+                book.setPrice(16.96);
+                book.setPress("Unknown");
+                book.save();
+            }
+        });
+    }
+}
+```
+&emsp;&emsp;在添加数据按钮的点击事件里面，首先是创建出一个Book的实例，然后调用Book类中的各种set方法对数据进行设置，最后再调用book.save()方法就能完成数据添加操作了。那么这个save()方法是从哪儿来的呢？当然是从LitePal类中继承而来的。现在重新运行一下程序，点击一下Add data按钮，此时数据应该添加成功了，输入SQL语句select * from Book，结果如下所示：
+
+![img_14.png](img_14.png)
+可以看到，作者、书名、页数、价格、出版社，这些数据全部添加成功了。
+
+
+### 6.5.5 使用LitePal更新数据
+
+&emsp;&emsp;学习完了如何使用LitePal添加数据，更新数据要比添加数据稍微复杂一些，因为它的API接口比较多。这里只介绍最常用的几种更新方式。首先，最简单的一种更新方式就是对已存储的对象重新赋值，然后重新调用save()方法即可。那么这里要了解一个概念，什么是已存储的对象？
+
+&emsp;&emsp;对于LitePal来说，对象是否已存储就是根据调用model.isSaved()方法的结果来判断的，返回true就表示已存储，返回false就表示未存储。那么接下来的问题就是，什么情况下会返回true，什么情况下会返回false呢？实际上只有在两种情况下，model.isSaved()方法才会返回true，一种情况是已经调用过model.save()方法去添加数据了，此时model会被认为是已存储的对象。另外一种情况是model对象是通过LitePal提供的查询API查出来的，由于是从数据库中查到的对象，因此也会被认为是已存储的对象。修改MainActivity中的代码，如下所示：
+
+```java
+package com.zj970.litepaltest;
+
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import com.zj970.litepaltest.entity.Book;
+import org.litepal.tablemanager.Connector;
+
+public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        //创建数据库
+        Button createDatabase = findViewById(R.id.create_database);
+        createDatabase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Connector.getDatabase();
+            }
+        });
+
+        //增加数据
+        Button addData = findViewById(R.id.add_data);
+        addData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Book book = new Book();
+                book.setName("The Da Vinci Code");
+                book.setAuthor("Dan Brown");
+                book.setPages(454);
+                book.setPrice(16.96);
+                book.setPress("Unknown");
+                book.save();
+            }
+        });
+
+        //更新数据
+        Button updateData = findViewById(R.id.update_data);
+        updateData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Book book = new Book();
+                book.setName("The Lost Symbol");
+                book.setAuthor("Dan Bro.wn");
+                book.setPages(510);
+                book.setPrice(19.95);
+                book.setPress("Unknown");
+                book.save();
+                book.setPrice(10.99);
+                book.save();
+            }
+        });
+    }
+}
+```
+
+&emsp;&emsp;在更新数据按钮的点击事件里面，我们先是通过上一小节中学习的知识添加了一条Book数据，然后调用setPrice()方法将这本书的价格进行了修改，之后再次调用了save()方法。此时LitePal会发现当前Book对象是已存储的，因此不会再向数据库中去添加一条新数据，而是会直接更新当前的数据。现在重新运行一下程序，然后带年纪Update data按钮，我们再次输入查询语句查看表中数据情况。
+
+![img_15.png](img_15.png)
+
+可以看到，Book表中新增了一条书的数据，但这本书的价格并不是一开始设置的19.55，而是10.99。但是这种更新方式只能已存储的对象进行操作，限制性比较大，接下来学习另外一种更加灵巧的更新方式。修改MainActivity的代码，如下所示：
+
+```java
+package com.zj970.litepaltest;
+
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import com.zj970.litepaltest.entity.Book;
+import org.litepal.tablemanager.Connector;
+
+public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        //创建数据库
+        Button createDatabase = findViewById(R.id.create_database);
+        createDatabase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Connector.getDatabase();
+            }
+        });
+
+        //增加数据
+        Button addData = findViewById(R.id.add_data);
+        addData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Book book = new Book();
+                book.setName("The Da Vinci Code");
+                book.setAuthor("Dan Brown");
+                book.setPages(454);
+                book.setPrice(16.96);
+                book.setPress("Unknown");
+                book.save();
+            }
+        });
+
+        //更新数据
+        Button updateData = findViewById(R.id.update_data);
+        updateData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Book book = new Book();
+/*                book.setName("The Lost Symbol");
+                book.setAuthor("Dan Bro.wn");
+                book.setPages(510);
+                book.setPrice(19.95);
+                book.setPress("Unknown");
+                book.save();
+                book.setPrice(10.99);
+                book.save();*/
+                book.setPrice(14.95);
+                book.setAuthor("Anchor");
+                book.updateAll("name = ? and author = ?","The Lost Symbol","Dan Brown");
+            }
+        });
+    }
+}
+```
+
+&emsp;&emsp;可以看到，这里我们首先new 出了一个 Book 的实例，然后直接调用setPrice()方法来设置要更新的数据，最后再调用updateAll()方法去执行更新操作。注意updateAll()方法种可以指定一个条件约束，和SQLiteDatabase中的update()方法的where参数部分有些类似，但是更加简洁，如果不指定条件语句的话，就表示更新所有数据。这里指定书名是The Lost Symbol并且作者是Dan Brown的书价格更新为14.95，出版社更新为Anchor。现在重新运行程序并点击Update data 按钮，然后查询表中的数据，结果如下：
+
+![img_16.png](img_16.png)
+
+&emsp;&emsp;意料之中，第二本书的价格被更新成14.95，出版社被更新成了Anchor。虽然LitePal的更新API是不是明显比SQLiteDatabase的update()方法好用，不过，在使用updateAll()方法时，还有一个非常重要的知识点需要知晓的，就是当你想把一个字段的值更新成默认值时，是不可以使用上面的方式来set数据。我们都知道，在java中任何一种数据类型的字段都会有默认值，例如int类型的默认值是0，boolean类型的默认是false，String类型默认值是null。那么当new 出一个Book对象时，其中所有字段都已经被初始化成默认值了，比如说pages字段的值就是0。因此，我们想把数据库表中的pages列更新成0，直接调用Book.setPages(0)是不可以的，因为即使不调用这行代码，pages字段本身也是0，LitePal此时是不会对这个列进行更新的。对于所有想要将数据更新的。对于所有想要将为数据更新成默认值的操作，LitePal统一提供了一个setToDefault()方法，然后传入相应的列名就可以实现，比如我们可以这样：
+
+```
+Book book = new Book();
+book.setToDefalut("pages");
+book.updateAll();
+```
+这段代码的意思是，将所有书的页数都更新为0，因为updateAll()方法中没有指定约束条件，因此更新操作对所有数据都生效了。
