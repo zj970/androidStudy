@@ -6,6 +6,9 @@ import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import com.zj970.litepaltest.entity.Book;
+import org.litepal.LitePal;
+import org.litepal.LitePalDB;
+import org.litepal.crud.LitePalSupport;
 import org.litepal.tablemanager.Connector;
 
 public class MainActivity extends AppCompatActivity {
@@ -57,6 +60,15 @@ public class MainActivity extends AppCompatActivity {
                 book.setPrice(14.95);
                 book.setAuthor("Anchor");
                 book.updateAll("name = ? and author = ?","The Lost Symbol","Dan Bro.wn");
+            }
+        });
+
+        //删除数据
+        Button deleteData = findViewById(R.id.delete_data);
+        deleteData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LitePal.deleteAll(Book.class,"price < ?","15");
             }
         });
     }

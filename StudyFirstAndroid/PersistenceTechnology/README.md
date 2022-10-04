@@ -1838,3 +1838,95 @@ book.setToDefalut("pages");
 book.updateAll();
 ```
 这段代码的意思是，将所有书的页数都更新为0，因为updateAll()方法中没有指定约束条件，因此更新操作对所有数据都生效了。
+
+### 6.5.6 使用LitePal删除数据
+
+&emsp;&emsp;使用LitePal删除数据的凡是主要有两种，第一种比较简单，就是直接调用已存储对象的delete()方法就可以了，对于已存储对象的概念。调用过save()方法的对象，或者是通过LitePal提供的查询API查出来的对象，都是可以直接使用delete()方法来删除数据。下面展示另外一种删除数据的方式。
+
+```java
+package com.zj970.litepaltest;
+
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import com.zj970.litepaltest.entity.Book;
+import org.litepal.LitePal;
+import org.litepal.LitePalDB;
+import org.litepal.crud.LitePalSupport;
+import org.litepal.tablemanager.Connector;
+
+public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        //创建数据库
+        Button createDatabase = findViewById(R.id.create_database);
+        createDatabase.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Connector.getDatabase();
+            }
+        });
+
+        //增加数据
+        Button addData = findViewById(R.id.add_data);
+        addData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Book book = new Book();
+                book.setName("The Da Vinci Code");
+                book.setAuthor("Dan Brown");
+                book.setPages(454);
+                book.setPrice(16.96);
+                book.setPress("Unknown");
+                book.save();
+            }
+        });
+
+        //更新数据
+        Button updateData = findViewById(R.id.update_data);
+        updateData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Book book = new Book();
+/*                book.setName("The Lost Symbol");
+                book.setAuthor("Dan Bro.wn");
+                book.setPages(510);
+                book.setPrice(19.95);
+                book.setPress("Unknown");
+                book.save();
+                book.setPrice(10.99);
+                book.save();*/
+                book.setPrice(14.95);
+                book.setAuthor("Anchor");
+                book.updateAll("name = ? and author = ?","The Lost Symbol","Dan Bro.wn");
+            }
+        });
+
+        //删除数据
+        Button deleteData = findViewById(R.id.delete_data);
+        deleteData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                LitePal.deleteAll(Book.class,"price < ?","15");
+            }
+        });
+    }
+}
+```
+
+&emsp;&emsp;这里调用了LitePal.deleteAll()方法来删除数据，其中deleteAll()方法的第一个参数用于指定删除哪张表中的数据，Book.class就意味着删除Book表中的数据，后面的参数用于指定约束条件，现在重新运行程序，结果如下：
+
+![img_17.png](img_17.png)
+如果deleteAll()方法如果不指定约束条件，就意味着你要删除表中的所有数据，这一点和updateAll()方法是比较相似的。
+
+
+### 6.5.7 使用LitePal查询数据
+
+&emsp;&emsp;使用LitePal来查询数据一点都不复杂，查询所有表中的所有数据表示为 List<Book> books = LitePal.findAll()方法，只需要调用一下findAll()方法，然后通过Book.class参数指定查询Book表。另外，findAll()方法的返回值是一个Book类型的List集合，不用像之前那样通过Curor对象一行行去取值，LitePal已经自动帮我们完成了赋值操作。
