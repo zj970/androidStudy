@@ -11,6 +11,8 @@ import org.litepal.LitePalDB;
 import org.litepal.crud.LitePalSupport;
 import org.litepal.tablemanager.Connector;
 
+import java.util.List;
+
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
 
@@ -69,6 +71,18 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 LitePal.deleteAll(Book.class,"price < ?","15");
+            }
+        });
+
+        //查询数据
+        Button queryData = findViewById(R.id.query_data);
+        queryData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                List<Book> bookList = LitePal.findAll(Book.class);
+                for (Book book : bookList){
+                    Log.d(TAG, "onClick: "+book.toString());
+                }
             }
         });
     }
