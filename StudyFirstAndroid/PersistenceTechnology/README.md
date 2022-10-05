@@ -2020,5 +2020,50 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
-}
+} 
 ```
+除了findAll()方法之外,LitePal还提供了很多其他非常有用的查询API。比如我们想要：
+
+- 查询Book表中的第一条数据就可以这样 
+
+> Book firstBook = LitePal.findFirst(Book.class);
+
+- 查询最后一条数据：
+
+> Book lastBook = LitePal.findLast(Book.class);
+
+我们还可以通过连缀查询来定制更多的查询功能
+
+- select()方法用于指定查询哪几行的数据，对应SQL当中的select关键字。比如查询name和author这两行的数据，可以这样写：
+
+> List<Book> bookList = LitePal.select("name","author").find(Book.class);
+
+- where()方法用于指定查询的约束条件，对应了SQL当中的where关键字。比如只查询页数大于400的数据，就可以这样写：
+
+> List<Book> bookList = LitePal.where("pages > ? ","400").find(Book.class);
+
+- order()方法用于指定结果的排序方式，对应SQL语句中的order by关键字。比如将查询结果按照书价从高到低排序，就可以这样写：
+
+> List<Book> bookList = LitePal.order("price desc").find(Book.class);
+
+其中desc表示降序排序，asc或者不写表示升序排列。
+
+- limit()方法用于指定查询结果的偏移量，比如只查询表中的前3条数据，就可以这样写：
+
+> List<Book> bookList = LitePal.limit(3).find(Book.class);
+
+- offset()方法用于指定查询结果的偏移量，比如查询表中的第2，3，4条数据，就可以这样写：
+
+> List<Book> bookList = LitePal.limit(3).offset(1).find(Book.class);
+
+由于limit(3)查询到是前3条数据，这里我们再加上offset(1)进行一个位置的偏移，就能实现查询第2，3，4条数据的功能。limit()和offset()对应了SQL语句中的limit关键字
+
+&emsp;&emsp;当然，还可以使用这5个方法任意的连缀组合，来完成一个比较复杂的查询操作：
+
+> List<Book> bookList = LitePal.select("name","author","pages").where("pages > ? ","400").order("pages").limit(10).offset(10).find(Book.class);
+
+这段代码表示，查询Book表中第11到20条满足页数大于400的这个条件的name、author和pages这3列的数据，并将查询结果按照页数进行升序排序。LitePal也支持原生态的SQL语句进行查询：
+
+> Cursor c = LitePal.findBySQL("select * from Book where pages > ? and price < ?","400","20")；
+
+调用LitePal.findBySQL()方法来进行原生态查询，其中第一个参数用于指定SQL语句，后面参数用于指定占位符值。注意findBySQL()返回是一个Cursor对象，还需要以前的老方式将数据一一取出。
