@@ -2067,3 +2067,8 @@ public class MainActivity extends AppCompatActivity {
 > Cursor c = LitePal.findBySQL("select * from Book where pages > ? and price < ?","400","20")；
 
 调用LitePal.findBySQL()方法来进行原生态查询，其中第一个参数用于指定SQL语句，后面参数用于指定占位符值。注意findBySQL()返回是一个Cursor对象，还需要以前的老方式将数据一一取出。
+
+
+## 6.8 小结与总结
+
+&emsp;&emsp;本章主要是对Android常用的数据持久化方式进行了详细的讲解，包括文件存储、SHaredPreferences存储以及数据库存储。其中文件适用于存储一些简单的文本数据或者二进制数据，SharedPreferences适用于存储一些键值对，而数据库则适用于存储哪些复杂的关系型数据。
