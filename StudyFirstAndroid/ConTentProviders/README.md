@@ -33,3 +33,25 @@
 ![img.png](img.png)
 
 &emsp;&emsp;这张表你看起来可能并不会那么轻松，因为里面的权限全都是你没使用过的。不过没有关系，你并不需要了解表格中每个权限的作用，只要把它当成一个参照表来查看就行了。每当要使用一个权限式，可以先从这张表中查一下，如果是属于这张表中的权限，那么就需要进行运行时权限处理，如果不在这张表中，那么只需要在AndroidManifest.xml中添加一下权限声明就可以了。另外注意一下，表格中每个危险权限都属于一个权限组，我们在进行运行时权限处理时使用的是权限名，但是用户一旦同意授权了，那么该权限所对应的权限组中所有的其他权限也会同时被授权。访问 http://developer.android.com/reference/android/Manifest.permisson.html 查看Android系统中完整的权限列表。
+
+#### 7.2.2 在程序运行时申请权限
+
+&emsp;&emsp;首先新建一个RuntimePermission项目，我们就在这个项目的基础上来学习运行时权限的使用方法。这里使用CALL_HOME这权限做示例。  
+&emsp;&emsp;CALL_PHONE这个权限是编写拨打电话功能的时候需要声明的，因为拨打电话会涉及到用户手机资费的问题，因而被列为了危险权限。在Android 6.0 之前，拨打电话的功能实现非常简单，修改activity_main.xml布局文件：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
+    <Button android:id="@+id/make_call"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Make Call"
+            android:textAllCaps="false"/>
+
+</LinearLayout>
+```
