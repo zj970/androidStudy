@@ -55,3 +55,40 @@
 
 </LinearLayout>
 ```
+
+我们在布局文件中只是定义了一个按钮，当点击按钮时就去触发拨打电话的逻辑。修改MainActivity.java
+
+```java
+package com.zj970.runtimepermission;
+
+import android.content.Intent;
+import android.net.Uri;
+import android.view.View;
+import android.widget.Button;
+import android.widget.QuickContactBadge;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Button makeCall = findViewById(R.id.make_call);
+        makeCall.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                try {
+                    Intent intent = new Intent(Intent.ACTION_CALL);
+                    intent.setData(Uri.parse("tel:1008611"));
+                    startActivity(intent);
+                } catch (SecurityException e){
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+}
+```
+&emsp;&emsp;可以看到，在按钮的点击事件中，我们构建了一个隐式Intent,Intent的action指定为Intent.ACTION_CALL,这是一个系统内置的打电话的动作，然后在data部分指定了协议是tel,号码是10086。
