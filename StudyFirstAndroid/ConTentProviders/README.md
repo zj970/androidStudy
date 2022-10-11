@@ -30,7 +30,7 @@
 &emsp;&emsp;当然，并不是所有权限都需要运行时申请，对于用户来说，不停地授权也很繁琐。Android现在将所有的权限归成两类，一类是普通权限，一类是危险权限。普通权限指的是那些不会直接威胁到用户的安全和隐私的权限，对于这部分权限申请，系统会自动帮我们进行授权，而不需要用户再去手动操作了，比如在BroadcastTest项目中申请的两个权限就是普通权限。危险权限则表示那些可能会触及用户隐私，或者对设备安全性造成影响的权限，如获取设备联系人信息，定位设备的地理位置等，对于这部分权限申请，必须由用户手动点击授权才可以，否则程序就无法使用相应的功能。  
 &emsp;&emsp;但是Android中有一共有上百种权限，我们怎么从中区分那些是普通权限，哪些是危险权限呢？其实并没有那么难，因为危险权限总共就那么几个，除了危险权限之外，剩余的就是普通权限了。下表列出了Android中所有的危险权限，一共是9组24个权限。
 
-![img.png](img.png)
+![img.png](./img.png)
 
 &emsp;&emsp;这张表你看起来可能并不会那么轻松，因为里面的权限全都是你没使用过的。不过没有关系，你并不需要了解表格中每个权限的作用，只要把它当成一个参照表来查看就行了。每当要使用一个权限式，可以先从这张表中查一下，如果是属于这张表中的权限，那么就需要进行运行时权限处理，如果不在这张表中，那么只需要在AndroidManifest.xml中添加一下权限声明就可以了。另外注意一下，表格中每个危险权限都属于一个权限组，我们在进行运行时权限处理时使用的是权限名，但是用户一旦同意授权了，那么该权限所对应的权限组中所有的其他权限也会同时被授权。访问 http://developer.android.com/reference/android/Manifest.permisson.html 查看Android系统中完整的权限列表。
 
@@ -228,15 +228,15 @@ public class MainActivity extends AppCompatActivity {
 &emsp;&emsp;如果已经授权就直接去执行拨打电话的逻辑操作就可以了，这里我们把拨打电话的逻辑封装到了call()方法当中。如果没有授权的话，则需要调用ActivityCompat.requestPermissions()方法来向用户申请授权，requestPermissions()方法接收3个参数，第一参数要求是Activity的实例，第二个参数是一个String数组，我们把要申请的权限名放进数组即可，第三个参数是请求码，只要是唯一值就可以了，这里传入了1。  
 &emsp;&emsp;调用完了requestPermissions()方法之后，系统会弹出一个权限申请的对话框，然后用户可以选择同意或者拒绝我们的权限申请，不论是哪种结果，最终都会回到onRequestPermissionsResult()方法中，而授权的结果会封装在grantResults参数中。这里我们只需要判断一下最后的授权结果，如果用户同意的话就调用call()方法来拨打电话，如果用户拒绝的话我们只能放弃操作，并且弹出一条失败提示。现在重新运行一下程序并点击Make Call按钮，由于用户还没有授权过我们拨打电话权限，因此第一次运行时弹出一个权限申请的对话框，用户可以选择同意或者拒绝。比如点击deny
 
-![img_1.png](img_1.png)
+![img_1.png](./img_1.png)
 
 就会弹出失败框，点击ALLOW之后进入拨打界面了
 
-![img_2.png](img_2.png)
-
+![img_2.png](./img_2.png)
+.
 &emsp;&emsp;当之前用户已经完成了授权操作，之后在点击Make Call按钮就不会再弹出权限申请对话框了，而是可以直接拨打电话。用户随时都可以将授予的危险权限进行关闭。Settings->Apps->RuntimePermission->Permission。
 
-![img_3.png](img_3.png)
+![img_3.png](./img_3.png)
 
 ---
 
@@ -267,7 +267,7 @@ Cursor cursor = getContentResolver().query(
 
 &emsp;&emsp;这些参数和SQLiteDatabase中query()方法里的参数很像，但总体来说要简单一些，毕竟这是在访问其他程序中的数据，没必要构建过于复杂的查询语句。下表对使用到的这部分参数进行详细的解释：
 
-![img_4.png](img_4.png)
+![img_4.png](./img_4.png)
 
 &emsp;&emsp;查询完成后返回的仍然是一个Cursor对象，这时我们就可以将数据从Cursor对象中逐个读取出来。读取的方法仍然是通过移动游标的位置来遍历Currsor的所有行，然后再取出每一行中相应列的数据，代码如下所示：
 
@@ -415,9 +415,366 @@ public class MainActivity extends AppCompatActivity {
 
 1. 首先弹出申请联系人权限对话框，同意后：
 
-![img_6.png](img_6.png)
+![img_6.png](./img_6.png)
 
 2. 效果如下
 
-![img_5.png](img_5.png)
+![img_5.png](./img_5.png)
 
+
+---
+### 7.4 创建自己的内容提供器  
+&emsp;&emsp;在上一节当中，我们学习了如何在自己的程序中访问其他应用程序的数据。总体来说思路还是非常简单的，只需要获取到该应用程序的内容URI，然后借助ContentResolver进行CRUD操作就可以了。那么提供外部访问接口的应用程序都是如何实现这种功能的呢？它们又是怎样保证数据的安全性，使得隐私数据不会泄露出去？
+
+#### 7.4.1 创建内容提供器的步骤  
+
+&emsp;&emsp;前面已经提到过，如果想要实现跨程序共享数据的功能，官方推荐的方式就是使用内容提供器，可以通过新建一个类去继承ContentProvider的方式来创建一个自己的内容提供器。ContentProvider类中有6个抽象方法，我们在使用子类继承它的时候，需要将这6个方法全部重写。新建MyProvider继承自ContentProvider
+
+```java
+import android.content.ContentProvider;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.CancellationSignal;
+
+public class MyProvider extends ContentProvider {
+    @Override
+    public boolean onCreate() {
+        return false;
+    }
+
+    @Override
+    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder, CancellationSignal cancellationSignal) {
+        return null;
+    }
+
+    @Override
+    public Uri insert(Uri uri, ContentValues values) {
+        return null;
+    }
+
+    @Override
+    public int update(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+        return 0;
+    }
+
+    @Override
+    public int delete(Uri uri, String selection, String[] selectionArgs) {
+        return 0;
+    }
+
+    @Override
+    public String getType(Uri uri) {
+        return null;
+    }
+}
+```
+- onCreate()
+
+&emsp;&emsp;初始化内容提供器的时候调用。通常会在这里完成对数据库的创建和升级等操作，返回true表示内容提供器初始化成功，返回false则表示失败。注意，只有当存在ContentResolver尝试访问我们程序中的数据时，内容提供器才会被初始化。
+  
+- query()
+
+&emsp;&emsp;从内容提供器中查询数据。使用uri参数来确定查询哪张表，projection参数用于确定查询哪些列，selection和selectionArgs参数用于约束查询哪些行，sortOrder参数用于对结果进行排序，查询的结果存放在Cursor对象中返回。
+
+- insert()
+
+&emsp;&emsp;向内容提供器中添加一条数据。使用uri参数来确定要添加到的表，待添加的数据保存在values参数中。添加完成后，返回一个用于表示这条新记录的URI。
+
+- update()
+
+&emsp;&emsp;更新内容提供器中已有的数据。使用uri参数来确定更新哪一张表，新数据保存在values参数中，selection和selectionArgs参数用来约束更新哪些行，受影响的行数将作为返回值返回。
+
+- delete()
+
+&emsp;&emsp;从内容提供器中删除数据。使用uri参数来确定删除哪一张表中的数据，selection和selectionArgs参数用于约束删除哪些行，被删除的行数作为返回值返回。
+
+- getType()
+
+&emsp;&emsp;根据传入的内容URI来返回相应的MIME类型。
+
+&emsp;&emsp;可以看出，几乎每一个方法都会带有uri这个参数，这个参数也正是调用ContentResolver的增删改查方法传递过来的。而现在，我们需要对传入的Uri参数进行解析，从中分析出调用方期望访问的表和数据。  
+&emsp;&emsp;一个标准内容URI写法是这样的：  
+&emsp;&emsp;content://com.example.app.provider/table1   
+&emsp;&emsp;这就表示调用方期望访问的是com.example.app这个应用的table1表中的数据。除此之外，我们还可以在这个内容URI的后面加上一个id，如下所示：  
+&emsp;&emsp;content://com.example.app.provider/table1/1  
+&emsp;&emsp;这就表示调用方期望访问的是com.example.app这个应用的table1表中id为1的数据。  
+&emsp;&emsp;内容URI的格式主要就只有以上两种，已路径结尾就表示期望访问该表中所有的数据。以id结尾就表示期望访问该表中拥有相应id的数据。我们可以使用通配符的方式来分别匹配这两种格式的内容URI，规则如下  
+- *表示匹配任意长度的任意字符。#表示匹配任意长度的数字  
+  
+&emsp;&emsp;所以，一个能够匹配任意表的内容URI格式就可以写成:  
+&emsp;&emsp;content://com.example.app.provider/*  
+&emsp;&emsp;而一个能够匹配table1表中任意一行数据的内容URI格式就可以写成：  
+&emsp;&emsp;content://com.example.app.provider/table1/#  
+&emsp;&emsp;接着，我们再借助UriMatcher的match()方法时，就可以将一个Uri对象传入，返回值是某个能够匹配这个Uri对象所对应的自定义代码。利用这个代码，我们就可以判断出调用方期望访问的是哪张表中的数据了。修改MyProvider中的代码，如下所示：
+
+```java
+import android.content.ContentProvider;
+import android.content.UriMatcher;
+import android.database.Cursor;
+import android.net.Uri;
+import android.os.CancellationSignal;
+
+public class MyProvider extends ContentProvider {
+    public static final int TABLE1_DIR = 0;
+    public static final int TABLE1_ITEM = 1;
+    public static final int TABLE2_DIR = 2;
+    public static final int TABLE2_ITEM = 3;
+    private static UriMatcher uriMatcher;
+
+    static {
+        uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+        uriMatcher.addURI("com.example.app.provider", "table1", TABLE1_DIR);
+        uriMatcher.addURI("com.example.app.provider", "table1/#", TABLE1_ITEM);
+        uriMatcher.addURI("com.example.app.provider", "table2", TABLE2_DIR);
+        uriMatcher.addURI("com.example.app.provider", "table2/#", TABLE2_ITEM);
+    }
+    /*.....*/
+
+    @Override
+    public Cursor query(Uri uri, String[] projection, String selection, String[] selectionArgs, String sortOrder, CancellationSignal cancellationSignal) {
+        switch (uriMatcher.match(uri)){
+            case TABLE1_DIR:
+                //查询table1表中的所有数据
+                break;
+            case TABLE1_ITEM:
+                //查询table1表中的单条数据
+                break;
+            case TABLE2_DIR:
+                //查询table2表中的所有数据
+                break;
+            case TABLE2_ITEM:
+                //查询table2表中的单条数据
+                break;
+            default:
+                break;
+        }
+    }
+}
+```
+
+&emsp;&emsp;可以看到，MyProvider中新增了4个整型常量，其中TABLE1_DIR表示访问table1表中的所有数据，TABLE1_ITEM表示访问table1表中的单条数据，TABLE2_DIR表示访问table2表中的所有数据，TABLE2_ITEM表示访问table2表中的单条数据。接着在静态代码块里我们创建了UriMatcher的实例，并调用addURI()方法，将期望匹配的内容URI格式传递进去，注意这里传入的路径参数是可以使用通配符的。然后当query()方法被调用的时候，就会通过UriMatcher的match()方法对传入的Uri对象进行匹配，如果发现UriMatcher中某个内容URI格式成功匹配了该Uri对象，则会返回相应的自定义代码，然后我们就可以判断出调用方期望访问的到底是什么数据了。  
+&emsp;&emsp;上述代码只是以query()方法为例，其实insert()、update()、delete()这几个方法的实现也是差不多的，它们都会携带Uri这个参数，然后同样利用UriMatcher的match()方法判断出调用方期望访问的是哪张表，再对该表中的数据进行相应的操作就可以了。  
+&emsp;&emsp;除此之外，还有一个方法，即getType()方法。它是所有的内容提供器都必须提供的一个方法，用于获取Uri对象所对应的MIME类型。一个内容URI所对应的MIME字符串主要是由3部分组成，Android对这3个部分做了如下格式规定。  
+- 必须以vnd开头
+- 如果内容URI以路径结尾，则后接android.cursor.dir/，如果内容以id结尾，则后接android.cursor.item/。
+- 最后接上vnd.<authority>.<path>
+
+&emsp;&emsp;所以，对于content://com.example.app.provider/table1这个内容URI，它所对应的MIME类型就可以写成：  
+&emsp;&emsp;vnd.android.cursor.dir/vnd.com.example.app.provider.table1  
+&emsp;&emsp;对于content://com.example.app.provider/table1/1这个内容URI，它所对应的MIME类型可以写成：  
+&emsp;&emsp;vnd.android.cursor.item/vnd.com.example.app.provider.table1  
+&emsp;&emsp;现在我们可以继续完善MyProvider中的内容了，这次来实现getType()方法中的逻辑，代码如下所示：
+
+```java
+import android.content.ContentProvider;
+import android.net.Uri;
+import android.content.UriMatcher;
+import android.database.Cursor;
+import android.os.CancellationSignal;
+public class MyProvider extends ContentProvider {
+
+    public static final int TABLE1_DIR = 0;
+    public static final int TABLE1_ITEM = 1;
+    public static final int TABLE2_DIR = 2;
+    public static final int TABLE2_ITEM = 3;
+    private static UriMatcher uriMatcher;
+
+    static {
+        uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+        uriMatcher.addURI("com.example.app.provider", "table1", TABLE1_DIR);
+        uriMatcher.addURI("com.example.app.provider", "table1/#", TABLE1_ITEM);
+        uriMatcher.addURI("com.example.app.provider", "table2", TABLE2_DIR);
+        uriMatcher.addURI("com.example.app.provider", "table2/#", TABLE2_ITEM);
+    }
+    /*.....*/
+    @Override
+    public String getType(Uri uri) {
+        switch (uriMatcher.match(uri)){
+            case TABLE1_DIR:
+                return "vnd.android.cursor.dir/vnd.com.example.app.provider.table1";
+            case TABLE1_ITEM:
+                return "vnd.android.cursor.item/vnd.com.example.app.provider.table1";
+            case TABLE2_DIR:
+                return "vnd.android.cursor.dir/vnd.com.example.app.provider.table2";
+            case TABLE2_ITEM:
+                return "vnd.android.cursor.item/vnd.com.example.app.provider.table2";
+            default:
+                break;
+        }
+        return null;
+    }
+}
+```
+&emsp;&emsp;到这里，一个完整的内容提供器就创建完成了，现在任何一个应用程序都可以使用ContentResolver来访问我们程序中的数据。那么前面所提到的，如何才能保证隐私数据不会泄露出去呢？其实多亏了内容提供器的良好机制，这个问题在不知不觉中已经被解决了。因为所有的CRUD操作都一定要匹配到相应的内容URI格式才能进行的，而我们当然不可能向UriMatcher中添加隐私数据的URI，所以这部分数据根本无法被外部程序访问到，安全问题也就不存在了。
+
+#### 7.4.2 实现跨程序共享
+
+&emsp;&emsp;简单起见，我们还是在上一章中DatabaseTest项目的基础上继续开发，通过内容提供器给它加入外部访问接口。打开DatabaseTest项目，首先将MyDatabaseHelper中使用Toast弹出创建数据成功的提示去除掉，因为跨程序访问时我们不能直接用Toast。然后创建一个内容提供器，右击com.zj970.databasetest包->New->Other->Content Provider,弹出如下窗口：
+
+![img_7.png](img_7.png)
+
+然后我们将内容提供器命名为DatabaseProvider，authority指定为com.zj970.databasetest.provider,Exported属性表示是否允许外部程序访问我们的内容提供器，Enable属性表示是否启动这个内容提供器，将其勾中，点击Finish完成构建。接着修改DatabaseProvider中的代码：
+
+```java
+package com.zj970.databasetest;
+
+import android.content.ContentProvider;
+import android.content.ContentValues;
+import android.content.UriMatcher;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.net.Uri;
+import android.widget.Switch;
+
+public class DatabaseProvider extends ContentProvider {
+    public static final int BOOK_DIR = 0;
+    public static final int BOOK_ITEM = 1;
+    public static final int CATEGORY_DIR = 2;
+    public static final int CATEGORY_ITEM = 3;
+
+    public static final String AUTHORITY = "com.zj970.databasetest.provider";
+    private static UriMatcher uriMatcher;
+    private MyDatabaseHelper myDatabaseHelper;
+    static {
+        uriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
+        uriMatcher.addURI(AUTHORITY,"book",BOOK_DIR);
+        uriMatcher.addURI(AUTHORITY,"book/#",BOOK_ITEM);
+        uriMatcher.addURI(AUTHORITY,"category",CATEGORY_DIR);
+        uriMatcher.addURI(AUTHORITY,"category/#",CATEGORY_ITEM);
+    }
+
+    public DatabaseProvider() {
+    }
+
+    @Override
+    public int delete(Uri uri, String selection, String[] selectionArgs) {
+        // Implement this to handle requests to delete one or more rows.
+        // 删除数据
+        SQLiteDatabase db = myDatabaseHelper.getWritableDatabase();
+        int deleteRaws = 0;
+        switch (uriMatcher.match(uri)){
+            case BOOK_DIR:
+                deleteRaws = db.delete("Book",selection,selectionArgs);
+                break;
+            case BOOK_ITEM:
+                String bookId = uri.getPathSegments().get(1);
+                deleteRaws = db.delete("Book","id = ?",new String[]{bookId});
+                break;
+            case CATEGORY_DIR:
+                deleteRaws = db.delete("Category",selection,selectionArgs);
+                break;
+            case CATEGORY_ITEM:
+                String categoryId = uri.getPathSegments().get(1);
+                deleteRaws = db.delete("Category","id = ? ",new String[]{categoryId});
+                break;
+            default:
+                break;
+        }
+        return deleteRaws;
+    }
+
+    @Override
+    public String getType(Uri uri) {
+        // TODO: Implement this to handle requests for the MIME type of the data
+        // at the given URI.
+        switch(uriMatcher.match(uri)){
+            case BOOK_DIR:
+                return "vnd.android.cursor.dir/vnd.com.zj970.databasetest.provider.book";
+            case BOOK_ITEM:
+                return "vnd.android.cursor.item/vnd.com.zj970.databasetest.provider.book";
+            case CATEGORY_DIR:
+                return "vnd.android.cursor.dir/vnd.com.zj970.databasetest.provider.category";
+            case CATEGORY_ITEM:
+                return "vnd.android.cursor.item/vnd.com.zj970.databasetest.provider.category";
+        }
+        return null;
+    }
+
+    @Override
+    public Uri insert(Uri uri, ContentValues values) {
+        // TODO: Implement this to handle requests to insert a new row.
+        // 添加数据
+        SQLiteDatabase db = myDatabaseHelper.getWritableDatabase();
+        Uri uriReturn = null;
+        switch (uriMatcher.match(uri)){
+            case BOOK_DIR:
+            case BOOK_ITEM:
+                long newBookId = db.insert("Book",null,values);
+                uriReturn = Uri.parse("content://"+AUTHORITY+"/book/"+newBookId);
+                break;
+            case CATEGORY_DIR:
+            case CATEGORY_ITEM:
+                long newCategoryId = db.insert("Category",null,values);
+                uriReturn = Uri.parse("content://"+AUTHORITY+"/category/"+newCategoryId);
+                break;
+            default:
+                break;
+        }
+        return uriReturn;
+    }
+
+    @Override
+    public boolean onCreate() {
+        // TODO: Implement this to initialize your content provider on startup.
+        myDatabaseHelper = new MyDatabaseHelper(getContext(),"BookStore.db",null,2);
+        return true;
+    }
+
+    @Override
+    public Cursor query(Uri uri, String[] projection, String selection,
+                        String[] selectionArgs, String sortOrder) {
+        // TODO: Implement this to handle query requests from clients.
+        // 查询数据
+        SQLiteDatabase db = myDatabaseHelper.getReadableDatabase();
+        Cursor cursor = null;
+        switch (uriMatcher.match(uri)){
+            case BOOK_DIR:
+                cursor = db.query("Book",projection,selection,selectionArgs,null,null,sortOrder);
+                break;
+            case BOOK_ITEM:
+                String bookId = uri.getPathSegments().get(1);
+                cursor = db.query("Book",projection,"id = ?",new String[]{bookId},null,null,sortOrder);
+                break;
+            case CATEGORY_DIR:
+                cursor = db.query("category",projection,selection,selectionArgs,null,null,sortOrder);
+                break;
+            case CATEGORY_ITEM:
+                String categoryId = uri.getPathSegments().get(1);
+                cursor = db.query("category",projection,"id = ? ",new String[]{categoryId},null,null,sortOrder);
+                break;
+            default:
+                break;
+        }
+        return cursor;
+    }
+
+    @Override
+    public int update(Uri uri, ContentValues values, String selection,
+                      String[] selectionArgs) {
+        // TODO: Implement this to handle requests to update one or more rows.
+        // 更新数据
+        SQLiteDatabase db = myDatabaseHelper.getWritableDatabase();
+        int updateRows = 0;
+        switch (uriMatcher.match(uri)){
+            case BOOK_DIR:
+               updateRows = db.update("Book",values,selection,selectionArgs);
+                break;
+            case BOOK_ITEM:
+                String bookId = uri.getPathSegments().get(1);
+                updateRows = db.update("Book",values,"id = ?",new String[]{bookId});
+                break;
+            case CATEGORY_DIR:
+                updateRows = db.update("Category",values,selection,selectionArgs);
+                break;
+            case CATEGORY_ITEM:
+                String categoryId = uri.getPathSegments().get(1);
+                updateRows = db.update("Category",values,"id = ? ",new String[]{categoryId});
+                break;
+            default:
+                break;
+        }
+        return updateRows;
+    }
+}
+```
