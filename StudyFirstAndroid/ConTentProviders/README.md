@@ -308,3 +308,116 @@ getContentResolver().delete(uri,"column2 = ?",new String[] {"1"});
 #### 7.3.2 读取系统联系人
 
 &emsp;&emsp;先给模拟器增加联系人，然后新建ContactsTest项目,编写activity_main.xml中的代码，如下所示：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
+    <ListView 
+            android:id="@+id/contacts_view"
+            android:layout_width="match_parent" 
+            android:layout_height="match_parent"/>
+</LinearLayout>
+```
+
+&emsp;&emsp;简单来说，LinearLayout里就只放置了一个ListView，这里使用ListView而不是RecyclerView，是因为我将要关注的重点放在读取系统联系人上面，如果使用RecyclerView的话，代码偏多，会容易让我们找不到重点，接着修改MainActivity,java中的代码：
+
+```java
+package com.zj970.contactstest;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.provider.ContactsContract;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+    ArrayAdapter<String> arrayAdapter;
+    List<String> contactsList = new ArrayList<>();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ListView contactsListView = findViewById(R.id.contacts_view);
+        arrayAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1,contactsList);
+        contactsListView.setAdapter(arrayAdapter);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS)!= PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this,new String[]{
+                    Manifest.permission.READ_CONTACTS
+            },1);
+        } else {
+            readContacts();
+        }
+    }
+
+    private void readContacts(){
+        Cursor cursor = null;
+
+        try {
+            //查询联系人数据
+            cursor = getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI,null,null,null,null);
+            if (cursor != null){
+                while (cursor.moveToNext()){
+                    //获取联系人姓名
+                    String displayName = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME));
+                    //获取联系人手机号
+                    String number = cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
+                    contactsList.add(displayName+"\n"+number);
+                }
+                arrayAdapter.notifyDataSetChanged();
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            if (cursor!=null){
+                cursor.close();
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case 1:
+                if (grantResults.length >0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    readContacts();
+                } else {
+                    Toast.makeText(this, "You denied the permission", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            default:
+        }
+    }
+}
+```
+
+&emsp;&emsp;在onCreate()方法中，我们首先获取了ListView控件的实例，并给它设置好了适配器，然后开始调用运行时权限的处理逻辑，因为READ_CONTACTS权限是属于危险权限的。关于运行时权限的处理流程相信你已经熟悉掌握了，这里我们在用户授权之后调用了readContacts()方法来读取系统联系人信息。  
+&emsp;&emsp;下面重点看一下readContacts()方法，可以看到，这里使用了ContentResolver的query()方法来查询系统联系人数据。不过传入的Uri参数怎么有些奇怪啊？为什么没有调用Uri.parse()方法去解析一个内容URI字符串呢？这是因为ContactsContract.CommonDataKinds.Phone类已经帮我们做好了封装，提供了一个CONTENT_URI常量，而这个常量就是使用Uri.parse()方法解析出来的结果。接着我们对Cursor对象进行遍历，将联系人姓名和手机号这些数据逐个读出。联系人姓名这一列对应的常量是ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME，联系人手机号这一列对应的常量是ContactsContract.CommonDataKinds.Phone.NUMBER。两个数据都取出之后，将它们进行拼接，并且在中间加上换行符，然后将拼接后的数据添加到ListView的数据源里，并通知刷新一下ListView。最后将Cursor对象关闭掉。最后在AndroidManifest.xml中添加读取系统联系人的权限：
+
+>     <uses-permission android:name="android.permission.READ_CONTACTS"/>
+
+运行效果如下：
+
+1. 首先弹出申请联系人权限对话框，同意后：
+
+![img_6.png](img_6.png)
+
+2. 效果如下
+
+![img_5.png](img_5.png)
+

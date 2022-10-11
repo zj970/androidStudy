@@ -1,2 +1,3 @@
+include ':contactstest'
 rootProject.name = "ConTentProviders"
 include ':runtimepermission'
