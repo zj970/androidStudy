@@ -1,3 +1,4 @@
+include ':providertest'
 include ':databasetest'
 include ':contactstest'
 rootProject.name = "ConTentProviders"

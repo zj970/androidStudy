@@ -612,7 +612,7 @@ public class MyProvider extends ContentProvider {
 
 &emsp;&emsp;简单起见，我们还是在上一章中DatabaseTest项目的基础上继续开发，通过内容提供器给它加入外部访问接口。打开DatabaseTest项目，首先将MyDatabaseHelper中使用Toast弹出创建数据成功的提示去除掉，因为跨程序访问时我们不能直接用Toast。然后创建一个内容提供器，右击com.zj970.databasetest包->New->Other->Content Provider,弹出如下窗口：
 
-![img_7.png](img_7.png)
+![img_7.png](./img_7.png)
 
 然后我们将内容提供器命名为DatabaseProvider，authority指定为com.zj970.databasetest.provider,Exported属性表示是否允许外部程序访问我们的内容提供器，Enable属性表示是否启动这个内容提供器，将其勾中，点击Finish完成构建。接着修改DatabaseProvider中的代码：
 
@@ -819,4 +819,144 @@ public class DatabaseProvider extends ContentProvider {
 </manifest>
 ```
 &emsp;&emsp;可以看到，<application>标签内出现了一个新的标签<provider>，我们使用它来对DatabaseProvider这个内容提供器进行注册。android:name属性指定了DatabaseProvider的类名，android:authority属性指定了DatabaseProvider的authority，而enable和exported属性则是根据我们刚才勾选的状态自动生成的，这里表示允许DatabaseProvider被其他应用程序进行访问。  
-&emsp;&emsp;现在DatabaseTest这个项目就已经有跨程序共享数据的功能了，运行一下，将DatabaseTest程序重新安装在模拟器上。然后新建一个模块ProviderTest，通过该程序去访问DatabaseTest中的数据。
+&emsp;&emsp;现在DatabaseTest这个项目就已经有跨程序共享数据的功能了，运行一下，将DatabaseTest程序重新安装在模拟器上。然后新建一个模块ProviderTest，通过该程序去访问DatabaseTest中的数据。先修改activity_main中的代码，如下所示：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity"
+        android:orientation="vertical">
+    <Button android:id="@+id/add_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAllCaps="false"
+            android:text="Add To Book"/>
+    <Button android:id="@+id/query_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAllCaps="false"
+            android:text="Query To Book"/>
+    <Button android:id="@+id/update_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAllCaps="false"
+            android:text="Update To Book"/>
+    <Button android:id="@+id/delete_data"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAllCaps="false"
+            android:text="Delete To Book"/>
+
+</LinearLayout>
+```
+布局文件很简单，里面放置了4个按钮，分别用于添加、查询、修改和删除数据。然后修改MainActivity中的代码：
+
+```java
+package com.zj970.providertest;
+
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.net.Uri;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+
+public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
+    private String newId;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Button addData = findViewById(R.id.add_data);
+        Button queryData = findViewById(R.id.query_data);
+        Button updateData = findViewById(R.id.update_data);
+        Button deleteData = findViewById(R.id.delete_data);
+        addData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //添加数据
+                Uri uri = Uri.parse("content://com.zj970.databasetest.provider/book");
+                ContentValues values = new ContentValues();
+                values.put("name", "A Clash of Kings");
+                values.put("author", "George Martin");
+                values.put("pages", 1040);
+                values.put("price", 22.85);
+                Uri newUri = getContentResolver().insert(uri, values);
+                newId = newUri.getPathSegments().get(1);
+            }
+        });
+        queryData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //查询数据
+                Uri uri = Uri.parse("content://com.zj970.databasetest.provider/book");
+                Cursor cursor = getContentResolver().query(uri, null, null, null, null);
+                if (cursor != null) {
+                    while (cursor.moveToNext()) {
+                        String name = cursor.getString(cursor.getColumnIndex("name"));
+                        String author = cursor.getString(cursor.getColumnIndex("author"));
+                        int pages = cursor.getInt(cursor.getColumnIndex("pages"));
+                        double price = cursor.getDouble(cursor.getColumnIndex("price"));
+                        Log.d(TAG, "book name is : " + name);
+                        Log.d(TAG, "book author is : " + author);
+                        Log.d(TAG, "book pages is : " + pages);
+                        Log.d(TAG, "book price is : " + price);
+                    }
+                    cursor.close();
+                }
+            }
+        });
+        updateData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //更新数据
+                Uri uri = Uri.parse("content://com.zj970.databasetest.provider/book/" + newId);
+                ContentValues values = new ContentValues();
+                values.put("name", "A Storm of Swords");
+                values.put("pages", 1216);
+                values.put("price", 24.05);
+                getContentResolver().update(uri,values,null,null);
+            }
+        });
+        deleteData.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //删除数据
+                Uri uri = Uri.parse("content://com.zj970.databasetest.provider/book/" + newId);
+                getContentResolver().delete(uri,null,null);
+            }
+        });
+
+    }
+}
+```
+&emsp;&emsp;可以看到，我们分别在这4个按钮的点击事件里处理了增删改查的逻辑。添加数据的时候，首先调用了Uri.parse()方法将一个内容解析成Uri对象，然后把要添加的数据操作都存放到ContentValues对象中，接着调用ContentResolver的insert()方法去执行添加操作就可以了。注意insert()方法会返回一个Uri对象，这个对象中包含了新增数据id,我们通过getPathSegments()方法将这个id取出来，稍后会用到它。  
+&emsp;&emsp;查询数据的时候，同样是调用了Uri.parse()方法将一个内容URI解析成Uri对象，然后调用ContentResolver的query()方法去查询数据，查询的结果当然还是存放在Cursor对象中。之后对Cursor进行遍历，从中取出查询结果，并一一打印出来。  
+&emsp;&emsp;更新数据的时候，也是先将内容URI解析成Uri对象，然后把想要更新的数据存放在ContentValues对象中，再调用ContentResolver的update()方法去执行更新操作就可以了。注意这里我们为了不想让Book表中的其他行受到影响，在调用Uri.parse()方法时，给内容URI的尾部增加了一个id，而这个id正是添加数据的时候返回的。这就表示我们只希望更新刚刚添加的那条数据，Book表中的其他行不会受到影响。  
+&emsp;&emsp;删除数据的时候，也是使用同样的方法解析了一个以id结尾的内容URI，然后调用ContentResolver的delete()方法执行删除操作就可以了。由于我们在内容URI里指定了一个id，因此只会删除掉相应id的那行数据，Book表中的其他数据不会受到影响。现在运行一下ProviderTest项目：
+
+![img_8.png](./img_8.png)
+
+点击 Add To Book 按钮，然后点击 Query To Book 按钮 查看logcat:
+
+![img_9.png](./img_9.png)
+
+然后点击update Book 按钮来更新数据并查询，logcat如下：
+
+![img_10.png](./img_10.png)
+
+点击删除Delete Book 按钮并查询，结果如下：
+
+![img_11.png](./img_11.png)
+
+第四条新增的数据（newId = 4）已被删除。
+
+&emsp;&emsp;由此看出，我们的跨程序共享数据功能已经成功实现了！现在不仅是ProviderTest程序，任何一个程序都可以轻松访问DatabaseTest中的数据，而且我们还丝毫不用担心隐私数据泄露的问题。

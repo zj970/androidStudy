@@ -17,7 +17,7 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        dbHelper = new MyDatabaseHelper(this,"BookStore.db",null,5);
+        dbHelper = new MyDatabaseHelper(this,"BookStore.db",null,2);
 
         //创建数据库
         Button createDatabase = findViewById(R.id.create_database);
