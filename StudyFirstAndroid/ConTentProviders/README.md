@@ -778,3 +778,45 @@ public class DatabaseProvider extends ContentProvider {
     }
 }
 ```
+
+&emsp;&emsp;代码虽然很长，不过不用担心，这些内容非常容易理解，因为使用到的是全部都是上一小节中我们学到的知识。首先在类的一开始，同样是定义了4个常量，分别是表示访问Book表中的所有数据、访问Book表中的单条数据、访问Category表中的所有数据和访问Category表中的单条数据。然后在静态代码块中对UriMatcher进行了初始化操作，将期望匹配的几种URI格式添加了进去。  
+&emsp;&emsp;接下来就是每个抽象方法的具体实现了，先看一下onCreate()方法，这个方法的代码很短，就是创建了一个MyDatabaseHelper的实例，然后返回true表示内容提供器初始化成功，这时数据库就已经完成了创建或升级操作。  
+&emsp;&emsp;接着看一下query()方法，在这个方法中先获取到了SQLiteDatabase的实例，然后根据传入的Uri参数判断出用户想要访问哪张表，再调用SQLiteDatabase的query()进行查询，并将Cursor对象返回就好了。注意当访问单条数据的时候有一个细节，这里调用了Uri对象的getPathSegments()方法，它会将内容URI权限之后的部分以"/"符号进行分割，并把分割后的结果放入到一个字符串列表中，那么这个列表的第0个位置存放的就是路径，第1个位置存放的就是id了。得到了id之后，再通过selection和selectionArgs参数进行约束，就实现了查询单条数据的功能。  
+&emsp;&emsp;再往后就是insert()方法，同样它也是先获取到了SQLiteDatabase的实例，然后根据传入的Uri参数判断用户想要往哪张表里添加数据，再调用SQLiteDatabase的insert()方法进行添加就可以了。注意insert()方法要求返回一个能够表示这条新增数据的URI，所以我们还需要调用Uri.parse()方法来将一个内容URI解析成Uri对象，当然这个内容URI是以新增数据的id结尾的。  
+&emsp;&emsp;接下来就是update()方法了，也是先获取SQLiteDatabase的实例，然后根据传入的Uri参数判断出用户想哟更新哪张表里的数据，再调用SQLiteDatabase的update()方法进行更新就好了，受影响的行数将作为返回值返回。  
+&emsp;&emsp;下面是delete()方法，这里仍然是先获取SQLiteDatabase的实例，然后根据传入的Uri参数判断出用户想要删除哪张表里的数据，再调用SQLiteDatabase的delete()方法进行删除就好了，被删除的行数将作为返回值返回。  
+&emsp;&emsp;最后是getType()方法，这个方法的代码完全是按照上一节中介绍的格式规则编写的。  
+&emsp;&emsp;另外一点还需要注意，内容提供器一定要在AndroidManifest.xml文件中注册才可以使用，由于我们是使用快捷方式创建的内容提供器，因此注册这一步已经被自动完成了。AndroidManifest.xml文件如下:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.zj970.databasetest">
+
+    <application
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/Theme.ConTentProviders">
+        <provider
+                android:name=".DatabaseProvider"
+                android:authorities="com.zj970.databasetest.provider"
+                android:enabled="true"
+                android:exported="true">
+        </provider>
+
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+```
+&emsp;&emsp;可以看到，<application>标签内出现了一个新的标签<provider>，我们使用它来对DatabaseProvider这个内容提供器进行注册。android:name属性指定了DatabaseProvider的类名，android:authority属性指定了DatabaseProvider的authority，而enable和exported属性则是根据我们刚才勾选的状态自动生成的，这里表示允许DatabaseProvider被其他应用程序进行访问。  
+&emsp;&emsp;现在DatabaseTest这个项目就已经有跨程序共享数据的功能了，运行一下，将DatabaseTest程序重新安装在模拟器上。然后新建一个模块ProviderTest，通过该程序去访问DatabaseTest中的数据。
