@@ -275,3 +275,42 @@ public class NotificationActivity extends AppCompatActivity {
 ```
 
 &emsp;&emsp;这里我们在cancel()方法中传入了1，这个1就是创建通知的时候给每条通知指定的id。如果想要取消哪条通知，在cancel90方法中传入该通知的id就可以了。
+
+#### 通知的进阶技巧
+
+&emsp;&emsp;上一节中创建的通知属于最基本的通知，实际上，NotificationCompat.Builder中提供了非常丰富的API来让我们创建出更加多样的通知效果，这里选取比较常用的API学习。先来看看setSound()方法，它可以在通知发出的时候播放一段音频，这样就能更好地通知用户有通知到来。setSound()方法接收一个Uriz参数，所以在指定音频文件的时候还需要先获取到音频文件对应的URI。比如说，每个手机的/system/media/auto/ringtones目录下都有很多的音频文件，我们可以从中随便挑选一个音频文件，在代码中可以这样指定：
+
+```
+Notification notification = new NotificaitionCpmpat.BUilder(this)
+.setSound(Uei.fromFile(new File("/system/media/audio/ringtonges/luna.ogg"))).build();
+```
+&emsp;&emsp;除了允许播放音频外，我们还可以在通知到来的时候让手机进行振动，使用的是vibrate这个属性。它是一个长整型的数组，用于设置手机静止和振动的时长，以毫秒为单位。下表为0的值表示手机静止的时长，下标为1的值表示手机振动的时长，下标为2的值又表示手机静止的时长，以此类推。所以如果想要手机通知到来的时候立刻振动1秒，然后静止1秒，再振动1秒，代码可以写成：
+
+```
+Notification notification = new NotificaitionCpmpat.BUilder(this)
+.setSound(Uei.fromFile(new File("/system/media/audio/ringtonges/luna.ogg")))
+.setVibrate(new long[]{0,1000,1000,1000}).build();
+```
+
+&emsp;&emsp;不过，想要控制手机振动还需要声明权限的。因此，我们还需要编辑AndroidManifest.xml文件，加入如下声明： 
+
+```
+<uses-permmission android:name="android.permission.VRIBRATE"/>
+```
+&emsp;&emsp;学会了控制通知的声音和振动，下面看一下如何在通知的时候控制手机LED灯的显示。现在手机基本上都会前置一个LED灯，当有未接电话或未读短信，而此时手机又处于锁屏状态时，LED灯就会不停闪烁，提醒用户去查看。我们可以使用setLights()方法来实现这种效果，setLights()方法接收3个参数，第一个参数用于指定LED灯的颜色，第二个参数用于指定LED灯亮起的时长，以毫秒为单位，第三个参数用于指定LED灯暗去的时长，也是以毫秒为单位。所以，当通知到来的时候，如果想要实现LED灯以绿色的灯光一闪一闪的效果，可以写成： 
+
+```
+Notification notification = new NotificaitionCpmpat.BUilder(this)
+.setSound(Uei.fromFile(new File("/system/media/audio/ringtonges/luna.ogg")))
+.setVibrate(new long[]{0,1000,1000,1000})
+.setLights(Color.GREEN,1000,1000)
+.build();
+```
+当然，如果你不想进行那么多繁琐的设置，也可以直接使用通知的默认效果，他会根据当前手机的环境来确定播放什么铃声，以及如何振动：
+
+```
+Notification notification = new NotificaitionCpmpat.BUilder(this)
+.setDefaults(NotificationCompat.DEFAULT_ALL)
+.build();
+```
+以上需要在真机上才能看到效果。
