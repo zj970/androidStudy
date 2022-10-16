@@ -282,13 +282,13 @@ public class NotificationActivity extends AppCompatActivity {
 
 ```
 Notification notification = new NotificaitionCpmpat.BUilder(this)
-.setSound(Uei.fromFile(new File("/system/media/audio/ringtonges/luna.ogg"))).build();
+.setSound(Uei.fromFile(new File("/system/media/audio/ringtones/MiHouse.ogg"))).build();
 ```
 &emsp;&emsp;除了允许播放音频外，我们还可以在通知到来的时候让手机进行振动，使用的是vibrate这个属性。它是一个长整型的数组，用于设置手机静止和振动的时长，以毫秒为单位。下表为0的值表示手机静止的时长，下标为1的值表示手机振动的时长，下标为2的值又表示手机静止的时长，以此类推。所以如果想要手机通知到来的时候立刻振动1秒，然后静止1秒，再振动1秒，代码可以写成：
 
 ```
 Notification notification = new NotificaitionCpmpat.BUilder(this)
-.setSound(Uei.fromFile(new File("/system/media/audio/ringtonges/luna.ogg")))
+.setSound(Uei.fromFile(new File("/system/media/audio/ringtones/MiHouse.ogg")))
 .setVibrate(new long[]{0,1000,1000,1000}).build();
 ```
 
@@ -301,7 +301,7 @@ Notification notification = new NotificaitionCpmpat.BUilder(this)
 
 ```
 Notification notification = new NotificaitionCpmpat.BUilder(this)
-.setSound(Uei.fromFile(new File("/system/media/audio/ringtonges/luna.ogg")))
+.setSound(Uri.fromFile(new File("/system/media/audio/ringtonges/luna.ogg")))
 .setVibrate(new long[]{0,1000,1000,1000})
 .setLights(Color.GREEN,1000,1000)
 .build();
@@ -314,3 +314,50 @@ Notification notification = new NotificaitionCpmpat.BUilder(this)
 .build();
 ```
 以上需要在真机上才能看到效果。
+
+#### 8.2.3 通知的高级功能
+
+&emsp;&emsp;继续观察NotificationCompat.Builder这个类，你会发现里面还有很多API是我们没有使用过的。那么下面我们就来学习一些更加强大的API的用法，从而构建出更加丰富的通知效果。  
+&emsp;&emsp;先来看看setStyle()方法，这个方法允许我们构建出富文本的通知的通知内容。也就是说比如这样写：
+
+```
+Notification notification = new NotificaitionCpmpat.BUilder(this)
+.setDefaults(NotificationCompat.DEFAULT_ALL)
+.setContentText("Learn how to build notifications,send and sync data,and use voice actions.Get the official Android IDE and developer tools to build apps for Android.")
+.build();
+```
+
+&emsp;&emsp;可以看到，通知内容是无法显示完整的，多余的部分会用省略号代替。其实这也很正常，因为通知的内容就应该言简意赅，详细内容放到点击后打开的活动当中会更加合适。  
+&emsp;&emsp;但是如果真的非常需要在通知当中显示一段长文字，Android也是非常的，通过setStyle()方法就可以做到，具体写法如下：
+
+```
+Notification notification = new NotificaitionCpmpat.BUilder(this)
+.setDefaults(NotificationCompat.DEFAULT_ALL)
+.setContentText(new NotificationCompat.BigTextStyle().bigText("Learn how to build notifications,send and sync data,and use voice actions.Get the official Android IDE and developer tools to build apps for Android."))
+.build();
+```
+
+&emsp;&emsp;我们在setStyle()方法中创建了一个NotificationCompat.BigTextStyle对象，这个对象就是用于封装长文字信息的，我们调用它的bigText()方法并将文字内容传入就可以了。除了显示长文字之外，通知里还可以显示一张大图片，具体用法也是基本相似的：
+
+```
+Notification notification = new NotificaitionCpmpat.BUilder(this)
+.setStyle(new NotificationCompat.BigPictureStyle().bigPicture(BigmapFactory.decodeResource(getResources(),R.drawable.big_image)))
+.build();
+```
+
+&emsp;&emsp;可以看到，这里仍然是调用的setStyle()方法，这次我们在参数中创建了一个NotificationCompat.BigPictureStyle对象，这个对象就是用于设置大图片的，然后调用它的bigPicture()方法并将图片传入。这里事先准备好一张图片，通过BitmapFactory的decodeResource()方法将图片解析成BitMap对象，再传入到bigPicture()方法中就可以为了。效果如下：
+
+![img_3.png](img_3.png)
+
+&emsp;&emsp;这样我们就把setStyle()方法中的重要内容基本都掌握了。接下来再学习一下setPriority()方法，它可以用于设置通知的重要程度。setPriority()方法接收一个整型参数用于设置这条通知的重要程度，一共有5个常量值可选：PRIORITY_DEFAULT表示默认的重要程度，和不设置效果是一样的；PRIORITY_MIN表示最低的种农药程度，系统可能只会在特定的场景才显示这条通知，比如用户下拉状态的时候；PRIORITY_LOW表示较低的重要程度，系统可能会将这类通知缩小，或改变其显示的顺序，将其排在更重要的通知之后；PRIORITY_HIGH表示较高的重要程度，系统可能会将这类通知放大，或改变其显示的顺序，将其排在比较靠前的位置；PRIORITY_MAX百世最高的重要程度，这类通知消息必须要让用户立刻看到，甚至需要用户做出响应操作。具体写法如下：
+
+```
+Notification notification = new NotificaitionCpmpat.BUilder(this)
+.setPriority(NotificationCompat.PRIORITY_MAX)
+.build();
+```
+&emsp;&emsp;这里我们将通知的重要程度设置成了最高，表示这是一条非常重要的通知，要求用户必须立刻看到。现在重新运行一下程序，并点击按钮，效果如下所示：
+
+![img_4.png](img_4.png)
+
+&emsp;&emsp;可以看到，这次的通知不是在系统状态栏显示一个小图标，而是弹出了一个横幅，并附带了通知的详细内容，这是一条非常重要的通知。不管用户现在是在玩游戏还是看电影，这条通知都会显示在最上方，以此引起用户的注意。

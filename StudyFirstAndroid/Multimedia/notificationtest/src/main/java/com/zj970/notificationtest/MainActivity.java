@@ -7,6 +7,8 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.net.Uri;
 import android.os.Build;
 import android.view.View;
 import android.widget.Button;
@@ -14,6 +16,8 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import androidx.core.app.NotificationCompat;
+
+import java.io.File;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
@@ -73,6 +77,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .setTicker("提示消息")
                 .setWhen(System.currentTimeMillis())
                 .setLargeIcon(BitmapFactory.decodeResource(this.getResources(), R.mipmap.ic_launcher_round))
+                .setSound(Uri.fromFile(new File("/system/media/audio/ringtones/MiHouse.ogg")))
+                .setStyle(new NotificationCompat.BigTextStyle().bigText("Learn how to build notifications,send and sync data,and use voice actions.Get the official Android IDE and developer tools to build apps for Android."))
+                .setStyle(new NotificationCompat.BigPictureStyle().bigPicture(BitmapFactory.decodeResource(getResources(),R.drawable.big_image)))
+                .setVibrate(new long[]{0,1000,1000,1000})
+                .setLights(Color.GREEN,1000,1000)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
                 .setContentTitle(title).setContentText(content);
         Notification notification = builder.build();
         NotificationManager notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
