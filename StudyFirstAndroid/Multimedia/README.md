@@ -361,3 +361,36 @@ Notification notification = new NotificaitionCpmpat.BUilder(this)
 ![img_4.png](img_4.png)
 
 &emsp;&emsp;可以看到，这次的通知不是在系统状态栏显示一个小图标，而是弹出了一个横幅，并附带了通知的详细内容，这是一条非常重要的通知。不管用户现在是在玩游戏还是看电影，这条通知都会显示在最上方，以此引起用户的注意。
+
+### 8.3 调用摄像头和相册
+
+&emsp;&emsp;我们平时在使用QQ或微信的时候经常要和别人分享图片，这些图片可以是用手机摄像头拍摄的，也是可以从相册中选取的。类似这样的功能实在是太常见，几乎在每一个应用程序中都会有，那么本节我们就学习一下调用摄像头和相册方面的知识。
+
+#### 8.3.1 调用摄像头拍照
+
+&emsp;&emsp;先来看看摄像头方面的知识，现在很多的应用都会要求用户上传一张图片来作为头像，这时打开摄像头拍张照是最简单快捷。下面就让我们通过一个例子学习一下，如何才能在应用程序里调用手机的摄像头进行拍照。新建一个CameraAlbumTest项目，然后修改activity_main.xml中的代码，如下所示：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context=".MainActivity">
+    <Button
+            android:id="@+id/take_photo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Take Photo"
+            android:textAllCaps="false"/>
+    <ImageView android:id="@+id/picture"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:layout_gravity="center_horizontal"/>
+</LinearLayout>
+```
+
+&emsp;&emsp;可以看到，布局只有两个控件，一个Button和一个ImageView。Button是用于打开摄像头进行拍照，而ImageView则是用于将排到的图片显示出来。然后开始编写调用摄像头的具体逻辑，修改MainActivity中的代码：
+
