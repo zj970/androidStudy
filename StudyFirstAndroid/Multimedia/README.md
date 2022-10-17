@@ -394,3 +394,144 @@ Notification notification = new NotificaitionCpmpat.BUilder(this)
 
 &emsp;&emsp;可以看到，布局只有两个控件，一个Button和一个ImageView。Button是用于打开摄像头进行拍照，而ImageView则是用于将排到的图片显示出来。然后开始编写调用摄像头的具体逻辑，修改MainActivity中的代码：
 
+```java
+package com.zj970.cameraalbumtest;
+
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.os.Build;
+import android.provider.MediaStore;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.core.content.FileProvider;
+import com.android.tv.cameraalbumtest.R;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+public class MainActivity extends AppCompatActivity {
+    public static final int TAKE_PHOTO = 1;
+    private ImageView picture;
+    private Uri imageUri;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Button takePhoto = findViewById(R.id.take_photo);
+        picture = findViewById(R.id.picture);
+        takePhoto.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //创建File对象，用于存储拍照后的图片
+                File outputImage = new File(getExternalCacheDir(),"output_image.jpg");
+                try {
+                    if (outputImage.exists()){
+                        outputImage.delete();
+                    }
+                    outputImage.createNewFile();
+                }catch (IOException e){
+                    e.printStackTrace();
+                }
+                if (Build.VERSION.SDK_INT >= 24){
+                    imageUri = FileProvider.getUriForFile(MainActivity.this,"com.zj970.cameraalbumtest.fileprovider",outputImage);
+                } else {
+                    imageUri = Uri.fromFile(outputImage);
+                }
+                //启动相机程序
+                Intent intent = new Intent("android.media.action.IMAGE_CAPTURE");
+                intent.putExtra(MediaStore.EXTRA_OUTPUT,imageUri);
+                startActivityForResult(intent,TAKE_PHOTO);
+            }
+        });
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode){
+            case TAKE_PHOTO:
+                if (resultCode == RESULT_OK){
+                    try {
+                        //将拍摄的照片显示出来
+                        Bitmap bitmap = BitmapFactory.decodeStream(getContentResolver().openInputStream(imageUri));
+                        picture.setImageBitmap(bitmap);
+                    }catch (FileNotFoundException e){
+                        e.printStackTrace();
+                    }
+                }
+                break;
+            default:
+                break;
+        }
+    }
+}
+```
+
+&emsp;&emsp;上述代码稍微有点复杂，我们来仔细地分析一下。在MainActivity中要做的第一件事自然是分别获取到Button和ImageView的实例，并给Button注册上点击事件，然后在Button的点击事件里开始处理调用摄像头的逻辑，我们重点看一下这部分的代码。  
+&emsp;&emsp;首先这里创建了一个File对象，用于存放摄像头拍下的图片，这里我们把图片命名为output_image.kpg，并将它存放在手机SD卡的应用关联缓存目录下。什么叫作应用关联缓存目录呢？就是指SD卡中专门用于存放当前应用缓存数据的位置，调用getExternalCacheDir()方法可以得到这个目录，具体的路径是/sdcard/Android/data/<package name>/cache。那么为什么要使用应用关联缓存目录来存放图片呢？因为从Android 6.0系统开始，读写SD卡被列为了危险权限。如果将图片存放在SD卡的任何其他目录，都要进行运行时权限处理才行，而使用应用关联目录则可以跳出这一步。  
+&emsp;&emsp;接着会进行一个判断，如果运行设备的系统版本低于Android 7.0，就调用Uri的formFile()方法将FIle对象转换为Uri对象，这个Uri对象标识着output_image.jpg这张图片的本地真实路径。否则，就调用FileProvider的getUriForFile()方法将File对象转换成一个封装过的Uri对象。getUriForFile()方法接收3个参数，第一个参数要求传入Context对象，第二个参数可以是任意唯一的字符串，第三个参数则是我们刚刚创建的File对象。之所以要进行这样一层转换，是因为从Android7.0系统开始，直接使用本地真实路径的Uri被认为是不安全稍微，会抛出一个FileUriExposedException异常。而FileProvider则是一种特殊的内容提供器，它使用了和内容提供器类似的机制来对数据进行保护，可以选择性地封装过的Uri共享给外部，从而提高了应用的安全性。  
+&emsp;&emsp;接下来构建出了一个Intent对象，并将这个Intent的action指定为android.media.action.IMAGE_CAPTURE，再调用Intent的putExtra()方法指定图片的输出地址，这里填入刚刚得到的Uri对象，最后调用startActivityForResult()来启动活动的，因此拍完照之后会有结果返回到onActivityResult()方法中。如果发现拍照成功，就可以调用BitmapFactory的decodeStream()方法将output_image.jpg这张照片解析成Bitmap对象，然后把它设置到ImageView中显示出来。不过还没有结束，刚才提到了内容提供器，那么我们自然要在AndroidManifest.xml中对内容提供器进行注册，如下所示：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.android.tv.cameraalbumtest">
+
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <application
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/Theme.Multimedia">
+        <activity android:name="com.zj970.cameraalbumtest.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+
+
+        <provider
+                android:authorities="com.zj970.cameraalbumtest.fileprovider"
+                android:name="androidx.core.content.FileProvider"
+                android:exported="false"
+                android:grantUriPermissions="true">
+            <meta-data
+                    android:name="android.support.FILE_PROVIDER_PATHS"
+                    android:resource="@xml/file_paths"/>
+        </provider>
+    </application>
+
+</manifest>
+```
+
+&emsp;&emsp;其中，android:name属性的值是固定的，android:authorities属性的值必须要和刚才FileProvider.getUriForFile()方法中的第二个参数一致。另外，这里还在<provider>标签的内部使用<meta-data>来指定Uri的共享路径，并引用了一个@xml/file_paths资源。当然这个资源现在还是不存在的，下面我们来创建一下：  
+&emsp;&emsp;右击res新建一个xml资源目录，创建一个file_paths.xml文件。然后修改file_paths.xml文件中的内容：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <external-path name="my_images" path="/"/>
+</paths>
+```
+
+&emsp;&emsp;其中，external-path就是用来指定Uri共享的，name属性的值可以随便填，path属性的值表示共享的具体路径。这里设置空值表示将整个SD卡进行共享，当然也可以指定路径。另外还有一点需要注意，在Android 4.4 系统之前，访问SD卡的应用关联目录也是要声明权限，在知乎就不再需要声明权限了。
+
+```xml
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+```
+
+&emsp;&emsp;现在将程序运行到手机上，点击Take Photo按钮，当拍摄完成后，点击确认就会返回主界面并显示图片，最终的效果如下：
+
+![img_5.jpg](img_5.jpg)
