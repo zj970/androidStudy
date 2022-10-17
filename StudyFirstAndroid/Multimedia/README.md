@@ -535,3 +535,36 @@ public class MainActivity extends AppCompatActivity {
 &emsp;&emsp;现在将程序运行到手机上，点击Take Photo按钮，当拍摄完成后，点击确认就会返回主界面并显示图片，最终的效果如下：
 
 ![img_5.jpg](img_5.jpg)
+
+#### 8.3.2 从相册中选择照片
+
+&emsp;&emsp;虽然调用摄像头拍照既方便又快捷，但是我们并不是每次都需要去当场拍一张照片。因为每个人的手机相册里应该都会存有许许多多张照片，直接从相册里选取一张现有的照片会比打开相机拍一张照片更加常用。一个优秀的应用程序应该将这两种选择方式都提供给用户，由用户来决定使用哪一种。下面我们就来看一下，如何才能实现从相册中选择照片的功能。在CameraAlbumTest项目的基础上进行修改，编辑activity_main.xml文件：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context="com.zj970.cameraalbumtest.MainActivity">
+    <Button
+            android:id="@+id/take_photo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Take Photo"
+            android:textAllCaps="false"/>
+    <Button
+            android:id="@+id/choose_from_album"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Choose From Album"
+            android:textAllCaps="false"/>
+    <ImageView android:id="@+id/picture"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:layout_gravity="center_horizontal"/>
+</LinearLayout>
+```
+然后修改MainActivity中的代码，加入从相册选择照片的逻辑，代码如下所示：
