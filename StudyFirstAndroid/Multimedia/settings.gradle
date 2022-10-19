@@ -1,3 +1,4 @@
+include ':playaudiotest'
 include ':cameraalbumtest'
 rootProject.name = "Multimedia"
 include ':notificationtest'
