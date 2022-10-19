@@ -761,4 +761,15 @@ public class MainActivity extends AppCompatActivity {
 ```
 
 &emsp;&emsp;可以看到，在Choose From Album按钮的点击事件里我们先是进行了一个运行时的权限处理，动态申请WRITE_EXTERNAL_STORAGE这个危险权限。为什么需要申请这个权限呢？因为相册中的照片都是存储在SD卡上的，我们要从SD卡中读取照片就需要申请这个权限。WRITE_EXTERNAL_STORAGE表示同时授予程序对SD卡读和写的能力。  
-&emsp;&emsp;当用户授权了权限之后会调用openAlbum()方法，这里我们先是构建出一个Intent对象，并将它的action指定为android.intent.action.Get_CONTENT。接着给这个Intent对象设置一些必要的参数，然后调用startActivityForResult()方法就可以打开相册程序选择照片了。注意在调用startActivityForResult()方法的时候，我们给第二个参数传入的值变成了CHOOSE_PHOTO，这样当从相册选择完图片回到onActivityResult()方法时，就会进入CHOOSE_PHOTO的case来处理图片。接下来的逻辑就比较复杂了，首先为了兼容新老版本的手机，我们做了一个判断，如果是4.4以上的系统用handleImageOnKitKat()方法来处理，否则就调用handleImageBeforeKitkat()方法来处理图片。之所以要这样做，是因为从android 4.4开始选取相册中的图片不再是图片的真实的Uri而是封装过的，所以从4.4开始需要对此Uri进行解析。
+&emsp;&emsp;当用户授权了权限之后会调用openAlbum()方法，这里我们先是构建出一个Intent对象，并将它的action指定为android.intent.action.Get_CONTENT。接着给这个Intent对象设置一些必要的参数，然后调用startActivityForResult()方法就可以打开相册程序选择照片了。注意在调用startActivityForResult()方法的时候，我们给第二个参数传入的值变成了CHOOSE_PHOTO，这样当从相册选择完图片回到onActivityResult()方法时，就会进入CHOOSE_PHOTO的case来处理图片。接下来的逻辑就比较复杂了，首先为了兼容新老版本的手机，我们做了一个判断，如果是4.4以上的系统用handleImageOnKitKat()方法来处理，否则就调用handleImageBeforeKitkat()方法来处理图片。之所以要这样做，是因为从android 4.4开始选取相册中的图片不再是图片的真实的Uri而是封装过的，所以从4.4开始需要对此Uri进行解析。  
+&emsp;&emsp;那么handleImageOnKitKat()方法中的逻辑就基本上是如何解析出这个封装过的Uri了。这里有好几种判断情况，如果返回的是Uri是document类型的话，那就取出document id进行处理，如果不是的话，那就使用普通的方式处理。另外，如果Uri的authority是media格式的话，document id 还需要再进行一次解析，通过字符串分割的方式取出后半部分才能得到真正的数字id。取出的id用于构建新的Uri和条件语句，然后把这些值作为参数传入到getImagePath()方法中，就可以获取到图片的真实路径了。拿到图片的路径之后，再调用displayImage()方法将图片显示到界面上。  
+&emsp;&emsp;相比于handleImageOnKitkat()方法，handleImageBeforeKitKat()方法中的逻辑就要简单得多了，因为它的Uri是没有封装过的，不需要任何解析，直接将Uri传入到getImagePath()方法当中就能获取到图片的真实路径了，最后同样是调用displayImage()方法将图片显示到界面上。  
+&emsp;&emsp;现在将程序重新运行到手机上，点击按钮，首先会弹出权限申请
+
+![img_5.png](img_5.png)
+
+选择完图片后回到主界面，如图所示：
+
+![img_6.png](img_6.png)
+
+&emsp;&emsp;调用摄像头拍照以及从相册中选择照片是很多Android应用都会带有的功能。不过目前我们的实现还不算完美，因为某些照片即使经过裁剪后体积仍然很大，直接加载到内存中有可能会导致程序崩溃。更好的做法是根据项目的需求先对照片进行适当的压缩，然后再加载到内存中。
