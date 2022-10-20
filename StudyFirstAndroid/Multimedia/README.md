@@ -783,3 +783,147 @@ public class MainActivity extends AppCompatActivity {
 &emsp;&emsp;在Android中播放音频文件一般是使用MediaPlayer类实现的，它对多种格式的音频文件提供了全面的控制方法，从而使得播放音乐的工作变得非常简单。下表列出了MediaPlayer类中一些较为常用的控制方法。
 
 ![img_7.png](img_7.png)
+
+&emsp;&emsp;简单了解上述方法后，我们再来梳理一下MediaPlayer的工作流程。首先需要创建出一个MediaPlayer对象，然后调用setDataSource()方法来设置音频文件的路径，再调用prepare()方法使MediaPlayer进入到准备状态，接下来调用start()方法就可以开始播放音频，调用pause()方法就会暂停播放，调用reset()方法就可以停止播放。下面新建一个PlayAudioTest模块，修改activity_main.xml中的代码：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity"
+        android:orientation="vertical">
+    <Button
+            android:id="@+id/play"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Play"
+            android:textAllCaps="false"/>
+    <Button
+            android:id="@+id/pause"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Pause"
+            android:textAllCaps="false"/>
+    <Button
+            android:id="@+id/stop"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Stop"
+            android:textAllCaps="false"/>
+
+</LinearLayout>
+```
+在布局文件中放置了3个按钮，分别对音频文件进行播放、暂停和停止操作。然后修改MainActivity中的代码：
+
+```java
+package com.android.tv.playaudiotest;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.media.MediaPlayer;
+import android.os.Environment;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+    private MediaPlayer mediaPlayer = new MediaPlayer();
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        Button play = findViewById(R.id.play);
+        Button pause = findViewById(R.id.pause);
+        Button stop = findViewById(R.id.stop);
+
+        play.setOnClickListener(this::onClick);
+        pause.setOnClickListener(this::onClick);
+        stop.setOnClickListener(this::onClick);
+
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
+        } else {
+            //初始化MedPlayer
+            initMediaPlayer();
+        }
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.play:
+                if (!mediaPlayer.isPlaying()){
+                    mediaPlayer.start();//开始播放
+                }
+                break;
+            case R.id.pause:
+                if (mediaPlayer.isPlaying()){
+                    mediaPlayer.pause();//暂停播放
+                }
+                break;
+            case R.id.stop:
+                if (mediaPlayer.isPlaying()){
+                    mediaPlayer.reset();//停止播放
+                    initMediaPlayer();
+                }
+                break;
+            default:
+                break;
+        }
+
+    }
+
+    private void initMediaPlayer(){
+        try {
+            File file = new File(Environment.getExternalStorageState(),"music.mp3");
+            //指定音频文件的路径
+            mediaPlayer.setDataSource(file.getPath());
+            mediaPlayer.prepare();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case 1:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+                    initMediaPlayer();
+                }else {
+                    Toast.makeText(this, "拒绝权限将无法使用程序", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+            default:
+                break;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mediaPlayer!=null){
+            mediaPlayer.stop();
+            mediaPlayer.release();
+        }
+    }
+}
+```
+
+&emsp;&emsp;可以看到，在类初始化的时候我们就先创建了一个MediaPlayer的实例，然后在onCreate()方法中进行了运行时权限处理，动态申请WRITE_EXTERNAL_STORAGE权限。
