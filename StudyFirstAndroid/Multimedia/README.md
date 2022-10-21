@@ -926,4 +926,35 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 }
 ```
 
-&emsp;&emsp;可以看到，在类初始化的时候我们就先创建了一个MediaPlayer的实例，然后在onCreate()方法中进行了运行时权限处理，动态申请WRITE_EXTERNAL_STORAGE权限。
+&emsp;&emsp;可以看到，在类初始化的时候我们就先创建了一个MediaPlayer的实例，然后在onCreate()方法中进行了运行时权限处理，动态申请WRITE_EXTERNAL_STORAGE权限。这是由于待会我们会在SD卡中放置一个音频文件，程序为了播放这个音频文件必须拥有访问SD卡的权限才行。注意，在onRequestPermissionsResult()方法中，如果用户拒绝了权限申请，那么就调用finish()方法将程序直接关掉，因为如果没有SD卡的访问权限，我们这个程序将什么都干不了。  
+&emsp;&emsp;用户同意授权之后就会调用initMediaPlayer()方法为MediaPlayer对象进行初始化操作。在initMediaPlayer()方法中，首先是通过创建一个File对象来指定音频文件的路径，从这里可以看出，我们需要事先在SD卡的根目录下放置一个名为music.mp3的音频文件。然后依次调用了setDataSource()方法和prepare()方法，为MediaPlayer做好了播放前的准备。  
+&emsp;&emsp;接下来我们看一下各个按钮的的点击事件中的代码。当点击Play按钮时会进行判断，如果当前MediaPlayer没有正在播放音频，则调用start()方法开始播放。当点击Pause按钮时会判断，如果当前MediaPlayer正在播放音频，则调用pause()方法暂停播放。当点击Stop按钮时就会判断，如果当前MediaPlayer正在播放音频，则调用reset()方法将MediaPlayer重新重置为刚刚创建的状态，然后重新调用一遍initMediaPlayer()方法。  
+&emsp;&emsp;最后在onDestroy()方法中，我们还需要分别调用stop()方法和release()方法，将与MediaPlayer相关的资源释放掉，这些前提是在AndroidManifest.xml中添加权限：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.android.tv.playaudiotest">
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <application
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/Theme.Multimedia">
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+```
+
+首先会弹出权限申请框
+
+![img_8.png](img_8.png)
