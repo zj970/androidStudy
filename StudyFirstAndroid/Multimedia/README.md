@@ -958,3 +958,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 首先会弹出权限申请框
 
 ![img_8.png](img_8.png)
+
+&emsp;&emsp;同意授权之后就可以开始播放音乐了，点击Play按钮就会响起音乐，然后点击Pause按钮，音乐就会停止，再次点击Play按钮，会接着暂停之前的位置继续播放。这时如果点击一下Stop按钮，音乐也会停止，但是当再次点击Play按钮时，音乐就会从头开始播放了。
