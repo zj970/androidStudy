@@ -1112,3 +1112,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 &emsp;&emsp;这里视频文件没有，所以无法播放。它的用法和MediaPlayer相似。其实VideoView只是帮我们做了一个很好的封装而已，它的背后仍然是使用MediaPlayer来对视频文件进行控制的。另外需要注意，VideoView并不是一个万能的视频播放工具类，它在视频格式的支持以及播放效率方面都存在着较大的不足。所以如果只是用于播放一些游戏的片头动画，或者某个应用的视频宣传，使用VideoView还是绰绰有余。
 
+### 8.5 总结
+
+&emsp;&emsp;本章节我们主要对Android系统中的各种多媒体技术进行了学习，其中包括通知的使用技巧、调用摄像头拍照、从相册中选取照片，以及播放音频和视频文件。
