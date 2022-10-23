@@ -1,3 +1,4 @@
+include ':playvideotest'
 include ':playaudiotest'
 include ':cameraalbumtest'
 rootProject.name = "Multimedia"

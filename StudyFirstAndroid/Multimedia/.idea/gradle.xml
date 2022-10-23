@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$/cameraalbumtest" />
             <option value="$PROJECT_DIR$/notificationtest" />
             <option value="$PROJECT_DIR$/playaudiotest" />
+            <option value="$PROJECT_DIR$/playvideotest" />
           </set>
         </option>
       </GradleProjectSettings>

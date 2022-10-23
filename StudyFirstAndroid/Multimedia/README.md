@@ -960,3 +960,155 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 ![img_8.png](img_8.png)
 
 &emsp;&emsp;同意授权之后就可以开始播放音乐了，点击Play按钮就会响起音乐，然后点击Pause按钮，音乐就会停止，再次点击Play按钮，会接着暂停之前的位置继续播放。这时如果点击一下Stop按钮，音乐也会停止，但是当再次点击Play按钮时，音乐就会从头开始播放了。
+
+#### 8.4.2 播放视频
+
+&emsp;&emsp;播放视频文件其实并不比播放音频文件复杂，主要是使用VideoView类来实现的。这个类将视频的显示和控制集于一身，使得我们仅仅借助它就可以完成一个简易的视频播放器。VideoView的用法和MediaPlayer也比较类似，主要有以下常用方法：  
+
+![img_9.png](img_9.png)
+
+&emsp;&emsp;新建一个PlayVideoTest项目，然后修改activity_main.xml中的代码：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        tools:context=".MainActivity">
+
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        <Button android:id="@+id/play"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Play"
+                android:textAllCaps="false"/>
+        <Button android:id="@+id/pause"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Pause"
+                android:textAllCaps="false"/>
+        <Button android:id="@+id/replay"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Replay"
+                android:textAllCaps="false"/>
+    </LinearLayout>
+    <VideoView
+            android:id="@+id/video_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+</LinearLayout>
+```
+&emsp;&emsp;这个布局文件中，首先放置了3个按钮，分别用于控制视频的播放、暂停和重新播放。然后在按钮下面又放置了一个VideoView，稍后的视频就将在这里显示。接下来修改MainActivity中的代码，如下所示：
+
+```java
+package com.zj970.playvideotest;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.os.Environment;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
+import android.widget.VideoView;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
+import java.io.File;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+    VideoView videoView;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        videoView = findViewById(R.id.video_view);
+        Button play = findViewById(R.id.play);
+        Button pause = findViewById(R.id.pause);
+        Button replay = findViewById(R.id.replay);
+        play.setOnClickListener(this::onClick);
+        pause.setOnClickListener(this::onClick);
+        replay.setOnClickListener(this::onClick);
+
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(MainActivity.this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
+        }else {
+            initVideoPath();//初始化Video
+        }
+    }
+
+    public void initVideoPath(){
+        File file = new File(Environment.getExternalStorageDirectory(),"movie.mp4");
+        videoView.setVideoPath(file.getPath());//指定视频文件的路径
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.play:
+                if (!videoView.isPlaying()){
+                    videoView.start();//开始播放
+                }
+                break;
+            case R.id.pause:
+                if (videoView.isPlaying()){
+                    videoView.pause();//暂停播放
+                }
+                break;
+            case R.id.replay:
+                if (videoView.isPlaying()){
+                    videoView.resume();//重新播放
+                }
+                break;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case 1:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    initVideoPath();
+                } else {
+                    Toast.makeText(this, "拒绝权限将无法使用程序", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (videoView != null){
+            videoView.suspend();
+        }
+    }
+}
+```
+
+&emsp;&emsp;这部分代码跟前面播放音频的代码非常相似。首先在onCreate()方法中同样进行了一个运行时权限处理，因为视频文件将会放在SD卡上。当用户同样授权之后就会调用initVideoPath()方法设置视频文件的路径，这里需要事先在SD卡的根目录下放置一个名为movie.mp4的视频文件。  
+&emsp;&emsp;下面看一下各个按钮的点击事件中的代码。当点击Play按钮时会进行判断，如果当前没有正在播放视频，则调用start()方法开始播放。当点击Pause按钮时会判断，如果当前视频正在播放，则调用pause()方法暂停播放。当点击Replay按钮时会判断，如果当前视频正在播放，则调用resume()方法从头播放视频。  
+&emsp;&emsp;最后在onDestroy()方法中，我们还需要调用一下suspend()方法，将VideoView所占用的资源释放掉。另外仍然始终记得在AndroidManifest.xml文件中声明用到的权限，如下所示： 
+
+> <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+
+![img_10.png](img_10.png)
+
+&emsp;&emsp;这里视频文件没有，所以无法播放。它的用法和MediaPlayer相似。其实VideoView只是帮我们做了一个很好的封装而已，它的背后仍然是使用MediaPlayer来对视频文件进行控制的。另外需要注意，VideoView并不是一个万能的视频播放工具类，它在视频格式的支持以及播放效率方面都存在着较大的不足。所以如果只是用于播放一些游戏的片头动画，或者某个应用的视频宣传，使用VideoView还是绰绰有余。
+
