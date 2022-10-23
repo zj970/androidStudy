@@ -1,0 +1,2 @@
+include ':webviewtest'
+rootProject.name = "NetworkStudy"
