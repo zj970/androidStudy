@@ -226,3 +226,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 }
 ```
+
+&emsp;&emsp;可以看到， 我们在Send Request按钮的点击事件里调用了sendRequestWithHttpURLConnection发出一条Http请求，请求的目标地址就是百度的首页。接着利用BufferedReader对服务器返回的流进行读取，并将结果传入到了showResponse()方法中。而在showResponse()方法里则是调用了一个runOnUiThread()方法，然后在这个方法的匿名类参数进行操作，将返回的数据显示到界面上。那么这里为什么要用这个runOnUiThread()方法呢，这是因为Android是不允许在子线程中进行UI操作的，我们需要通过这个方法将线程切换到主线程，然后再更新UI元素。在运行之前，必须在AndroidManifest.xml申请网络权限。
+
+![img_1.png](img_1.png)
+
+&emsp;&emsp;是不是看得头晕眼花了？没错，服务器返回给我们的就是这种HTML代码，通常情况下浏览器都会将这些代码解析成漂亮的网页再展示出来。那么如果是想要提交数据给服务器应该怎么办呢？其实也不复杂，只需要将HTTP请求的方式改成POST，并在获取输入流之前将要提交数据写出即可。注意每条数据都要以键值对的形式存在，数据与数据之间用"&"符号隔开，比如说我们想要向服务器提交用户名和密码，就可以这样写：  
+
+```
+connection.setRequestMethod("POST");
+DataOutputStream out = new DataOutputStream(connection.getOutputStream());
+out.writeBytes("username=admin&password=123456");
+```
+
