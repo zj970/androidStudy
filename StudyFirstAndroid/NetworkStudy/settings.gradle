@@ -1,3 +1,4 @@
+include ':networktest'
 include ':httpurlconnectiontest'
 include ':webviewtest'
 rootProject.name = "NetworkStudy"

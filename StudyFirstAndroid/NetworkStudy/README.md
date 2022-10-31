@@ -239,5 +239,114 @@ DataOutputStream out = new DataOutputStream(connection.getOutputStream());
 out.writeBytes("username=admin&password=123456");
 ```
 
-#### 9.2.2 使用OkHttp 
+#### 9.2.2 使用OkHttp
 
+&emsp;&emsp;当然我们并不是只能使用HttpURLConnection，完全没有任何其他选择，事实上在开源盛行的今天，有许多出色的网络通信库都可以替代原生的HttpURLConnection，而其中OkHttp无疑是做的最出色的一个。  
+&emsp;&emsp;OkHttp是由鼎鼎大名的Square公司开发的，这个公司在开源事业上面贡献良多，除了OkHttp之外，还开发了；了像Picasso、Retrofit等著名的开源项目。OkHttp不仅在接口封装上面做得简单易用，就连在底层实现上也是自成一派，比起原生的HttpURLConnection，可以说是有过之而无不及，现在已经成了广大Android开发者首选的网络通信库。那么本小节我们就来学习一下OkHttp的用法，okHttp的项目地址是：https://github.com/square/okhttp。在使用OkHttp之前，我们需要先在项目中添加OkHttp库的依赖。编辑app/build.gradle文件，在dependencies闭包中添加如下内容：
+
+```groovy
+dependencies {
+    // define a BOM and its version
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.10.0"))
+    // define any required OkHttp artifacts without version
+    implementation("com.squareup.okhttp3:okhttp")
+    implementation("com.squareup.okhttp3:logging-interceptor")
+}
+```
+&emsp;&emsp;添加上述依赖会自动下载两个库，一个是OkHttp库，一个是Okio库，后者是前者的通信基础。首先需要创建一个OkHttpClient的实例，如下所示：
+&emsp;&emsp;OkHttpClient client = new OkHttpClient();
+&emsp;&emsp;接下来如果想要发出一条HTTP请求，就需要创建一个Request对象：
+&emsp;&emsp;Request request = new Request.Builder().build();
+&emsp;&emsp;当然，上述代码只是创建一个空的Request对象，并没有什么实际作用，我们可以在最终的build()方法之前连缀很多其他方法来丰富这个Request对象。比如可以通过url()方法来设置目标的网络地址，如下所示：
+
+```
+Request request = new Request.Builder().url("http://www.baidu.com").build();
+```
+&emsp;&emsp;之后调用OkHttpClient的newCall()方法来创建一个Call对象，并调用它的execute()方法来发送请求并获取服务器返回的数据，写法如下：  
+```
+Response response = client.newCall(request).execute();
+```
+&emsp;&emsp;其中Response对象就是服务器返回的数据了，我们可以使用如下写法来得到返回的具体内容：
+
+```
+String responseData = response.body().string();
+```
+&emsp;&emsp;如果是发起一条POST请求会比GET请求稍微复杂一点，我们需要先构建一个RequestBody对象来存放待提交的参数，如下所示：
+```
+RequestBody requestBody = new FormBody.Builder().add("username","admin")
+                            .add("password","123456")
+                            .build();
+```
+&emsp;&emsp;然后在Request.Builder中调用一下post()方法，并将Request.Builder中调用一下post()方法，并将RequestBody对象传入：
+
+```
+Request request = new Request.Builder()
+                .url("http://www.baidu.com")
+                .post(requestBody)
+                .build();
+```
+&emsp;&emsp;接下来的操作就和GET请求一样，调用execute()方法来发送请求并获取服务器返回的数据即可。新建一个NetworkTest项目，修改MainActivity中的代码，如下所示：
+
+```java
+package com.zj970.networktest;
+
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    private static final String STRING_URL= "https://www.baidu.com";
+    TextView responseText;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Button sendRequest = findViewById(R.id.send_request);
+        responseText = findViewById(R.id.response_text);
+        sendRequest.setOnClickListener(this::onClick);
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.send_request){
+            sendRequestWithOkHttp();
+        }
+    }
+
+    private void sendRequestWithOkHttp(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    OkHttpClient client = new OkHttpClient();
+                    Request request = new Request.Builder().url(STRING_URL).build();
+                    Response response = client.newCall(request).execute();
+                    String responseData = response.body().string();
+                    showResponse(responseData);
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+
+    private void showResponse(String value){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                //这里更新UI操作
+                responseText.setText(value);
+            }
+        });
+    }
+}
+```
+
+&emsp;&emsp;这里我们并没有做太多的改动，只是添加了一个sendRequestWithOkHttp()方法，并在SendRequest按钮的点击时事件里去调用这个方法。在这个方法中同样还是先开启一个子线程，然后在子线程中使用OkHttp发出一条Http请求，请求的目标地址还是百度的首页，Okhttp的用法也正如前面介绍一样。最后调用showResponse()方法将数据显示到界面。
