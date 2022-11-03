@@ -351,7 +351,155 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 &emsp;&emsp;这里我们并没有做太多的改动，只是添加了一个sendRequestWithOkHttp()方法，并在SendRequest按钮的点击时事件里去调用这个方法。在这个方法中同样还是先开启一个子线程，然后在子线程中使用OkHttp发出一条Http请求，请求的目标地址还是百度的首页，Okhttp的用法也正如前面介绍一样。最后调用showResponse()方法将数据显示到界面。
 
-### 解析XML格式数据。
+### 9.3 解析XML格式数据
 &emsp;&emsp;通常情况下，每个需要访问网络数据的应用程序都会有一个自己的服务器，我们可以向服务器提交数据，也可以从服务器上获取数据，不过这个时候就出现了一个问题，这个数据到底要以什么样的格式在网络上传输呢？随便传递一段文本肯定是不行的，因为另一方根本就不会知道这段文本的用途是什么。因此，一般我们都会在网络上传输一些格式化后的数据，这种数据会有一定的结构规格和语义，当另一方收到数据消息之后就可以按照相同的结构规格进行解析，从而取出他想要的那部分内容。  
 &emsp;&emsp;在网络上传输数据时最常用的格式有两种：XML和JSON，下面我们就来一个一个地进行学习，首先学习如何解析XML格式的数据。  
-&emsp;&emsp;在此之前搭建一个Web服务器，用Apache服务器
+&emsp;&emsp;在此之前搭建一个Web服务器，用Apache服务器，然后在服务器地址下新建一个get_data.xml文件
+
+
+```xml
+<apps>
+    <app>
+        <id>1</id>
+        <name>Google Map</name>
+        <version>1.0</version>
+    </app>
+    
+    <app>
+        <id>2</id>
+        <name>Chrome</name>
+        <version>2.1</version>
+    </app>
+    
+    <app>
+        <id>3</id>
+        <name>Google Play</name>
+        <version>2.3</version>
+    </app>
+    
+</apps>
+```
+
+然后在浏览器中输入http://loclhost/get_data.xml就会出现如下图所示：
+
+![img_2.png](img_2.png)
+
+#### 9.3.1 Pull解析方式
+
+&emsp;&emsp;解析XML格式的数据其实也有很多方式，本次学习Pull解析和SAX解析。那么简单起见，这里仍然是在NetworkTest项目上继续开发，这样我们就可重用之前网络通信部分的代码，从而把工作的重心放在XML数据解析上，修改MainActivity中的代码，如下所示：
+
+```java
+package com.zj970.networktest;
+
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
+
+import java.io.StringReader;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    //private static final String STRING_URL= "https://www.baidu.com";
+    private static final String STRING_URL= "http://10.0.2.2/get_data.xml";
+    private static final String TAG = "MainActivity";
+    TextView responseText;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Button sendRequest = findViewById(R.id.send_request);
+        responseText = findViewById(R.id.response_text);
+        sendRequest.setOnClickListener(this::onClick);
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.send_request){
+            sendRequestWithOkHttp();
+        }
+    }
+
+    private void sendRequestWithOkHttp(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    OkHttpClient client = new OkHttpClient();
+                    Request request = new Request.Builder().url(STRING_URL).build();
+                    Response response = client.newCall(request).execute();
+                    String responseData = response.body().string();
+                    pareXMLWithPull(responseData);
+                    showResponse(responseData);
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+
+    private void showResponse(String value){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                //这里更新UI操作
+                responseText.setText(value);
+            }
+        });
+    }
+
+
+    private void pareXMLWithPull(String xmlData){
+        try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            XmlPullParser xmlPullParser = factory.newPullParser();
+            xmlPullParser.setInput(new StringReader(xmlData));
+            int eventType = xmlPullParser.getEventType();
+            String id = "";
+            String name = "";
+            String version = "";
+            while (eventType != XmlPullParser.END_DOCUMENT){
+                String nodeName = xmlPullParser.getName();
+                switch (eventType){
+                    //开始解析某个节点
+                    case XmlPullParser.START_TAG:
+                        if ("id".equals(nodeName)){
+                            id = xmlPullParser.nextText();
+                        } else if ("name".equals(nodeName)){
+                            name = xmlPullParser.nextText();
+                        }else if ("version".equals(nodeName)){
+                            version = xmlPullParser.nextText();
+                        }
+                        break;
+                    //完成解析某个节点
+                    case XmlPullParser.END_TAG:
+                        if ("app".equals(nodeName)){
+                            Log.d(TAG, "pareXMLWithPull: id "+id);
+                            Log.d(TAG, "pareXMLWithPull: name "+name);
+                            Log.d(TAG, "pareXMLWithPull: version "+version);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                eventType = xmlPullParser.next();
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+}
+```
+&emsp;&emsp;可以看到，这里首先将HTTP请求地址修改成了http://10.0.2.2/get_data.xml，10.0.2.2对于模拟器来说就是电脑本机的IP地址。在得到了服务器返回的数据后，调用parseXMLWithPull()方法来解析服务器返回的数据。  
+&emsp;&emsp;首先要获取一个XmlPullParseFactory的实例，并借助这个实例得到XmlPullParse对象，然后调用XmlPullParse的setInput()方法将服务器返回的XML数据设置进去就可以开始解析了。解析的过程非常简单，通过getEventType()可以得到当前的解析事件，然后在一个While循环中不断地进行解析，如果当前的解析事件不等于XmlPullParse.END_DOCUMENT，说明解析工作还没完成，调用next()方法后可以获取到下一个解析事件。  
+&emsp;&emsp;在while循环中我们通过getName()方法得到当前节点的名字，如果发现节点名等于id、name或version，就调用nextText()方法来获取节点内具体的内容，每当解析完一个app节点后将获取到的内容打印出来。效果如下：
+
+![img_3.png](img_3.png)
