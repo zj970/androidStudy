@@ -503,3 +503,108 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 &emsp;&emsp;在while循环中我们通过getName()方法得到当前节点的名字，如果发现节点名等于id、name或version，就调用nextText()方法来获取节点内具体的内容，每当解析完一个app节点后将获取到的内容打印出来。效果如下：
 
 ![img_3.png](img_3.png)
+
+#### 9.3.2 SAX解析方式
+
+&emsp;&emsp;Pull解析方式虽然好用，但它并不是我们唯一的选择。SAX解析也是一种特别常用的XML解析方式。虽然它的用法比Pull解析要复杂一些，但在语义上更加清楚。  
+&emsp;&emsp;通常情况下我们都会新建一个类继承自DefaultHandler，并重写父类的5个方法，如下所示：
+
+```java
+package com.zj970.networktest;
+
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+
+public class ContentHandler extends DefaultHandler {
+
+    @Override
+    public void startDocument() throws SAXException {
+
+    }
+
+    @Override
+    public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+
+    }
+
+    @Override
+    public void characters(char[] ch, int start, int length) throws SAXException {
+
+    }
+
+    @Override
+    public void endElement(String uri, String localName, String qName) throws SAXException {
+
+    }
+
+    @Override
+    public void endDocument() throws SAXException {
+
+    }
+}
+
+```
+
+&emsp;&emsp;startDocument()方法会在开始XML解析的时候调用，startElement()方法会在开始解析某个节点的时候呀调用，characters()方法会在获取节点中内容的时候调用，endElement()方法会在解析某个节点的时候调用，endDocument()方法会在完成整个XML解析的时候调用。其中，startElement()、characters()和endElement()这3个方法是有参数的，从XML解析出的数据会以参数的形式传入到这些方法中，需要注意的是，在获取节点中的内容时，characters()方法可能会被调用多次，一些换行符也会被当做内容解析出来，我们需要针对这种情况在代码中做好控制。实现如下：
+
+```java
+package com.zj970.networktest;
+
+import android.util.Log;
+import org.xml.sax.Attributes;
+import org.xml.sax.SAXException;
+import org.xml.sax.helpers.DefaultHandler;
+
+public class ContentHandler extends DefaultHandler {
+    private static final String TAG = "ContentHandler";
+    private String nodeName;
+    private StringBuilder id;
+    private StringBuilder name;
+    private StringBuilder version;
+
+    @Override
+    public void startDocument() throws SAXException {
+        id = new StringBuilder();
+        name = new StringBuilder();
+        version = new StringBuilder();
+    }
+
+    @Override
+    public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
+        //记录当前的节点名
+        nodeName = localName;
+    }
+
+    @Override
+    public void characters(char[] ch, int start, int length) throws SAXException {
+        //根据当前的节点判断将内容添加到哪一个StringBuilder对象中
+        if ("id".equals(nodeName)){
+            id.append(ch,start,length);
+        } else if ("name".equals(nodeName)){
+            name.append(ch,start,length);
+        } else if ("version".equals(nodeName)){
+            version.append(ch,start,length);
+        }
+    }
+
+    @Override
+    public void endElement(String uri, String localName, String qName) throws SAXException {
+        if ("app".equals(localName)){
+            Log.d(TAG, "pareXMLWithPull: id "+id);
+            Log.d(TAG, "pareXMLWithPull: name "+name);
+            Log.d(TAG, "pareXMLWithPull: version "+version);
+            //最后将StringBuilder清空掉
+            id.setLength(0);
+            name.setLength(0);
+            version.setLength(0);
+        }
+    }
+
+    @Override
+    public void endDocument() throws SAXException {
+        super.endDocument();
+    }
+}
+
+```
