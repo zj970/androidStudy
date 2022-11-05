@@ -753,3 +753,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 &emsp;&emsp;在得到了服务器返回的数据后，我们这次去调用parseXMLWithSAX()方法来解析XML数据。parseXMLWithSAX()方法中先是创建了一个SAXParserFactory的对象，然后再获取到了XMLReader对象，接着我们编写的ContentHandler的实例设置到了XMLReader中，最后调用parse()方法开始执行。  
 &emsp;&emsp;除了Pull解析和SAX解析之外，其实还有一种解DOM解析方式。
 
+### 9.4 解析JSON格式数据  
+
+&emsp;&emsp;下面学习如何解析JSON格式的数据。比起XML，JSON的主要优势在于它的体积更小，在网络上传输的时候更省流浪。但缺点在于，他的语义性较差，看起来不如XML直观。我们在服务器地址下新建一个get_data.json的文件，内容如下：
+
+```json
+[
+  {"id":"5","version":"5.5","name":"clash of clans"},
+  {"id":"6","version":"7.0","name":"Boom Beach"},
+  {"id":"7","version":"3.5","name":"Clash Royale"}
+]
+
+```
+
+本机访问效果如下
+
+![img_4.png](img_4.png)
