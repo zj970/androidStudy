@@ -608,3 +608,148 @@ public class ContentHandler extends DefaultHandler {
 }
 
 ```
+
+&emsp;&emsp;可以看到，我们首先给id、name和version节点分别定义了一个StringBuilder对象，并在startDocument()方法里对它们进行了初始化。每当开始解析某个节点的时候，startElement()方法就会得到调用，其中localName参数记录着当前节点的名字，这里我们把它记录下来。接着在解析节点中具体内容的时候就会调用StringBuilder对象中。最后在endElement()方法中进行判断，如果app节点已经解析完成，就打印出id、name和version中的内容。需要注意的是，目前id、name和version中都可能是包括回车或换行符的，因此在打印之前我们还需要调用一下trim()方法，并且打印完成后还要将stringBuilder的内容清空掉，不然的话会影响下一次内容的获取，接下来修改MainActivity中的代码：
+
+```java
+package com.zj970.networktest;
+
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+import java.io.IOException;
+import java.io.StringReader;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    //private static final String STRING_URL= "https://www.baidu.com";
+    private static final String STRING_URL= "http://10.0.2.2/get_data.xml";
+    private static final String TAG = "MainActivity";
+    TextView responseText;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Button sendRequest = findViewById(R.id.send_request);
+        responseText = findViewById(R.id.response_text);
+        sendRequest.setOnClickListener(this::onClick);
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.send_request){
+            sendRequestWithOkHttp();
+        }
+    }
+
+    private void sendRequestWithOkHttp(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    OkHttpClient client = new OkHttpClient();
+                    Request request = new Request.Builder().url(STRING_URL).build();
+                    Response response = client.newCall(request).execute();
+                    String responseData = response.body().string();
+                    pareXMLWithPull(responseData);
+                    pareXMLWithSAX(responseData);
+                    showResponse(responseData);
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+
+    private void showResponse(String value){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                //这里更新UI操作
+                responseText.setText(value);
+            }
+        });
+    }
+
+
+    /**
+     * Pull 解析XML
+     * @param xmlData
+     */
+    private void pareXMLWithPull(String xmlData){
+        try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            XmlPullParser xmlPullParser = factory.newPullParser();
+            xmlPullParser.setInput(new StringReader(xmlData));
+            int eventType = xmlPullParser.getEventType();
+            String id = "";
+            String name = "";
+            String version = "";
+            while (eventType != XmlPullParser.END_DOCUMENT){
+                String nodeName = xmlPullParser.getName();
+                switch (eventType){
+                    //开始解析某个节点
+                    case XmlPullParser.START_TAG:
+                        if ("id".equals(nodeName)){
+                            id = xmlPullParser.nextText();
+                        } else if ("name".equals(nodeName)){
+                            name = xmlPullParser.nextText();
+                        }else if ("version".equals(nodeName)){
+                            version = xmlPullParser.nextText();
+                        }
+                        break;
+                    //完成解析某个节点
+                    case XmlPullParser.END_TAG:
+                        if ("app".equals(nodeName)){
+                            Log.d(TAG, "pareXMLWithPull: id "+id);
+                            Log.d(TAG, "pareXMLWithPull: name "+name);
+                            Log.d(TAG, "pareXMLWithPull: version "+version);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                eventType = xmlPullParser.next();
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * SAX 解析XML
+     * @param xmlData
+     */
+    private void pareXMLWithSAX(String xmlData){
+        try {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            XMLReader xmlReader = factory.newSAXParser().getXMLReader();
+            ContentHandler handler = new ContentHandler();
+            xmlReader.setContentHandler(handler);
+            // 开始执行
+            xmlReader.parse(new InputSource(new StringReader(xmlData)));
+        } catch (ParserConfigurationException | SAXException | IOException e){
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+&emsp;&emsp;在得到了服务器返回的数据后，我们这次去调用parseXMLWithSAX()方法来解析XML数据。parseXMLWithSAX()方法中先是创建了一个SAXParserFactory的对象，然后再获取到了XMLReader对象，接着我们编写的ContentHandler的实例设置到了XMLReader中，最后调用parse()方法开始执行。  
+&emsp;&emsp;除了Pull解析和SAX解析之外，其实还有一种解DOM解析方式。
+

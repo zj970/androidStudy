@@ -9,9 +9,15 @@ import android.os.Bundle;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+import java.io.IOException;
 import java.io.StringReader;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
@@ -46,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Response response = client.newCall(request).execute();
                     String responseData = response.body().string();
                     pareXMLWithPull(responseData);
+                    pareXMLWithSAX(responseData);
                     showResponse(responseData);
                 } catch (Exception e){
                     e.printStackTrace();
@@ -66,6 +73,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
+    /**
+     * Pull 解析XML
+     * @param xmlData
+     */
     private void pareXMLWithPull(String xmlData){
         try {
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
@@ -102,6 +113,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 eventType = xmlPullParser.next();
             }
         } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * SAX 解析XML
+     * @param xmlData
+     */
+    private void pareXMLWithSAX(String xmlData){
+        try {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            XMLReader xmlReader = factory.newSAXParser().getXMLReader();
+            ContentHandler handler = new ContentHandler();
+            xmlReader.setContentHandler(handler);
+            // 开始执行
+            xmlReader.parse(new InputSource(new StringReader(xmlData)));
+        } catch (ParserConfigurationException | SAXException | IOException e){
             e.printStackTrace();
         }
     }
