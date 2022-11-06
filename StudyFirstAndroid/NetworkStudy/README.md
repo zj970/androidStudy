@@ -769,3 +769,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 本机访问效果如下
 
 ![img_4.png](img_4.png)
+
+#### 9.4.1 使用JSONObject
+
+&emsp;&emsp;类似地，解析JSON数据也有很多种方法，可以使用官方提供的
