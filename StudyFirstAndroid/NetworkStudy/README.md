@@ -1223,4 +1223,61 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 ### 9.5 网络编程的最佳实践  
 
-&emsp;&emsp;目前已经掌握了HttpURLConnection和OkHttp的用法
+&emsp;&emsp;目前已经掌握了HttpURLConnection和OkHttp的用法，知道了如何发起HTTP请求，以及解析服务器返回的数据，但也许你还没有发现，之前我们的写法其实是很有问题的。因为一个应用程序很可能会在许多地方都使用到网络功能，而发送HTTP请求的代码基本上都是相同的，如果我们每次都去编写一遍发送HTTP请求的代码，这显然是非常差劲的做法。  
+&emsp;&emsp;没错，通常情况下我们都应该将这些通用的网络操作提取到一个公共类中，并提供一个静态方法，当想要发起网络请求的时候，只需要简单地调用一下这个方法即可。比如使用如下的写法：  
+
+```java
+package com.zj970.networktest.util;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
+
+public class HttpUtil {
+
+    public static String sendHttpRequest(String address){
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(address);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(8000);
+            connection.setReadTimeout(8000);
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            InputStream in = connection.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null){
+                response.append(line);
+            }
+            return response.toString();
+        } catch (ProtocolException e) {
+            return e.getMessage();
+        } catch (MalformedURLException e) {
+            return e.getMessage();
+        } catch (IOException e) {
+            return e.getMessage();
+        } finally {
+            if (connection != null){
+                connection.disconnect();
+            }
+        }
+    }
+}
+
+```
+
+以后每当需要发起一条HTTP请求的时候可以这样写：  
+
+```
+String address = "http://www.baidu.com";
+String response = HttpUtil.sendHttpRequest(address);
+
+```
