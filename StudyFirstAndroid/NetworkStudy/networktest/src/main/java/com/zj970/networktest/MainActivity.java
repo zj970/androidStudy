@@ -6,9 +6,15 @@ import android.widget.Button;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.zj970.networktest.entity.App;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
@@ -19,10 +25,12 @@ import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     //private static final String STRING_URL= "https://www.baidu.com";
     private static final String STRING_URL= "http://10.0.2.2/get_data.xml";
+    private static final String STRING_JSON_URL= "http://10.0.2.2/get_data.json";
     private static final String TAG = "MainActivity";
     TextView responseText;
     @Override
@@ -51,8 +59,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Request request = new Request.Builder().url(STRING_URL).build();
                     Response response = client.newCall(request).execute();
                     String responseData = response.body().string();
-                    pareXMLWithPull(responseData);
-                    pareXMLWithSAX(responseData);
+                    parseXMLWithPull(responseData);
+                    parseXMLWithSAX(responseData);
+
+                    OkHttpClient clientJson = new OkHttpClient();
+                    Request requestJson = new Request.Builder().url(STRING_JSON_URL).build();
+                    Response responseJson = clientJson.newCall(requestJson).execute();
+                    String responseDataJson = responseJson.body().string();
+                    parseJSONWithJSONObject(responseDataJson);
+                    parseJSONWithGSON(responseDataJson);
+
                     showResponse(responseData);
                 } catch (Exception e){
                     e.printStackTrace();
@@ -77,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * Pull 解析XML
      * @param xmlData
      */
-    private void pareXMLWithPull(String xmlData){
+    private void parseXMLWithPull(String xmlData){
         try {
             XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
             XmlPullParser xmlPullParser = factory.newPullParser();
@@ -121,7 +137,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * SAX 解析XML
      * @param xmlData
      */
-    private void pareXMLWithSAX(String xmlData){
+    private void parseXMLWithSAX(String xmlData){
         try {
             SAXParserFactory factory = SAXParserFactory.newInstance();
             XMLReader xmlReader = factory.newSAXParser().getXMLReader();
@@ -133,4 +149,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             e.printStackTrace();
         }
     }
+
+    /**
+     * 解析JSON数据
+     * @param jsonData
+     */
+    private void parseJSONWithJSONObject(String jsonData){
+        try {
+            JSONArray jsonArray = new JSONArray(jsonData);
+            for (int i = 0 ; i < jsonData.length(); i++){
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                String id  = jsonObject.getString("id");
+                String name  = jsonObject.getString("name");
+                String version  = jsonObject.getString("version");
+
+                Log.d(TAG, "parseJSONWithObject: id " + id);
+                Log.d(TAG, "parseJSONWithObject: name " + name);
+                Log.d(TAG, "parseJSONWithObject: version " + version);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * 采取GSON解析数据
+     * @param jsonData
+     */
+    private void parseJSONWithGSON(String jsonData){
+        Gson gson = new Gson();
+        List<App> appList = gson.fromJson(jsonData, new TypeToken<List<App>>(){}.getType());
+        for (App app : appList){
+            Log.d(TAG, "parseJSONWithGSON: id " + app.getId());
+            Log.d(TAG, "parseJSONWithGSON: name " + app.getName());
+            Log.d(TAG, "parseJSONWithGSON: version " + app.getVersion());
+        }
+    }
+
 }

@@ -772,4 +772,455 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 #### 9.4.1 使用JSONObject
 
-&emsp;&emsp;类似地，解析JSON数据也有很多种方法，可以使用官方提供的
+&emsp;&emsp;类似地，解析JSON数据也有很多种方法，可以使用官方提供的JSONObject，也可以使用谷歌开源库GSON。另外，一些第三方的开源库如Jackson、FastJSON等也非常不错。本节中我们就来学习一下前两种解析方式的用法。修改MainActivity中的代码
+
+```java
+package com.zj970.networktest;
+
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+import java.io.IOException;
+import java.io.StringReader;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    //private static final String STRING_URL= "https://www.baidu.com";
+    private static final String STRING_URL= "http://10.0.2.2/get_data.xml";
+    private static final String STRING_JSON_URL= "http://10.0.2.2/get_data.json";
+    private static final String TAG = "MainActivity";
+    TextView responseText;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Button sendRequest = findViewById(R.id.send_request);
+        responseText = findViewById(R.id.response_text);
+        sendRequest.setOnClickListener(this::onClick);
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.send_request){
+            sendRequestWithOkHttp();
+        }
+    }
+
+    private void sendRequestWithOkHttp(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    OkHttpClient client = new OkHttpClient();
+                    Request request = new Request.Builder().url(STRING_URL).build();
+                    Response response = client.newCall(request).execute();
+                    String responseData = response.body().string();
+                    parseXMLWithPull(responseData);
+                    parseXMLWithSAX(responseData);
+
+                    OkHttpClient clientJson = new OkHttpClient();
+                    Request requestJson = new Request.Builder().url(STRING_JSON_URL).build();
+                    Response responseJson = clientJson.newCall(requestJson).execute();
+                    String responseDataJson = responseJson.body().string();
+                    parseJSONWithJSONObject(responseDataJson);
+
+                    showResponse(responseData);
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+
+    private void showResponse(String value){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                //这里更新UI操作
+                responseText.setText(value);
+            }
+        });
+    }
+
+
+    /**
+     * Pull 解析XML
+     * @param xmlData
+     */
+    private void parseXMLWithPull(String xmlData){
+        try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            XmlPullParser xmlPullParser = factory.newPullParser();
+            xmlPullParser.setInput(new StringReader(xmlData));
+            int eventType = xmlPullParser.getEventType();
+            String id = "";
+            String name = "";
+            String version = "";
+            while (eventType != XmlPullParser.END_DOCUMENT){
+                String nodeName = xmlPullParser.getName();
+                switch (eventType){
+                    //开始解析某个节点
+                    case XmlPullParser.START_TAG:
+                        if ("id".equals(nodeName)){
+                            id = xmlPullParser.nextText();
+                        } else if ("name".equals(nodeName)){
+                            name = xmlPullParser.nextText();
+                        }else if ("version".equals(nodeName)){
+                            version = xmlPullParser.nextText();
+                        }
+                        break;
+                    //完成解析某个节点
+                    case XmlPullParser.END_TAG:
+                        if ("app".equals(nodeName)){
+                            Log.d(TAG, "pareXMLWithPull: id "+id);
+                            Log.d(TAG, "pareXMLWithPull: name "+name);
+                            Log.d(TAG, "pareXMLWithPull: version "+version);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                eventType = xmlPullParser.next();
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * SAX 解析XML
+     * @param xmlData
+     */
+    private void parseXMLWithSAX(String xmlData){
+        try {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            XMLReader xmlReader = factory.newSAXParser().getXMLReader();
+            ContentHandler handler = new ContentHandler();
+            xmlReader.setContentHandler(handler);
+            // 开始执行
+            xmlReader.parse(new InputSource(new StringReader(xmlData)));
+        } catch (ParserConfigurationException | SAXException | IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 解析JSON数据
+     * @param jsonData
+     */
+    private void parseJSONWithJSONObject(String jsonData){
+        try {
+            JSONArray jsonArray = new JSONArray(jsonData);
+            for (int i = 0 ; i < jsonData.length(); i++){
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                String id  = jsonObject.getString("id");
+                String name  = jsonObject.getString("name");
+                String version  = jsonObject.getString("version");
+
+                Log.d(TAG, "parseJSONWithObject: id " + id);
+                Log.d(TAG, "parseJSONWithObject: name " + name);
+                Log.d(TAG, "parseJSONWithObject: version " + version);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+}
+```
+
+&emsp;&emsp;首先记得要将HTTP请求店址改成http://10.0.2.2/get_data.json，然后在得到了服务器返回的数据后调用parseJSONWithJSONObject()方法来解析数据。可以看到，解析JSON的代码非常简单，由于我们在服务器中定义的是一个JSON数组，因此这里首先是将服务器返回的数据传入到了一个JSONArray对象中。然后循环这个遍历JSONArray，总中取出的每一个元素都是一个JSONObject对象，每个JSONObject对象zh9ong又包含id、name和version这些数据。接下来就只需要调用getString()方法将这些数据打印出来。现在重新运行一下程序，效果如下：  
+
+![img_5.png](img_5.png)
+
+备注：  
+1.如果看到是{ }–>使用JSONObject   
+2.如果看到的[ ]–>使用JSONArray解析
+
+#### 9.4.2 使用GSON
+
+&emsp;&emsp;谷歌提供的GSON开源库可以让JSON数据的工作更加简单，不过GSON并没有添加到Android官方的API中，因此如果想要使用这个功能的话，就必须要在项目中添加GSON库的依赖。编辑app/build.gradle文件，在dependencies闭包中添加如下内容：  
+
+```groovy
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'com.google.android.material:material:1.1.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    // define a BOM and its version
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.10.0"))
+    // define any required OkHttp artifacts without version
+    implementation("com.squareup.okhttp3:okhttp")
+    implementation("com.squareup.okhttp3:logging-interceptor")
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    implementation 'com.google.code.gson:gson:2.10'
+}
+```
+
+&emsp;&emsp;那么GSON库究竟是神奇在哪里呢？其实它主要是可以将一段JSON格式的字符串自动映射一个对象，从而不需要在手动去编写代码进行解析了。比如说一段JSON格式的数据如下：  
+&emsp;&emsp; {"name":"Tome","age":20} 那么我们可以定义一个Person类，并加入name和age这两个字段，然后只需要简单地调用如下代码就可以将JSON数据自动解析成一个Person类，并加入name和age这两个字段，然后只需要简单地调用如下代码就可以将JSOn数据自动解析成一个Person对象了：  
+&emsp;&emsp; Gson gson = new Gson();  
+&emsp;&emsp; Person person = gson.fromJson(jsonData, new TypeToken<List<Person>>);  
+&emsp;&emsp;如果需要解析的是一段JSON数组会稍微麻烦一点，我们需要借助TypeToken将期望解析成的数据类型传入到fromJson()方法中，如下所示：  
+&emsp;&emsp; List<Person> person = gson.from(jsonData, new TypeToken<List<Person>>(){}.getType());  
+&emsp;&emsp;好了，基本的用法就是这样，下面就让我们来真正地尝试一下吧。首先是新建一个App类，并加入id、name和version这3个字段中，如下所示：  
+
+```java
+package com.zj970.networktest.entity;
+
+public class App {
+    private String id;
+
+    private String name;
+
+    private String version;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+}
+
+```
+
+然后修改MainActivity中的代码，如下所示：
+
+```java
+package com.zj970.networktest;
+
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+import com.zj970.networktest.entity.App;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
+import org.xml.sax.XMLReader;
+import org.xmlpull.v1.XmlPullParser;
+import org.xmlpull.v1.XmlPullParserFactory;
+
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.parsers.SAXParserFactory;
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    //private static final String STRING_URL= "https://www.baidu.com";
+    private static final String STRING_URL= "http://10.0.2.2/get_data.xml";
+    private static final String STRING_JSON_URL= "http://10.0.2.2/get_data.json";
+    private static final String TAG = "MainActivity";
+    TextView responseText;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Button sendRequest = findViewById(R.id.send_request);
+        responseText = findViewById(R.id.response_text);
+        sendRequest.setOnClickListener(this::onClick);
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.send_request){
+            sendRequestWithOkHttp();
+        }
+    }
+
+    private void sendRequestWithOkHttp(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    OkHttpClient client = new OkHttpClient();
+                    Request request = new Request.Builder().url(STRING_URL).build();
+                    Response response = client.newCall(request).execute();
+                    String responseData = response.body().string();
+                    parseXMLWithPull(responseData);
+                    parseXMLWithSAX(responseData);
+
+                    OkHttpClient clientJson = new OkHttpClient();
+                    Request requestJson = new Request.Builder().url(STRING_JSON_URL).build();
+                    Response responseJson = clientJson.newCall(requestJson).execute();
+                    String responseDataJson = responseJson.body().string();
+                    parseJSONWithJSONObject(responseDataJson);
+                    parseJSONWithGSON(responseDataJson);
+
+                    showResponse(responseData);
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+
+
+    private void showResponse(String value){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                //这里更新UI操作
+                responseText.setText(value);
+            }
+        });
+    }
+
+
+    /**
+     * Pull 解析XML
+     * @param xmlData
+     */
+    private void parseXMLWithPull(String xmlData){
+        try {
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            XmlPullParser xmlPullParser = factory.newPullParser();
+            xmlPullParser.setInput(new StringReader(xmlData));
+            int eventType = xmlPullParser.getEventType();
+            String id = "";
+            String name = "";
+            String version = "";
+            while (eventType != XmlPullParser.END_DOCUMENT){
+                String nodeName = xmlPullParser.getName();
+                switch (eventType){
+                    //开始解析某个节点
+                    case XmlPullParser.START_TAG:
+                        if ("id".equals(nodeName)){
+                            id = xmlPullParser.nextText();
+                        } else if ("name".equals(nodeName)){
+                            name = xmlPullParser.nextText();
+                        }else if ("version".equals(nodeName)){
+                            version = xmlPullParser.nextText();
+                        }
+                        break;
+                    //完成解析某个节点
+                    case XmlPullParser.END_TAG:
+                        if ("app".equals(nodeName)){
+                            Log.d(TAG, "pareXMLWithPull: id "+id);
+                            Log.d(TAG, "pareXMLWithPull: name "+name);
+                            Log.d(TAG, "pareXMLWithPull: version "+version);
+                        }
+                        break;
+                    default:
+                        break;
+                }
+                eventType = xmlPullParser.next();
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * SAX 解析XML
+     * @param xmlData
+     */
+    private void parseXMLWithSAX(String xmlData){
+        try {
+            SAXParserFactory factory = SAXParserFactory.newInstance();
+            XMLReader xmlReader = factory.newSAXParser().getXMLReader();
+            ContentHandler handler = new ContentHandler();
+            xmlReader.setContentHandler(handler);
+            // 开始执行
+            xmlReader.parse(new InputSource(new StringReader(xmlData)));
+        } catch (ParserConfigurationException | SAXException | IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 解析JSON数据
+     * @param jsonData
+     */
+    private void parseJSONWithJSONObject(String jsonData){
+        try {
+            JSONArray jsonArray = new JSONArray(jsonData);
+            for (int i = 0 ; i < jsonData.length(); i++){
+                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                String id  = jsonObject.getString("id");
+                String name  = jsonObject.getString("name");
+                String version  = jsonObject.getString("version");
+
+                Log.d(TAG, "parseJSONWithObject: id " + id);
+                Log.d(TAG, "parseJSONWithObject: name " + name);
+                Log.d(TAG, "parseJSONWithObject: version " + version);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+    /**
+     * 采取GSON解析数据
+     * @param jsonData
+     */
+    private void parseJSONWithGSON(String jsonData){
+        Gson gson = new Gson();
+        List<App> appList = gson.fromJson(jsonData, new TypeToken<List<App>>(){}.getType());
+        for (App app : appList){
+            Log.d(TAG, "parseJSONWithGSON: id " + app.getId());
+            Log.d(TAG, "parseJSONWithGSON: name " + app.getName());
+            Log.d(TAG, "parseJSONWithGSON: version " + app.getVersion());
+        }
+    }
+
+}
+```
+
+运行效果如下 ：  
+
+![img_7.png](img_7.png)
+
+### 9.5 网络编程的最佳实践  
+
+&emsp;&emsp;目前已经掌握了HttpURLConnection和OkHttp的用法
