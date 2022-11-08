@@ -8,10 +8,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.zj970.networktest.callback.HttpCallbackListener;
 import com.zj970.networktest.entity.App;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import com.zj970.networktest.util.HttpUtil;
+import okhttp3.*;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -47,6 +48,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         if (v.getId() == R.id.send_request){
             sendRequestWithOkHttp();
+            HttpUtil.sendOkhttpRequest(STRING_JSON_URL, new Callback() {
+                @Override
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
+
+                }
+
+                @Override
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    parseJSONWithJSONObject(response.toString());
+                }
+            });
+            HttpUtil.sendHttpRequest(STRING_URL, new HttpCallbackListener() {
+                @Override
+                public void onFinish(String response) {
+                    parseJSONWithJSONObject(response);
+                }
+
+                @Override
+                public void onError(Exception e) {
+
+                }
+            });
         }
     }
 

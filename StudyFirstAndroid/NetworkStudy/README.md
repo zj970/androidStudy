@@ -1281,3 +1281,165 @@ String address = "http://www.baidu.com";
 String response = HttpUtil.sendHttpRequest(address);
 
 ```
+
+&emsp;&emsp;在获取到服务器响应的数据后，我们就可以对它进行解析和处理了。但是需要注意，网络请求通常都是属于耗时操作，而sendHttpRequest()方法的内部没有开启线程，这样就有可能导致在调用sendHttpRequest()方法的时候使得主线程被阻塞住。  
+&emsp;&emsp;你可能说，很简单嘛，在sendHttpRequest()方法内部开启一个线程不就解决这个问题了嘛？其实没有想象中的那么容易，因为如果我们在sendHttpRequest()方法内部开启一个线程来发起HTTP请求，那么服务器响应的数据是无法进行返回的，所有的耗时逻辑都是在子线程里进行的,sendHttpRequest()方法会在服务器还没来得及响应的时候就执行结束了，然后也就无法返回响应的数据了。  
+&emsp;&emsp;那么遇到这种情况下应该怎么办呢？其实解决方法并不难，只需要使用Java的回调机制就可以了，下面让我们来学习一下回调机制到底是如何使用的。  
+&emsp;&emsp;首先需要定义一个结构，比如将它命名成HttpCallbackListener，代码如下所示：  
+
+```java
+package com.zj970.networktest.callback;
+
+public interface HttpCallbackListener {
+    void onFinish(String response);
+
+    void OnError(Exception e);
+}
+
+```
+
+&emsp;&emsp;可以看到，我们在接口中定义了两个方法，onFinish()方法表示当服务器响应我们请求的时候调用，onError()表示当进行网络出现错误的时候调用。这两个方法都带有参数，onFinish()方法中的参数代表着服务器返回的数据，而onError()方法中的 参数记录着错误的详细信息。接着修改HttpUtil中的代码：如下所示：  
+
+```java
+package com.zj970.networktest.util;
+
+import com.zj970.networktest.callback.HttpCallbackListener;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.URL;
+
+public class HttpUtil {
+
+    public static String sendHttpRequest(String address){
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(address);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(8000);
+            connection.setReadTimeout(8000);
+            connection.setDoInput(true);
+            connection.setDoOutput(true);
+            InputStream in = connection.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null){
+                response.append(line);
+            }
+            return response.toString();
+        } catch (ProtocolException e) {
+            return e.getMessage();
+        } catch (MalformedURLException e) {
+            return e.getMessage();
+        } catch (IOException e) {
+            return e.getMessage();
+        } finally {
+            if (connection != null){
+                connection.disconnect();
+            }
+        }
+    }
+
+
+    public static void sendHttpRequest(final String address, final HttpCallbackListener callbackListener){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                HttpURLConnection connection = null;
+                try {
+                    URL url = new URL(address);
+                    connection = (HttpURLConnection) url.openConnection();
+                    connection.setRequestMethod("GET");
+                    connection.setConnectTimeout(8000);
+                    connection.setReadTimeout(8000);
+                    connection.setDoInput(true);
+                    connection.setDoOutput(true);
+                    InputStream in = connection.getInputStream();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+                    StringBuilder response = new StringBuilder();
+                    String line;
+                    while ((line = reader.readLine()) != null){
+                        response.append(line);
+                    }
+                    if (callbackListener != null){
+                        callbackListener.onFinish(response.toString());//回调onFinish()方法
+                    }
+                } catch (Exception e) {
+                    if (callbackListener != null){
+                        callbackListener.onError(e);//回调onError()方法
+                }
+                } finally {
+                    if (connection != null){
+                        connection.disconnect();
+                    }
+                }
+            }
+        }).start();
+    }
+}
+
+```
+&emsp;&emsp;我们首先给sendHttpRequest()方法中添加了一个HttpCallbackListener餐胡，并在方法的内部开启了一个子线程，然后在子线程里去执行具体的网络操作。注意，子线程中是无法通过return语句来返回数据的，因此这里我们将服务器响应的数据传入了HttpCallbackListener的onFinish()方法中，如果出现了异常就将异常原因传入到onError()方法中。现在sendHttpRequest()方法接收两个参数了，因此我们在调用它的时候还需要将HttpCallbackListener的实例传入，如下所示：  
+
+```
+            HttpUtil.sendHttpRequest(STRING_URL, new HttpCallbackListener() {
+                @Override
+                public void onFinish(String response) {
+                    //TODO: 在这里根据返回内容执行具体逻辑
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    //TODO: 在这里对异常情况进行处理
+                }
+            });
+```
+&emsp;&emsp;这样的话，当服务器成功响应的时候，我们就可以在onFinish()方法里对响应数据进行处理了。类似地，如果出现了异常，就可以在onError()方法里对异常情况进行处理。如此依赖，我们就巧妙地利用回调机制将响应数据成功返回给调用方了。  
+&emsp;&emsp;不过你会发现，上述使用HttpURLConnection 的写法总体来说还是比较复杂的，那么使用OkHttp会变得简单？答案是肯定的，而且要简单的多，下面我们来具体看一下，在HttpUtil中加入一个sendOkhttpRequest()方法，如下所示：  
+
+```
+    public static void sendOkhttpRequest(String address, Callback callback){
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder().url(address).build();
+        client.newCall(request).enqueue(callback);
+    }
+```
+&emsp;&emsp;可以看到，sendOkHttpRequest()方法中有个Callback参数，这个是OkHttp参数，这个是OkHttp自带的一个回调接口。类似于我们刚才自己编写的HttpCallbackListener。然后在client.newCall()之后并没有像之前一直调用execute()方法而是调用了一个enqueue()方法，并把callback参数传入。OkHttp在enqueue()方法的内部已经帮我们开好子线程了，然后会在子线程中去执行HTTP请求，并将最终的请求结果回调到callback当中。那么我么在调用sendOkHttpRequest()方法的时候可以这样写：  
+
+```
+public void onClick(View v) {
+        if (v.getId() == R.id.send_request){
+            sendRequestWithOkHttp();
+            HttpUtil.sendOkhttpRequest(STRING_JSON_URL, new Callback() {
+                @Override
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
+
+                }
+
+                @Override
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    parseJSONWithJSONObject(response.toString());
+                }
+            });
+            HttpUtil.sendHttpRequest(STRING_URL, new HttpCallbackListener() {
+                @Override
+                public void onFinish(String response) {
+                    parseJSONWithJSONObject(response);
+                }
+
+                @Override
+                public void onError(Exception e) {
+
+                }
+            });
+        }
+    }
+```
+&emsp;&emsp;由此可以看出，okHttp的接口设计更加人性化，它将常用的功能进行了封装，使得我们用少量的代码完成较为复杂的网络操作。另外需要注意的是，不管是使用HttpURLConnection还是Okhttp，最终的回调接口还是在子线程中运行，因此我们不可以在这里执行任何的UI操作，除非借助runOnUiThread()方法进行线程转换。至于具体原因，在下一章中学习到了。
