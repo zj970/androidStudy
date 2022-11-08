@@ -51,11 +51,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             HttpUtil.sendOkhttpRequest(STRING_JSON_URL, new Callback() {
                 @Override
                 public void onFailure(@NotNull Call call, @NotNull IOException e) {
-
+                    Log.d(TAG, "onFailure: ");
                 }
 
                 @Override
                 public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    Log.d(TAG, "onResponse: ");
                     parseJSONWithJSONObject(response.toString());
                 }
             });
