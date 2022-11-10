@@ -142,3 +142,60 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 &emsp;&emsp;由此证实了Android确实是不允许子线程里去执行一些耗时任务，然后根据任务的执行结果来更新相应的UI控件，这该如何是好呢？  
 &emsp;&emsp;对于这种情况，Android提供了一套异步消息处理机制，完美地解决了在子线程进行UIc操作的问题。本小节中我们先来学习一下异步消息处理的使用方法，下一小节中再去分析它的原理。修改MainActivity中的代码:  
+
+```java
+package com.zj970.androidthreadtest;
+
+import android.os.Handler;
+import android.os.Message;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener{
+    public static final int UPDATE_TEXT = 1;
+    TextView text;
+
+    private Handler handler = new Handler(){
+        public void handleMessage(Message msg){
+            switch (msg.what){
+                case UPDATE_TEXT:
+                    //这里进行UI操作
+                    text.setText("Nice to meet you");
+                    break;
+                default:
+                    break;
+            }
+        }
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        text = findViewById(R.id.text);
+        Button changeText = findViewById(R.id.change_text);
+        changeText.setOnClickListener(this::onClick);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.change_text:
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Message message = new Message();
+                        message.what = UPDATE_TEXT;
+                        handler.sendMessage(message);//将Message对象发送出去
+                    }
+                }).start();
+                break;
+            default:
+                break;
+        }
+    }
+}
+```
