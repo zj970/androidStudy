@@ -76,6 +76,7 @@ new Thread(new Runnable(){
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:orientation="vertical"
         tools:context=".MainActivity">
     <Button
             android:id="@+id/change_text"
@@ -88,6 +89,7 @@ new Thread(new Runnable(){
             android:id="@+id/text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
             android:text="Hello world"
             android:textSize="20sp"/>
 
@@ -198,4 +200,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 }
-```
+```  
+&emsp;&emsp;这里我们先是定义了一个整型常量UPDATE_TEXT，用于表示更新TextView这个动作。然后新增一个Handler对象，并重写父类的handleMessage()方法，在这里对具体的Message进行处理。如果发现Message的what字段的值等于UPDATE_TEXT，就将TextView显示的内容改成Nice to meet you。  
+&emsp;&emsp;下面再来看一下Change Text按钮的点击事件中的代码。可以看到，这次我们并没有子线程里直接进行UI操作，而是创建了一个Message(android.os.Message)对象，并将它的what字段的值指定为UPDATE_TEXT，然后调用Handler的sendMessage()方法将这条Message发送出去。很快，Handler就会收到这条Message，并在handleMessage()方法中对它进行处理。注意此时UI操作。接下来对Message携带的what字段的值进行判断，如果等于UPDATE_TEXT，就将TextView显示的内容改成Nice to meet you。  
+&emsp;&emsp;现在重新运行程序，可以看到屏幕的正中央显示着Hello world。如果等于UPDATE_TEXT，就将TextView显示的内容改成Nice to meet you。
+
+![img_1.png](img_1.png)  
+
+&emsp;&emsp;这样你就已经掌握了Android异步消息处理的基本用法，使用这种机制就可以出色地解决掉在子线程中更新UI问题。不过恐怕你对它的工作原理还不是很清楚，下面我们就来分析一下Android异步消息处理机制到底是如何工作的。  
+
+### 10.2.3 解析异步消息处理机制  
+
+&emsp;&emsp;Android中的异步消息处理主要由4个部分组成：Message、Handler、MessageQueue和Looper。其中Message和Handler在上一小节中我们已经接触过了，而MessageQueue和Looper对于你来说还是全新的概念，下面我就对这4个部分进行一下简单的介绍。
