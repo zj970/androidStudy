@@ -236,3 +236,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 &emsp;&emsp;一条Message经过这样一个流程的辗转调用，也就从子线程进入到了主线程，从不能更新UI变成可以更新UI，整个异步消息处理的核心思想也就是如此。  
 &emsp;&emsp;而我们在第9章中使用到的runOnUiThread()方法其实就是一个异步消息处理机制的接口封装，它虽然表面上看起来用法更为简单，但其实背后的实现原题如上图的描述是一模一样。  
 
+### 10.2.4 使用AsyncTask  
+
+&emsp;&emsp;不过为了更加方便我们在子线程中对UI进行操作，Android还提供了另外一些好用的工具，比如AsyncTask。
