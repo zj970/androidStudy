@@ -238,4 +238,4 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 ### 10.2.4 使用AsyncTask  
 
-&emsp;&emsp;不过为了更加方便我们在子线程中对UI进行操作，Android还提供了另外一些好用的工具，比如AsyncTask。
+&emsp;&emsp;不过为了更加方便我们在子线程中对UI进行操作，Android还提供了另外一些好用的工具，比如AsyncTask。借助AsyncTask，即使你对异步消息处理机制完全不了解，也可以十分简单地从子线程切换到主线程，当然，AsyncTask背后的实现原理也是基于异步消息处理机制的，只是Android帮我们做了很好的封装而已。
