@@ -1,2 +1,3 @@
+include ':servicetest'
 include ':androidthreadtest'
 rootProject.name = "ServerStudy"

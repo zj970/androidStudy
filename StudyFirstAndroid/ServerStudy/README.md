@@ -320,4 +320,101 @@ class DownloadTask extends AsyncTask<Void,Integer,Boolean>{
 ````
 new DownloadTask().execute();
 ````
-&emsp;&emsp;以上就是AsyncTask()的基本用法，怎么样，是不是感觉简单方便多了，我们并不需要去考虑什么异步消息处理机制，也不需要专门使用一个Handler来发送和接收消息，只需要调用一下publishProgress()方法，就可以轻松地从子线程切换到UI操作了。
+&emsp;&emsp;以上就是AsyncTask()的基本用法，怎么样，是不是感觉简单方便多了，我们并不需要去考虑什么异步消息处理机制，也不需要专门使用一个Handler来发送和接收消息，只需要调用一下publishProgress()方法，就可以轻松地从子线程切换到UI操作了。  
+
+## 10.3 服务的基本用法
+
+&emsp;&emsp;了解了Android多线程编程的技术之后，下面就让我们进入到本章的正题，开始对服务的相关内容进行学习。作为Android 四大组件之一，服务也少不了有很多非常重要的知识点，那我们自然要从最基本的用法开始学习了。  
+
+### 10.3.1 定义一个服务  
+
+&emsp;&emsp;新建一个ServiceTest项目，然后右击->new->service->service。将服务名命名为MyService，Exported属性表示是否允许除了当前程序之外的其他程序访问这个服务，Enable属性表示是否启动这个服务。将这两个属性都勾中，点击Finish完成创建。
+
+```java
+
+package com.zj970.servicetest;
+
+import android.app.Service;
+import android.content.Intent;
+import android.os.IBinder;
+
+public class MyService extends Service {
+    public MyService() {
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+}
+```
+
+AndroidManifest.xml如下：  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.zj970.servicetest">
+
+    <application
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/Theme.ServerStudy">
+        <service
+                android:name=".MyService"
+                android:enabled="true"
+                android:exported="true">
+        </service>
+
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+```
+
+&emsp;&emsp;可以看到，MyService是继承自Service类的，说明这是一个服务。目前MyService中可以算是空空如也，但有一个onBind()方法特别醒目。这个方法是Service中唯一的一个抽吸方法，所以必须在子类中实现。我们会在后面小节中使用到onBind()方法。  
+&emsp;&emsp;既然是定义一个服务，自然应该在服务中去处理一些事情了，那处理事情的逻辑应该写在哪里呢？这里就可以重写Service中的另外一些方法了，如下所示：  
+
+```java
+package com.zj970.servicetest;
+
+import android.app.Service;
+import android.content.Intent;
+import android.os.IBinder;
+
+public class MyService extends Service {
+    public MyService() {
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+}
+```
