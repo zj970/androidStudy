@@ -350,38 +350,6 @@ public class MyService extends Service {
 }
 ```
 
-AndroidManifest.xml如下：  
-
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          package="com.zj970.servicetest">
-
-    <application
-            android:allowBackup="true"
-            android:icon="@mipmap/ic_launcher"
-            android:label="@string/app_name"
-            android:roundIcon="@mipmap/ic_launcher_round"
-            android:supportsRtl="true"
-            android:theme="@style/Theme.ServerStudy">
-        <service
-                android:name=".MyService"
-                android:enabled="true"
-                android:exported="true">
-        </service>
-
-        <activity android:name=".MainActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
-        </activity>
-    </application>
-
-</manifest>
-```
-
 &emsp;&emsp;可以看到，MyService是继承自Service类的，说明这是一个服务。目前MyService中可以算是空空如也，但有一个onBind()方法特别醒目。这个方法是Service中唯一的一个抽吸方法，所以必须在子类中实现。我们会在后面小节中使用到onBind()方法。  
 &emsp;&emsp;既然是定义一个服务，自然应该在服务中去处理一些事情了，那处理事情的逻辑应该写在哪里呢？这里就可以重写Service中的另外一些方法了，如下所示：  
 
@@ -418,3 +386,164 @@ public class MyService extends Service {
     }
 }
 ```
+
+&emsp;&emsp;可以看到，这里我们又重写了onCreate()、pnStartCommand()和onDestroy()这3个方法，它们是每个服务中最常用到的3个方法了、其中onCreate()方法会在服务创建的时候调用，onStartCommand()方法会在每次服务启动的时候调用，onDestroy()方法会在服务销毁的时候调用。  
+&emsp;&emsp;通常情况下，如果我们希望服务一旦启动就立即去执行某个动作，就可以将逻辑写在onStartCommand()方法里。而当服务销毁时，我们又应该在onDestroy()方法中去回收那些不再使用的资源。  
+&emsp;&emsp;另外需要注意，每一个服务都需要在AndroidManifest.xml文件中进行注册才能生效，不知道你有没有发现，这时Android四大组件共有的特点。  
+
+AndroidManifest.xml如下：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.zj970.servicetest">
+
+    <application
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/Theme.ServerStudy">
+        <service
+                android:name=".MyService"
+                android:enabled="true"
+                android:exported="true">
+        </service>
+
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+```
+
+### 10.3.2 启动和停止服务  
+
+&emsp;&emsp;定义好了服务之后，接下来就应该考虑如何去启动以及停止这个服务。启动和停止的方法当然你也不会陌生，主要是借助Intent来实现的，下面就让我们在ServiceTest项目中尝试去启动以及停止MyService这个服务。首先修改activity_main.xml中的代码：  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
+
+    <Button
+            android:id="@+id/start_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start Service"
+            android:textAllCaps="false"/>
+    <Button
+            android:id="@+id/stop_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Stop Service"
+            android:textAllCaps="false"/>
+</LinearLayout>
+```
+
+&emsp;&emsp;这里我们在布局文件中加入了两个按钮，分别是用于启动服务和停止服务。修改MainActivity中的代码：  
+
+```java
+package com.zj970.servicetest;
+
+import android.content.Intent;
+import android.view.View;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener
+{
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Button startService = findViewById(R.id.start_service);
+        Button stopService = findViewById(R.id.stop_service);
+        startService.setOnClickListener(this::onClick);
+        stopService.setOnClickListener(this::onClick);
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.start_service:
+                Intent startIntent = new Intent(this,MyService.class);
+                startService(startIntent);//开始服务
+                break;
+            case R.id.stop_service:
+                Intent stopService = new Intent(this,MyService.class);
+                stopService(stopService);//停止服务
+                break;
+            default:
+                break;
+        }
+    }
+}
+```
+
+&emsp;&emsp;可以看到，这里在onCreate()方法中分别获取到了Start Service按钮和Stop Service按钮的实例，并给它们注册了点击事件。然后在Start Service按钮的点击事件里，我们构建出了一个Intent对象，并调用了startService()方法来启动MyService这个服务。在Stop Service按钮的点击事件里，我们同样是构建出了一个Intent对象，并调用stopService()方法来停止MyService这个服务。startService()和stopService()方法都是定义在Context类中的，所以我们在活动里可以直接调用这两个方法。注意，这里完全是由活动来决定服务何时停止的，如果没有Stop Service按钮，服务则会一直处于运行状态。那服务有没有什么办法让自己停止下来呢？当然可以，只需要在MyService的任何一个位置调用stopSelf()方法就能让这个服务停止下来的。  
+
+&emsp;&emsp;那么接下来又有一个问题需要思考了，我们如何才能证实服务已经成功启动或者停止了呢？最简单的办法就是在MyService的几个方法加入打印日志，如下所示：  
+
+```java
+package com.zj970.servicetest;
+
+import android.app.Service;
+import android.content.Intent;
+import android.os.IBinder;
+import android.util.Log;
+
+public class MyService extends Service {
+    private static final String TAG = "MyService";
+    public MyService() {
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        throw new UnsupportedOperationException("Not yet implemented");
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.d(TAG, "onCreate: ");
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "onStartCommand: ");
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.d(TAG, "onDestroy: ");
+        super.onDestroy();
+    }
+}
+```
+
+运行一下程序，点击Start Service按钮，打印日志如下：  
+
+![img_3.png](img_3.png)
+
+&emsp;&emsp;MyService中的onCreate()和onStartCommand()方法都执行了，说明这个服务确实已经成功启动，亦可以通过adb shell service list查看，在点击Stop Service按钮，打印如图所示：  
+
+![img_4.png](img_4.png)
+
+&emsp;&emsp;由此证明，MyService确实已经停止下来。虽然我们已经学会了启动服务以及停止读物的方法，但onCreate()方法和onStartCommand()方法到底有什么区别呢？因为刚刚点击Start Service按钮后两个方法都执行了。  
+&emsp;&emsp;其实onCreate()方法是在服务第一次创建的时候调用的，而onStartCommand()方法则在每次启动服务的时候都会调用，由于刚才我们是第一次点击Start Service按钮，服务此时还未创建过，所以两个方法都会执行，之后如果你再连续点击几次startService按钮，就发现只有onStartCommand()方法可以得到执行。
