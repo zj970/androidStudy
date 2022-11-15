@@ -547,3 +547,7 @@ public class MyService extends Service {
 
 &emsp;&emsp;由此证明，MyService确实已经停止下来。虽然我们已经学会了启动服务以及停止读物的方法，但onCreate()方法和onStartCommand()方法到底有什么区别呢？因为刚刚点击Start Service按钮后两个方法都执行了。  
 &emsp;&emsp;其实onCreate()方法是在服务第一次创建的时候调用的，而onStartCommand()方法则在每次启动服务的时候都会调用，由于刚才我们是第一次点击Start Service按钮，服务此时还未创建过，所以两个方法都会执行，之后如果你再连续点击几次startService按钮，就发现只有onStartCommand()方法可以得到执行。
+
+### 10.3.3 活动和服务进行通信
+
+&emsp;&emsp;上以小节中我们学习了启动和停止服务的方法，不知道你有没有发现，虽然服务是在活动里启动的，但是在启动了服务之后，活动与服务基本上就没有什么关系了。确实如此，我们在活动里调用了startService()方法来启动MyService这个服务，然后MyService的onCreate()和onStartCommand()方法就会得到执行。之后服务会一直处于运行状态，但具体运行的是什么逻辑，活动就控制不了。这就类似于活动通知了服务一下：“你可以启动了！”然后服务就去忙自己的事情了，但活动并不知道服务去做了什么事情，但活动并不知道服务到底去做了什么事情，以及完成得如何。
