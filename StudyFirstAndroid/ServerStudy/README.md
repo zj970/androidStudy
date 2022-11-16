@@ -550,4 +550,57 @@ public class MyService extends Service {
 
 ### 10.3.3 活动和服务进行通信
 
-&emsp;&emsp;上以小节中我们学习了启动和停止服务的方法，不知道你有没有发现，虽然服务是在活动里启动的，但是在启动了服务之后，活动与服务基本上就没有什么关系了。确实如此，我们在活动里调用了startService()方法来启动MyService这个服务，然后MyService的onCreate()和onStartCommand()方法就会得到执行。之后服务会一直处于运行状态，但具体运行的是什么逻辑，活动就控制不了。这就类似于活动通知了服务一下：“你可以启动了！”然后服务就去忙自己的事情了，但活动并不知道服务去做了什么事情，但活动并不知道服务到底去做了什么事情，以及完成得如何。
+&emsp;&emsp;上以小节中我们学习了启动和停止服务的方法，不知道你有没有发现，虽然服务是在活动里启动的，但是在启动了服务之后，活动与服务基本上就没有什么关系了。确实如此，我们在活动里调用了startService()方法来启动MyService这个服务，然后MyService的onCreate()和onStartCommand()方法就会得到执行。之后服务会一直处于运行状态，但具体运行的是什么逻辑，活动就控制不了。这就类似于活动通知了服务一下：“你可以启动了！”然后服务就去忙自己的事情了，但活动并不知道服务去做了什么事情，但活动并不知道服务到底去做了什么事情，以及完成得如何。  
+&emsp;&emsp;那么有没有什么办法能让活动与服务的关系更加紧密些呢？例如在活动中指挥服务干什么，服务就去干什么。当然可以，这就需要借助我们刚刚忽略的onBind()方法了。  
+&emsp;&emsp;比如说，目前我们希望在MyService里提供一些下载功能，然后在活动中决定什么时候开始下载，以及随时查看下载进度。实现这个功能的思路是创建一个专门的Binder对象来对下载功能进行管理，修改NyService中的代码：  
+
+````java
+package com.zj970.servicetest;
+
+import android.app.Service;
+import android.content.Intent;
+import android.os.Binder;
+import android.os.IBinder;
+import android.util.Log;
+
+public class MyService extends Service {
+    private static final String TAG = "MyService";
+    private DownloadBinder mBinder = new DownloadBinder();
+    public MyService() {
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        return mBinder;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.d(TAG, "onCreate: ");
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "onStartCommand: ");
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.d(TAG, "onDestroy: ");
+        super.onDestroy();
+    }
+    
+    class DownloadBinder extends Binder{
+        public void startDownload(){
+            Log.d(TAG, "startDownload: executed");
+        }
+        public int getProgress(){
+            Log.d(TAG, "getProgress: ");
+            return 0;
+        }
+    }
+}
+````
