@@ -604,3 +604,116 @@ public class MyService extends Service {
     }
 }
 ````
+&emsp;&emsp;可以看到，这里我们新建了一个DownloadBinder类，并让它继承自Binder，然后在它的内部提供了开始下载以及查看下载进度的方法。当然这只是两个模拟方法，并没有实现真正的功能，我们在两个方法中分别打印了一行日志。  
+&emsp;&emsp;接着，在MyService中创建了DownloadBinder的实例，然后在onBind()方法里返回了这个实例，这样MyService中的工作就全部完成了。  
+&emsp;&emsp;下面就要看一看，在活动中如何去调用服务里的这些方法了。首先需要在布局文件里新增两个按钮，修改activity_main.xml中的代码，如下所示：  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
+
+    <Button
+            android:id="@+id/start_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start Service"
+            android:textAllCaps="false"/>
+    <Button
+            android:id="@+id/stop_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Stop Service"
+            android:textAllCaps="false"/>
+
+    <Button
+            android:id="@+id/bind_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Stop Service"
+            android:textAllCaps="false"/>
+
+    <Button
+            android:id="@+id/unbind_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Stop Service"
+            android:textAllCaps="false"/>
+</LinearLayout>
+```
+
+&emsp;&emsp;这两个按钮分别是用于绑定和取消绑定服务的，那到底谁需要去和服务绑定呢？当然就是活动了。当一个活动和服务绑定之后，就可以调用该服务里的Binder提供的方法。修改MainActivity中的代码，如下所示： 
+
+```java
+package com.zj970.servicetest;
+
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.os.IBinder;
+import android.view.View;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    private MyService.DownloadBinder downloadBinder;
+
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            downloadBinder = (MyService.DownloadBinder) service;
+            downloadBinder.startDownload();
+            downloadBinder.getProgress();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Button startService = findViewById(R.id.start_service);
+        Button stopService = findViewById(R.id.stop_service);
+        Button bindService = findViewById(R.id.start_service);
+        Button unbindService = findViewById(R.id.stop_service);
+        startService.setOnClickListener(this::onClick);
+        stopService.setOnClickListener(this::onClick);
+        bindService.setOnClickListener(this::onClick);
+        unbindService.setOnClickListener(this::onClick);
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()){
+            case R.id.start_service:
+                Intent startIntent = new Intent(this,MyService.class);
+                startService(startIntent);//开始服务
+                break;
+            case R.id.stop_service:
+                Intent stopService = new Intent(this,MyService.class);
+                stopService(stopService);//停止服务
+                break;
+            case R.id.bind_service:
+                Intent bindIntent = new Intent(this,MyService.class);
+                bindService(bindIntent,connection,BIND_ABOVE_CLIENT);//绑定服务
+                break;
+            case R.id.unbind_service:
+                unbindService(connection);//解绑服务
+                break;
+            default:
+                break;
+        }
+    }
+}
+```
