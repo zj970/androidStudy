@@ -717,3 +717,5 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 }
 ```
+&emsp;&emsp;可以看到，这里我们首先创建了一个ServiceConnected的匿名类，在里面重写onServiceConnected()方法和onServiceDisconnected()方法，这两个方法分别会在活动与服务成绑定以及解除绑定的时候调用。在onServiceConnected()方法中，我们又通过向下转型得到了DownloadBinder的实例，有了这个实例，活动和服务之间的关系就变得非常紧密了。现在我们可以在活动中根据具体的场景来调用DownloadBinder中的任何public()方法，即实现了指挥服务干什么的功能。这里仍然只是做了简单的测试，在onServiceConnected()方法中调用了DownloadBinder的startDownload()和getProgress()方法。  
+&emsp;&emsp;当然，现在活动和服务其实还没进行绑定呢，这个功能是在Bind Service按钮的点击事件里完成的。可以看到，这里我们仍然是构建出了一个Intent对象，然后调用bindService()方法将MainActivity和MyService进行绑定。bindService()
