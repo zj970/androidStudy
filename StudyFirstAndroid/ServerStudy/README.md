@@ -635,14 +635,14 @@ public class MyService extends Service {
             android:id="@+id/bind_service"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Stop Service"
+            android:text="Bind Service"
             android:textAllCaps="false"/>
 
     <Button
             android:id="@+id/unbind_service"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Stop Service"
+            android:text="Unbind Service"
             android:textAllCaps="false"/>
 </LinearLayout>
 ```
@@ -718,4 +718,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 }
 ```
 &emsp;&emsp;可以看到，这里我们首先创建了一个ServiceConnected的匿名类，在里面重写onServiceConnected()方法和onServiceDisconnected()方法，这两个方法分别会在活动与服务成绑定以及解除绑定的时候调用。在onServiceConnected()方法中，我们又通过向下转型得到了DownloadBinder的实例，有了这个实例，活动和服务之间的关系就变得非常紧密了。现在我们可以在活动中根据具体的场景来调用DownloadBinder中的任何public()方法，即实现了指挥服务干什么的功能。这里仍然只是做了简单的测试，在onServiceConnected()方法中调用了DownloadBinder的startDownload()和getProgress()方法。  
-&emsp;&emsp;当然，现在活动和服务其实还没进行绑定呢，这个功能是在Bind Service按钮的点击事件里完成的。可以看到，这里我们仍然是构建出了一个Intent对象，然后调用bindService()方法将MainActivity和MyService进行绑定。bindService()方法接收3个参数，第一个参数就是刚刚构建出的Intent对象，第二个参数是前面创建出的ServiceConnection的实例，第三个参数就则是一个标志位，这里传入BIND_AUTO_CREATE表示在活动和服务进行绑定后自动创建服务。这会使得MyService中的onCreate()方法得到执行，但onStartCommand()方法不会执行。
+&emsp;&emsp;当然，现在活动和服务其实还没进行绑定呢，这个功能调用一下unBindService()方法就可以了，这也是Unbind Service按钮的点击事件里实现的功能。现在让我们重新运行一下程序。界面如下所示：  
+
+![img_5.png](img_5.png)
+
+点击一下Bind Service，打印logcat中的日志
+
+![img_6.png](img_6.png)  
+
+&emsp;&emsp;可以看到，首先是MyService的onCreate()方法得到了执行，然后startDownload()
