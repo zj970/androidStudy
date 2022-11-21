@@ -656,6 +656,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
@@ -684,8 +685,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         Button startService = findViewById(R.id.start_service);
         Button stopService = findViewById(R.id.stop_service);
-        Button bindService = findViewById(R.id.start_service);
-        Button unbindService = findViewById(R.id.stop_service);
+        Button bindService = findViewById(R.id.bind_service);
+        Button unbindService = findViewById(R.id.unbind_service);
         startService.setOnClickListener(this::onClick);
         stopService.setOnClickListener(this::onClick);
         bindService.setOnClickListener(this::onClick);
@@ -706,7 +707,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.bind_service:
                 Intent bindIntent = new Intent(this,MyService.class);
-                bindService(bindIntent,connection,BIND_ABOVE_CLIENT);//绑定服务
+                bindService(bindIntent,connection,BIND_AUTO_CREATE);//绑定服务
                 break;
             case R.id.unbind_service:
                 unbindService(connection);//解绑服务
@@ -724,6 +725,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 点击一下Bind Service，打印logcat中的日志
 
-![img_6.png](img_6.png)  
+![img_6.png](img_6.png)  ![img_7.png](img_7.png)
 
-&emsp;&emsp;可以看到，首先是MyService的onCreate()方法得到了执行，然后startDownload()
+&emsp;&emsp;可以看到，首先是MyService的onCreate()方法得到了执行，然后startDownload()和getProgress()方法都得到了执行，说明我们确实已经在活动里成功调用了服务里提供的方法了。  
+&emsp;&emsp;另外需要注意，任何一个服务在整个应用程序范围内都是通用的，即MyService不仅可以和MainActivity办法定。还可以和任何一个其他的活动进行绑定，而且在绑定完成周它们都可以获取到相同的DownloadBinder实例。

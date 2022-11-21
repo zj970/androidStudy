@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,8 +33,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
         Button startService = findViewById(R.id.start_service);
         Button stopService = findViewById(R.id.stop_service);
-        Button bindService = findViewById(R.id.start_service);
-        Button unbindService = findViewById(R.id.stop_service);
+        Button bindService = findViewById(R.id.bind_service);
+        Button unbindService = findViewById(R.id.unbind_service);
         startService.setOnClickListener(this::onClick);
         stopService.setOnClickListener(this::onClick);
         bindService.setOnClickListener(this::onClick);
@@ -54,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.bind_service:
                 Intent bindIntent = new Intent(this,MyService.class);
-                bindService(bindIntent,connection,BIND_ABOVE_CLIENT);//绑定服务
+                bindService(bindIntent,connection,BIND_AUTO_CREATE);//绑定服务
                 break;
             case R.id.unbind_service:
                 unbindService(connection);//解绑服务
