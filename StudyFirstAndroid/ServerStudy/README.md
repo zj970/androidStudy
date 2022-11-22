@@ -728,4 +728,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 ![img_6.png](img_6.png)  ![img_7.png](img_7.png)
 
 &emsp;&emsp;可以看到，首先是MyService的onCreate()方法得到了执行，然后startDownload()和getProgress()方法都得到了执行，说明我们确实已经在活动里成功调用了服务里提供的方法了。  
-&emsp;&emsp;另外需要注意，任何一个服务在整个应用程序范围内都是通用的，即MyService不仅可以和MainActivity办法定。还可以和任何一个其他的活动进行绑定，而且在绑定完成周它们都可以获取到相同的DownloadBinder实例。
+&emsp;&emsp;另外需要注意，任何一个服务在整个应用程序范围内都是通用的，即MyService不仅可以和MainActivity办法定。还可以和任何一个其他的活动进行绑定，而且在绑定完成周它们都可以获取到相同的DownloadBinder实例。  
+
+## 10.4 服务的生命周期  
+
+&emsp;&emsp;之前我们学习过了活动以及碎片的声明周期。类似地，服务也有自己的生命周期。类似地，服务也有自己的生命周期，前面我们使用到的onCreate()、onStartCommand()、onBind()和onDestroy()等方法都是在服务的生命周期可能回调的方法。  
+&emsp;&emsp;一旦在项目的任何位置调用了Context的startService()方法，相应的服务就会启动起来，并回调onStartCommand()方法。如果这个服务之前还没有创建过，onCreate()方法会先于onStartCommand()方法执行。服务启动了之后会一直保持运行状态，直到stopService()方法或stopSelf()方法被调用。注意，虽然每调用一次startService()方法，onStartCommand()就会执行一次，但实际上每个服务都只会存在一个实例。所有不管你调用了多少次startService()方法，只需要调用要从stopService或stopSelf()方法，服务就会停止下来。  
+&emsp;&emsp;另外，还可以调用Context的bindService()来获取一个服务的持久连接，这时就会回调服务中的onBind()方法。类似地，如果这个服务之前还没有创建过，onCreate()方法会先于onBind()方法执行。之后，调用方可以获取到onBind()方法里返回的IBinder对象的实例，这样就能自由地和服务进行通信了。只要调用方和服务之间的连接没有断开，服务就会一直保持运行状态。  
+&emsp;&emsp;当调用了startService()方法后，又去调用stopService()方法，这时服务中的onDestroy()方法就会执行，表示服务已经销毁了。类似地，当调用了bindService()方法后，又去调用unBindService()方法。onDestroy()方法也会执行，这两种情况都很好理解。但是需要注意，我们是完全有可能对一个服务既调用了startService()方法，又调用了bindService()方法的，这种情况该如何才能让服务销毁掉呢？必须要以上两种条件同时都不满足，服务才能被销毁。所以，这种情况下同时调用stopService()和unbindService()方法，onDestroy()方法才会执行。  
+
