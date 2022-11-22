@@ -737,3 +737,75 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 &emsp;&emsp;另外，还可以调用Context的bindService()来获取一个服务的持久连接，这时就会回调服务中的onBind()方法。类似地，如果这个服务之前还没有创建过，onCreate()方法会先于onBind()方法执行。之后，调用方可以获取到onBind()方法里返回的IBinder对象的实例，这样就能自由地和服务进行通信了。只要调用方和服务之间的连接没有断开，服务就会一直保持运行状态。  
 &emsp;&emsp;当调用了startService()方法后，又去调用stopService()方法，这时服务中的onDestroy()方法就会执行，表示服务已经销毁了。类似地，当调用了bindService()方法后，又去调用unBindService()方法。onDestroy()方法也会执行，这两种情况都很好理解。但是需要注意，我们是完全有可能对一个服务既调用了startService()方法，又调用了bindService()方法的，这种情况该如何才能让服务销毁掉呢？必须要以上两种条件同时都不满足，服务才能被销毁。所以，这种情况下同时调用stopService()和unbindService()方法，onDestroy()方法才会执行。  
 
+## 10.5 服务的更多技巧 
+
+&emsp;&emsp;以上所学的都是关于服务最基本的一些用法和概念，当然也是最常用的。不过，仅仅满足于此显然是不够的，关于服务的更多高级使用技巧还在等着我们呢。下面就赶快去看一看。  
+
+### 10.5.1 使用前台服务 
+
+&emsp;&emsp;服务几乎都是在后台运行的，一直以来它都是默默地做着辛苦的工作。但是服务的系统优先极还是比较低的，当系统出现内存不足的情况时，就有可能会回收掉正在后天运行的服务。如果你希望服务可以一直保持运行状态，而不会由于系统内存不足的原因导致被回收，就可以考虑使用前台服务。前台服务和普通服务最大的区别就在于，它会一直有一个正在运行的图标在系统的状态栏显示，下拉状态栏后可以看到更加详细的信息，非常类似于通知的效果。当然有时候你也可能不仅仅是为了防止服务被回收掉才使用前台服务的，有些项目由于特殊的需求会要求必须使用前台服务，比如说彩云天气这款天气预报应用，它的服务在后台更新天气数据的同时，还会在系统状态栏一直显示当前的天气信息。那么我们就来看一下如何才能创建一个前台服务。其实并不复杂，修改MyService中的代码：  
+
+```java
+package com.zj970.servicetest;
+
+import android.app.Notification;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.Intent;
+import android.graphics.BitmapFactory;
+import android.os.Binder;
+import android.os.IBinder;
+import android.util.Log;
+
+public class MyService extends Service {
+    private static final String TAG = "MyService";
+    private DownloadBinder mBinder = new DownloadBinder();
+    public MyService() {
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        return mBinder;
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Log.d(TAG, "onCreate: ");
+        Intent intent = new Intent(this,MainActivity.class);
+        PendingIntent pi = PendingIntent.getActivity(this,0,intent,0);
+        Notification notification = new Notification.Builder(this)
+                .setContentTitle("This is content title")
+                .setContentText("This is content text")
+                .setWhen(System.currentTimeMillis())
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(),R.mipmap.ic_launcher))
+                .setContentIntent(pi)
+                .build();
+        startForeground(1,notification);
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d(TAG, "onStartCommand: ");
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
+    public void onDestroy() {
+        Log.d(TAG, "onDestroy: ");
+        super.onDestroy();
+    }
+    
+    class DownloadBinder extends Binder{
+        public void startDownload(){
+            Log.d(TAG, "startDownload: executed");
+        }
+        public int getProgress(){
+            Log.d(TAG, "getProgress: ");
+            return 0;
+        }
+    }
+}
+```
