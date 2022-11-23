@@ -1,8 +1,10 @@
 package com.zj970.servicetest;
 
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
@@ -64,4 +66,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
     }
+
+    /**
+     * Android 8.0及以后,启动服务的形式已经变了
+     */
+    private void mStartService(Context context) {
+        Intent intent = new Intent(context, MyService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            context.startForegroundService(intent);
+        } else {
+            context.startService(intent);
+        }
+    }
+
+
 }
