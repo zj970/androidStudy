@@ -964,3 +964,5 @@ public class MyService extends Service {
 }
 ```
 并且申请权限 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+### 10.5.2 使用IntentService
