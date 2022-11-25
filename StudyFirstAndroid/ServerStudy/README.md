@@ -966,3 +966,94 @@ public class MyService extends Service {
 并且申请权限 <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
 ### 10.5.2 使用IntentService
+
+&emsp;&emsp;话说回来，在本章一开始的时候我们就已经知道，服务中的代码都是默认运行在主线程当中的，如果直接在服务里去处理一些耗时的逻辑，就很容易出现ANR(Application Not Responding)的情况。  
+&emsp;&emsp;所以这个时候就需要用到Android多线程编程的技术，我们应该在服务的每个具体的方法里开启一个子线程，然后在这里去处理那些耗时的逻辑。因此，一个比较标准的服务就可以写成如下形式:  
+
+``` 
+public class MyService extends Service{
+    ...
+    
+    @Override
+    public int onStartCommand(Intent intent ,int flags, int startId){
+        new Thread(new Runnable（）{
+            @Override
+            public void run(){
+                //处理具体的逻辑
+            }
+        }）.start();
+        retrun super.onStartCommand(intent, flags, startId);
+    }
+}
+```
+
+&emsp;&emsp;但是，这种服务一旦运行之后，就会一直处于运行状态，必须调用stopService()或者stopSelf()方法才能让服务停止下拉。所以，如果想要实现让一个服务在执行完毕后自动停止的功能，就可以这样写：  
+
+```
+public class MyService extends Service{
+    ...
+    
+    @Override
+    public int onStartCommand(Intent intent ,int flags, int startId){
+        new Thread(new Runnable（）{
+            @Override
+            public void run(){
+                //处理具体的逻辑
+                stopSelf();
+            }
+        }）.start();
+        retrun super.onStartCommand(intent, flags, startId);
+    }
+}
+```
+
+&emsp;&emsp;虽然这种写法并不复杂，但是总会有一些程序员忘记开启线程，或者忘记调用stopSelf()方法。为了可以简单地创建一个异步的、会自动停止的服务。Android专门提供了一个IntentService类，这个类就很好地解决了前面所提到的两种尴尬，下面我们就来看一下它的用法。  
+&emsp;&emsp;新建一个MyIntentService类继承自IntentService，代码如下所示：  
+
+```java
+package com.zj970.servicetest;
+
+import android.app.IntentService;
+import android.content.Intent;
+import android.util.Log;
+import androidx.annotation.Nullable;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/11/25
+ */
+public class MyIntentService extends IntentService {
+    private static final String TAG = "MyIntentService";
+    public MyIntentService() {
+        super("MyIntentService");//调用父类的有参构造函数
+    }
+
+    /**
+     * Creates an IntentService.  Invoked by your subclass's constructor.
+     *
+     * @param name Used to name the worker thread, important only for debugging.
+     */
+    public MyIntentService(String name) {
+        super(name);
+    }
+
+    @Override
+    protected void onHandleIntent(@Nullable Intent intent) {
+        //打印当前线程的id
+        Log.d(TAG,"Thread id is "+ Thread.currentThread().getId());
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy: executed ");
+    }
+}
+
+```
+
+&emsp;&emsp;这里首先要提供一个无参的构造函数，并且必须在其内部调用父类的有参构造函数。然后要在子类中去实现onHandleIntent()这个抽象方法，在这个方法中可以去处理一些具体的逻辑，而且不用担心ANR的问题，因为这个方法已经是在子线程中运行的了。这里为了证实一下，我们在onHandleIntent()方法中打印了当前线程的id。另外根据IntentService的特性，这个服务在运行结束后应该是会自动停止的，所以我们又重写了onDestroy()方法，在这里也打印了一行日志，以证实服务是不会停止了。
