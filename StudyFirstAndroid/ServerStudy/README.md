@@ -1056,4 +1056,52 @@ public class MyIntentService extends IntentService {
 
 ```
 
-&emsp;&emsp;这里首先要提供一个无参的构造函数，并且必须在其内部调用父类的有参构造函数。然后要在子类中去实现onHandleIntent()这个抽象方法，在这个方法中可以去处理一些具体的逻辑，而且不用担心ANR的问题，因为这个方法已经是在子线程中运行的了。这里为了证实一下，我们在onHandleIntent()方法中打印了当前线程的id。另外根据IntentService的特性，这个服务在运行结束后应该是会自动停止的，所以我们又重写了onDestroy()方法，在这里也打印了一行日志，以证实服务是不会停止了。
+&emsp;&emsp;这里首先要提供一个无参的构造函数，并且必须在其内部调用父类的有参构造函数。然后要在子类中去实现onHandleIntent()这个抽象方法，在这个方法中可以去处理一些具体的逻辑，而且不用担心ANR的问题，因为这个方法已经是在子线程中运行的了。这里为了证实一下，我们在onHandleIntent()方法中打印了当前线程的id。另外根据IntentService的特性，这个服务在运行结束后应该是会自动停止的，所以我们又重写了onDestroy()方法，在这里也打印了一行日志，以证实服务是不会停止了。  
+&emsp;&emsp;接下来修改activity_main.xml中代码，加入一个用于启动MyIntentService这个服务的按钮，如下所示： 
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
+
+    <Button
+            android:id="@+id/start_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start Service"
+            android:textAllCaps="false"/>
+    <Button
+            android:id="@+id/stop_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Stop Service"
+            android:textAllCaps="false"/>
+
+    <Button
+            android:id="@+id/bind_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bind Service"
+            android:textAllCaps="false"/>
+
+    <Button
+            android:id="@+id/unbind_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Unbind Service"
+            android:textAllCaps="false"/>
+
+
+    <Button
+            android:id="@+id/start_intent_service"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start Intent Service"
+            android:textAllCaps="false"/>
+</LinearLayout>
+```
