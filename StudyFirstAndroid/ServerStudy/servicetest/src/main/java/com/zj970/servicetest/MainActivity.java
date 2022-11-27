@@ -1,5 +1,6 @@
 package com.zj970.servicetest;
 
+import android.app.IntentService;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -13,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    private static final String TAG = "MainActivity";
     private MyService.DownloadBinder downloadBinder;
 
     private ServiceConnection connection = new ServiceConnection() {
@@ -42,6 +44,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         bindService.setOnClickListener(this::onClick);
         unbindService.setOnClickListener(this::onClick);
 
+        Button startIntentService = findViewById(R.id.start_intent_service);
+        startIntentService.setOnClickListener(this::onClick);
+
     }
 
     @Override
@@ -62,6 +67,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.unbind_service:
                 unbindService(connection);//解绑服务
                 break;
+            case R.id.start_intent_service:
+                //打印主线程的id
+                Log.d(TAG, "Thread id is "+ Thread.currentThread().getId());
+               Intent intentService = new Intent(this,MyIntentService.class);
+               startService(intentService);
+               break;
             default:
                 break;
         }
