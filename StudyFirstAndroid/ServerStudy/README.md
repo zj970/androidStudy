@@ -1211,3 +1211,216 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 ![img_9.png](img_9.png)
 
 &emsp;&emsp;可以看到，不仅MyIntentService和MainActivity所在的线程id不一样，而且onDestroy()方法也得到了了执行，说明MyIntentService在运行完毕后确实自动停止了。集开启线程和自动停止于一身，IntentService还是博得了不少程序原的喜爱。
+
+## 10.6 服务的最佳实践——完整版的下载示例  
+&emsp;&emsp;本章中你已经掌握了很多关于服务的使用技巧，但是当在真正的项目里需要用到服务的时候，可能还会有一些棘手的问题让你不知所措。因此，下面我们就来综合运用一下，尝试一下一个在服务中经常会使用到的功能——下载。  
+&emsp;&emsp;本节中我们将要编写一个完整版的下载示例，其中会设计第7、8、9和10章的部分内容，算是目前为止综合程度最高的一个例子。常见创建一个ServiceBestPractice项目，然后开始本节的学习之旅。  
+&emsp;&emsp;首先添加一个OkHttp的依赖，待会在编写网络相关的功能时，我们将使用OkHttp进行实现。  
+&emsp;&emsp;接下来需要定义一个回调接口，用于对下载过程中的各种状态进行监听和回调。新建一个DownloadListener接口，代码如下所示：  
+
+```java
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @create: 2022/11/28
+ * @FileName: IDownloadListener
+ */
+
+package com.zj970.servicebestpractice.service;
+
+/**
+ * <p>
+ * 用于对下载过程中的各种状态进行监听和回调
+ * </p>
+ * @author: zj970
+ * @date: 2022/11/28
+ */
+public interface IDownloadListener {
+    void onProgress(int progress);
+    void onSuccess();
+    void onFailed();
+    void onPaused();
+    void onCanceled();
+}
+
+```  
+
+&emsp;&emsp;可以看到，这里我们一共定义了5个回调方法，onProgress()方法用于通知当前的下载进度，onSuccess()方法用于通知下载成功事件，onFailed()方法用于通知下载失败事件，onPaused()方法用于通知下载暂时事件，onCanceled()方法用于通知下载取消事件。  
+&emsp;&emsp;回调接口定义好了之后，下面我们就可以开始编写下载功能了。这里我准备使用本章中刚学的AsyncTask来进行实现，新建一个DownloadTask继承自AsyncTask，代码如下所示：  
+
+```java
+package com.zj970.servicebestpractice;
+
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.AsyncTask;
+import android.os.Environment;
+import com.zj970.servicebestpractice.service.IDownloadListener;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.RandomAccessFile;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/11/28
+ */
+public class DownloadTask extends AsyncTask<String, Integer,Integer> {
+    public static final int TYPE_SUCCESS = 0;
+    public static final int TYPE_FAILED = 1;
+    public static final int TYPE_PAUSED = 2;
+    public static final int TYPE_CANCELED = 3;
+
+    private IDownloadListener listener;
+
+    private boolean isCanceled = false;
+
+    private boolean isPaused = false;
+
+    private int lastProgress;
+
+    public DownloadTask(IDownloadListener listener) {
+        this.listener = listener;
+    }
+
+    @Override
+    protected Integer doInBackground(String... params) {
+        InputStream is = null;
+        RandomAccessFile savedFile = null;
+        File file = null;
+        try {
+            long downloadedLength = 0;//记录已下载的文件长度
+            String downloadUrl = params[0];
+            String fileName = downloadUrl.substring(downloadUrl.lastIndexOf("/"));
+            String directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
+            file = new File(directory + fileName);
+            if (file.exists()){
+                downloadedLength = file.length();
+            }
+            long contentLength = getContentLength(downloadUrl);
+            if (contentLength == 0){
+                return TYPE_FAILED;
+            } else if (contentLength == downloadedLength){
+                //已下载字节和文件总字节相等，说明已经下载完成了
+                return TYPE_SUCCESS;
+            }
+
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder()
+                    //断点下载，指定从哪个字节开始下载
+                    .addHeader("RANGE","bytes = " + downloadedLength + "-")
+                    .url(downloadUrl)
+                    .build();
+            Response response = client.newCall(request).execute();
+            if (response != null){
+                is = response.body().byteStream();
+                savedFile = new RandomAccessFile(file,"rw");
+                savedFile.seek(downloadedLength);//跳过已下载的字节
+                byte[] b = new byte[1024];
+                int total = 0;
+                int len;
+                while ((len = is.read(b)) != -1){
+                    if (isCanceled){
+                        return TYPE_CANCELED;
+                    } else if (isPaused){
+                        return TYPE_PAUSED;
+                    } else {
+                        total += len;
+                        savedFile.write(b,0,len);
+                        //计算已下载的百分比
+                        int progress = (int) ((total + downloadedLength) * 100 / contentLength);
+                        publishProgress(progress);
+                    }
+                }
+                response.body().close();
+                return TYPE_SUCCESS;
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        } finally {
+            try {
+                if (is != null){
+                    is.close();
+                }
+                if (savedFile != null){
+                    savedFile.close();
+                }
+
+                if (isCanceled && file != null){
+                    file.delete();
+                }
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        return TYPE_FAILED;
+    }
+
+
+    @Override
+    protected void onProgressUpdate(Integer... values) {
+        int progress = values[0];
+        if (progress > lastProgress){
+            listener.onProgress(progress);
+            lastProgress = progress;
+        }
+    }
+
+    @Override
+    protected void onPostExecute(Integer status) {
+        switch (status){
+            case TYPE_SUCCESS:
+                listener.onSuccess();
+                break;
+            case TYPE_FAILED:
+                listener.onFailed();
+                break;
+            case TYPE_PAUSED:
+                listener.onPaused();
+                break;
+            case TYPE_CANCELED:
+                listener.onCanceled();
+            default:
+                break;
+        }
+    }
+
+    public void pauseDownload(){
+        isPaused = true;
+    }
+
+    public void cancelDownload(){
+        isCanceled = true;
+    }
+
+    public long getContentLength(String downloadUrl) throws IOException{
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder().url(downloadUrl).build();
+        Response response = client.newCall(request).execute();
+        if (response != null && response.isSuccessful()){
+            long contentLength = response.body().contentLength();
+            response.close();
+            return contentLength;
+        }
+        return 0;
+    }
+
+}
+
+```
+
+&emsp;&emsp;这段代码就比较长了，我们需要一步一步地进行分析。首先看一下AsyncTask中的3个泛型参数：第一个泛型参数指定为String，表示在执行AsyncTask的时候需要传入一个字符串参数给后台任务；第二个泛型参数指定为Integer，表示使用整型数据来作为进度显示单位；第三个泛型参数指定为Integer，则表示使用整型数据来反馈执行结果。  
+&emsp;&emsp;接下来我们定义了4个整型常量用于表示下载的状态，TYPE_SUCCESS表示下载成功，TYPE_FAILED表示下载失败，TYPE_PAUSED表示暂停下载，TYPE_CANCELED表示取消下载。然后在DownloadTask的构造函数要求传入一个刚刚定义的DownloadListener参数，我们会就会将下载的状态通过这个参数进行回调。  
+&emsp;&emsp;接着就是重写doInBackground()、onProgressUpdate()和onPostExecute()这3个方法了，我们之前已经学习过这3个方法各自的作用，因此在这里它们各自所负责的任务也是明确的：doInBackground()方法用于在后台执行具体的下载逻辑、onProgressUpdate()方法用于在界面上更行当前的下载进度，onPostExecute()用于通知最终的下载结果。  
+&emsp;&emsp;那么先来看一下doInBackground()方法，首先我们从参数中获取到了下载的URL地址，并根据URL地址解析出了下载的文件名，然后指定将文件下载到Environment.DIRECTORY_DOWNLOADS目录下，也就是SD卡的Download目录。我们还要判断一下Download目录中是不是已经存在要下载的文件了，如果已经存在的话则读取已下载的字节数，这样就可以在后面启用断点续传的功能。接下来先是调用了getContentLength()方法来获取待下载文件的总长度，如果长度等于0说明文件有问题，直接返回TYPE_FAILED，如果文件长度等于已下载文件长度，那么就说明文件已经下载完了，直接返回TYPE_SUCCESS即可。紧接着使用OkHttp来发送一条网络请求，需要注意的是，这里在请求中添加了一个header，用于告诉服务器我们想要从哪个字节开始下载，因为已下载过的部分就不需要再重新下载了。接下来读取服务器响应的数据，并使用Java的文件流方式，不断从网络上读取数据，不断写入到本地，一直到文件全部下载完成为止。这个过程中，我们还需要判断用户有没有触发暂停或者取消的操作，如果有的话则返回TYPE_PAUSED或TYPE_CANCELED来中断下载，如果没有的话则实时计算当前的下载进度，然后调用publishProgress()方法进行通知。暂停和取消操作都是使用一个布尔型的变量来进行控制的，调用pauseDownload()或cancelDownload()方法即可更改变量的值。
