@@ -1426,4 +1426,136 @@ public class DownloadTask extends AsyncTask<String, Integer,Integer> {
 &emsp;&emsp;那么先来看一下doInBackground()方法，首先我们从参数中获取到了下载的URL地址，并根据URL地址解析出了下载的文件名，然后指定将文件下载到Environment.DIRECTORY_DOWNLOADS目录下，也就是SD卡的Download目录。我们还要判断一下Download目录中是不是已经存在要下载的文件了，如果已经存在的话则读取已下载的字节数，这样就可以在后面启用断点续传的功能。接下来先是调用了getContentLength()方法来获取待下载文件的总长度，如果长度等于0说明文件有问题，直接返回TYPE_FAILED，如果文件长度等于已下载文件长度，那么就说明文件已经下载完了，直接返回TYPE_SUCCESS即可。紧接着使用OkHttp来发送一条网络请求，需要注意的是，这里在请求中添加了一个header，用于告诉服务器我们想要从哪个字节开始下载，因为已下载过的部分就不需要再重新下载了。接下来读取服务器响应的数据，并使用Java的文件流方式，不断从网络上读取数据，不断写入到本地，一直到文件全部下载完成为止。这个过程中，我们还需要判断用户有没有触发暂停或者取消的操作，如果有的话则返回TYPE_PAUSED或TYPE_CANCELED来中断下载，如果没有的话则实时计算当前的下载进度，然后调用publishProgress()方法进行通知。暂停和取消操作都是使用一个布尔型的变量来进行控制的，调用pauseDownload()或cancelDownload()方法即可更改变量的值。  
 &emsp;&emsp;接下来看一下onProgressUpdate()方法，这个方法就简单得多了，它首先从参数中获取到当前的下载进度，然后和上一次的下载进度进行对比，如果有变化的话则调用DownloadListener的onProgress()方法来通知下载进度更新。  
 &emsp;&emsp;最后是onPostExecute()方法，也非常简单，就是根据参数中传入的下载状态来进行回调。下载成功就调用DownloadListener的onSuccess()方法，下载失败就调用onFailed()方法，暂停下载就调用onPaused()方法，取消下载就调用onCanceled()方法。  
-&emsp;&emsp;这样我们就把具体的下载功能完成了，下面为了保证DownloadTask可以一直在后台运行，我们还需要创建一个下载的服务。右击com.example.servicebestpractice->New->Service->Service，新建DownloadService，然后修改其中的代码，如下所示
+&emsp;&emsp;这样我们就把具体的下载功能完成了，下面为了保证DownloadTask可以一直在后台运行，我们还需要创建一个下载的服务。右击com.example.servicebestpractice->New->Service->Service，新建DownloadService，然后修改其中的代码，如下所示: 
+
+```java
+package com.zj970.servicebestpractice;
+
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.Intent;
+import android.graphics.BitmapFactory;
+import android.os.Binder;
+import android.os.Environment;
+import android.os.IBinder;
+import android.widget.Toast;
+import androidx.core.app.NotificationCompat;
+import com.zj970.servicebestpractice.service.IDownloadListener;
+
+import java.io.File;
+
+public class DownloadService extends Service {
+    private DownloadTask downloadTask;
+    private String downloadUrl;
+
+    private IDownloadListener listener = new IDownloadListener() {
+        @Override
+        public void onProgress(int progress) {
+            getNotificationManager().notify(1,getNotification("Downloading....",progress));
+        }
+
+        @Override
+        public void onSuccess() {
+            downloadTask = null;
+            //下载成功时将前台服务通知关闭，并创建一个下载成功的通知
+            stopForeground(true);
+            getNotificationManager().notify(1,getNotification("Download Success",-1));
+            Toast.makeText(DownloadService.this, "Download success", Toast.LENGTH_SHORT).show();
+
+        }
+
+        @Override
+        public void onFailed() {
+            downloadUrl = null;
+            //下载失败时将前台服务通知关闭，并创建一个下载失败的通知
+            stopForeground(true);
+            getNotificationManager().notify(1,getNotification("Download",-1));
+            Toast.makeText(DownloadService.this, "Download Failed", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onPaused() {
+            downloadTask = null;
+            Toast.makeText(DownloadService.this, "Paused", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onCanceled() {
+            downloadTask = null;
+            Toast.makeText(DownloadService.this, "Cancled", Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    private DownloadBinder mBinder = new DownloadBinder();
+
+
+    public DownloadService() {
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        return mBinder;
+    }
+
+    class DownloadBinder extends Binder{
+        public void startDownload(String url){
+            if (downloadTask == null){
+                downloadUrl = url;
+                downloadTask = new DownloadTask(listener);
+                downloadTask.execute(downloadUrl);
+                startForeground(1,getNotification("Downloading...",0));
+                Toast.makeText(DownloadService.this, "Downloading...", Toast.LENGTH_SHORT).show();
+            }
+        }
+        public void pauseDownload(){
+            if (downloadTask != null){
+                downloadTask.pauseDownload();
+            }
+        }
+        
+        public void cancelDownload(){
+            if (downloadTask != null){
+                downloadTask.cancelDownload();
+            }else {
+                if (downloadUrl != null){
+                    //取消下载时需要将文件删除，并将通知关闭
+                    String fileName = downloadUrl.substring(downloadUrl.lastIndexOf("/"));
+                    String directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
+                    File file = new File(directory+fileName);
+                    if (file.exists()){
+                        file.delete();
+                    }
+                    getNotificationManager().cancel(1);
+                    stopForeground(true);
+                    Toast.makeText(DownloadService.this, "Canceled", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    }
+
+    private NotificationManager getNotificationManager(){
+        return (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+    }
+
+    private Notification getNotification(String title, int progress){
+        Intent intent = new Intent(this,MainActivity.class);
+        PendingIntent pi = PendingIntent.getActivity(this,0,intent,0);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        builder.setSmallIcon(R.mipmap.ic_launcher);
+        builder.setLargeIcon(BitmapFactory.decodeResource(getResources(),R.mipmap.ic_launcher));
+        builder.setContentIntent(pi);
+        builder.setContentTitle(title);
+        if (progress > 0){
+            //当progress大于或等于0时才需要显示下载进度
+            builder.setContentText(progress+"%");
+            builder.setProgress(100,progress,false);
+        }
+        return builder.build();
+    }
+}
+```
+
+&emsp;&emsp;这段代码同样比较长，我们还是得耐心慢慢看。首先这里创建了一个DownloadListener的匿名类实例，并在匿名类中实现了onProgress()、onSuccess()、onFailed()、onPaused()和onCanceled()这个5个方法。
