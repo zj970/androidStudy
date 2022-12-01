@@ -1558,4 +1558,5 @@ public class DownloadService extends Service {
 }
 ```
 
-&emsp;&emsp;这段代码同样比较长，我们还是得耐心慢慢看。首先这里创建了一个DownloadListener的匿名类实例，并在匿名类中实现了onProgress()、onSuccess()、onFailed()、onPaused()和onCanceled()这个5个方法。
+&emsp;&emsp;这段代码同样比较长，我们还是得耐心慢慢看。首先这里创建了一个DownloadListener的匿名类实例，并在匿名类中实现了onProgress()、onSuccess()、onFailed()、onPaused()和onCanceled()这个5个方法。在onProgress()方法中 ，我们调用getNotification()方法构建了一个用于显示下载进度的通知，然后调用NotificationManager的notify()的方法去除触发这个通知，这样就可以在下拉状态栏中实时看到当前下载的进度了。在onSuccess()方法中，我们首先是将正在下载的前台通知关闭，然后创建一个新的通知用于告诉用户下载成功了。其他几个方法也都是类似的，分别用于告诉用户下载失败、暂停和取消这几个事件。  
+&emsp;&emsp;接下来为了要让DownloadService可以和活动进行通信，我们又创建了一个DownloadBinder。DownloadBinder中提供为了startDownload()、pauseDownload()和cancelDownload()这3个方法，那么顾名思义，它们分别用于开始下载、暂停下载和取消下载稍微。在startDownload()方法中，我们创建了一个DownloadTask实例，把刚才的DownloadListener作为参数传入，然后调用execute()方法开始下载，并将下载文件袋额URL地址传入到execute()方法中。同时，为了让这个下载服务成为一个前台服务，我们还调用了startForeground()方法，这样就会在系统状态栏中创建一个持续运行的通知了。接着往下看，pauseDownload()方法中的代码就非常简单亏了，就是简单地调用了一下DownloadTask中的pauseDownload()方法。cancelDownload()方法中的逻辑基本类似，但是要注意，取消下载的时候我们需要将正在下载的文件删除掉，这一点暂停下载是不同的。
