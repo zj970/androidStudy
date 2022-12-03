@@ -1595,3 +1595,142 @@ public class DownloadService extends Service {
 ```
 
 &emsp;&emsp;布局文件还是非常简单的，这里在LinearLayout中放置了3个按钮，分别用于开始下载、暂停下载和取消下载。然后修改MainActivity中的代码，如下所示：  
+
+```java
+package com.zj970.servicebestpractice;
+
+import android.Manifest;
+import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
+import android.os.IBinder;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import org.jetbrains.annotations.NotNull;
+
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+
+    private DownloadService.DownloadBinder downloadBinder;
+
+    private ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            downloadBinder = (DownloadService.DownloadBinder) service;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Button startDownload = findViewById(R.id.start_download);
+        Button pauseDownload = findViewById(R.id.pause_download);
+        Button cancelDownload = findViewById(R.id.cancel_download);
+        startDownload.setOnClickListener(this::onClick);
+        pauseDownload.setOnClickListener(this::onClick);
+        cancelDownload.setOnClickListener(this::onClick);
+        Intent intent = new Intent(this, DownloadService.class);
+        startService(intent);//启动服务
+        bindService(intent,connection,BIND_AUTO_CREATE);//绑定服务
+        if(ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(MainActivity.this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},1);
+        }
+
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (downloadBinder == null){
+            return;
+        }
+        switch (v.getId()){
+            case R.id.start_download:
+                String url = "https://download-cdn.jetbrains.com/idea/ideaIU-2022.3.tar.gz";
+                downloadBinder.startDownload(url);
+                break;
+            case R.id.pause_download:
+                downloadBinder.pauseDownload();
+                break;
+            case R.id.cancel_download:
+                downloadBinder.cancelDownload();
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull @NotNull String[] permissions, @NonNull @NotNull int[] grantResults) {
+        switch (requestCode){
+            case 1:
+                if (grantResults.length > 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED){
+                    Toast.makeText(this, "拒绝权限将无法使用程序", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unbindService(connection);
+    }
+}
+```
+
+&emsp;&emsp;可以看到，这里我们首先创建了一个ServiceConnection的匿名类，然后在onServiceConnected()方法中获取到了DownloadBinder的实例，有了这个实例，我们就可以在活动中调用服务提供的各种方法了。  
+&emsp;&emsp;接下来看一下onCreate()方法，在这里我们对各个按钮都进行了初始化操作并设置了点击事件，然后分别调用了startService()和bindService()方法来启动和绑定服务。这有点至关重要，因为启动服务可以保证DownloadService一直在后天运行，绑定服务则可以让ManiActivity和DownloadService进行通信，因此两个方法调用都必不可少。在onCreate()方法的最后，我们还进行了WRITE_EXTERNAL_STORAGE的运行时权限都必不可少。在onCreate()方法的最后，我们还进行了WRITE_EXTERNAL_STORAGE的运行时权限申请，因为下载文件是要下载到SD卡deDownload目录下的，如果没有这个权限，我们整个程序都无法正常工作。  
+&emsp;&emsp;接下来的代码就非常简单了，在onClick()方法中我们对点击事件进行判断，如果点击了开始按钮就调用DownloadBinder的startDownload()方法，如果点击了暂停按钮就调用pauseDownload()方法，如果点击取消按钮就调用cancelDownload()方法。startDownload()方法中可以传入任意的下载地址，这里我使用了IDEA的下载地址。  
+&emsp;&emsp;另外还有一点需要注意，如果活动被销毁了，那么一定要记得对服务进行解绑，不然就有可能会造成内存泄露。这里我们在onDestroy()方法中完成了解绑操作。  
+&emsp;&emsp;现在只差最后一步，我们还需要在AndroidManifest.xml中声明使用到的权限。当然除了权限之外，MainActivity和DownloadService也是需要声明的。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.zj970.servicebestpractice">
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <application
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/Theme.ServerStudy">
+        <service
+                android:name=".DownloadService"
+                android:enabled="true"
+                android:exported="true">
+        </service>
+
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+```
+
+&emsp&emsp;其中，由于我们的程序使用到了网络和访问SD卡的功能，因此需要声明INTERNET和WRITE_EXTERNAL_STORAGE这两个权限，运行程序，如图所示： 
+
