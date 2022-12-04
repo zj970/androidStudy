@@ -30,3 +30,12 @@
 ![img_3.png](img_3.png)
 
 &emsp;&emsp;这里展示了一个Android Studio 项目中所有内置的Gradle Tasks，其中signingReport这个Task就可以用来查看签名文件信息。双击signingReport
+
+![img_4.png](img_4.png)
+
+&emsp;&emsp;其中SHA1就是我们所需要的SHA1指纹了。另外需要注意。目前我们使用的是debug.keystore文件所生成的指纹，这是Android自动生成的一个用于测试的签名文件。而当你的应用发布时还需要创建一个正式的签名文件，如果要得到它的指纹，可以在cmd中输入如下命令:
+
+&emsp;&emsp;  keytool -list -v -keystore <签名文件路径>  
+&emsp;&emsp;然后输入正确的密码就可以了。创建签名文件的方法在15章中学习。那么也就是说，现在得到的这个SHA1指纹其实是一个开发版的SHA1指纹，不过因为暂时我们还没有一个发布版的SHA1指纹，因此这连个值都填成一样的就可以了。最后还剩下一个包名选项，虽然目前我们的应用程序不存在，但是可以预定下来。填写完全后就可以额开始后续的LBS开发工作了。  
+
+## 11.3 使用百度定位
