@@ -1701,6 +1701,170 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 &emsp;&emsp;另外还有一点需要注意，如果活动被销毁了，那么一定要记得对服务进行解绑，不然就有可能会造成内存泄露。这里我们在onDestroy()方法中完成了解绑操作。  
 &emsp;&emsp;现在只差最后一步，我们还需要在AndroidManifest.xml中声明使用到的权限。当然除了权限之外，MainActivity和DownloadService也是需要声明的。
 
+
+&emsp;&emsp; 这里环境由于是Android 8 以上创建通道，需要指定通道id和通道名字：
+
+```java
+package com.zj970.servicebestpractice;
+
+import android.app.*;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.os.Binder;
+import android.os.Build;
+import android.os.Environment;
+import android.os.IBinder;
+import android.widget.Toast;
+import androidx.annotation.RequiresApi;
+import androidx.core.app.NotificationCompat;
+import com.zj970.servicebestpractice.service.IDownloadListener;
+
+import java.io.File;
+
+public class DownloadService extends Service {
+    private DownloadTask downloadTask;
+    private String downloadUrl;
+    String channelId = null;
+
+    private IDownloadListener listener = new IDownloadListener() {
+        @Override
+        public void onProgress(int progress) {
+            getNotificationManager().notify(1,getNotification("Downloading....",progress,channelId));
+        }
+
+        @Override
+        public void onSuccess() {
+            downloadTask = null;
+            //下载成功时将前台服务通知关闭，并创建一个下载成功的通知
+            stopForeground(true);
+            getNotificationManager().notify(1,getNotification("Download Success",-1,channelId));
+            Toast.makeText(DownloadService.this, "Download success", Toast.LENGTH_SHORT).show();
+
+        }
+
+        @Override
+        public void onFailed() {
+            downloadUrl = null;
+            //下载失败时将前台服务通知关闭，并创建一个下载失败的通知
+            stopForeground(true);
+            getNotificationManager().notify(1,getNotification("Download",-1,channelId));
+            Toast.makeText(DownloadService.this, "Download Failed", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onPaused() {
+            downloadTask = null;
+            Toast.makeText(DownloadService.this, "Paused", Toast.LENGTH_SHORT).show();
+        }
+
+        @Override
+        public void onCanceled() {
+            downloadTask = null;
+            Toast.makeText(DownloadService.this, "Cancled", Toast.LENGTH_SHORT).show();
+        }
+    };
+
+    private DownloadBinder mBinder = new DownloadBinder();
+
+
+    public DownloadService() {
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        return mBinder;
+    }
+
+    class DownloadBinder extends Binder{
+        public void startDownload(String url){
+            if (downloadTask == null){
+                downloadUrl = url;
+                downloadTask = new DownloadTask(listener);
+                downloadTask.execute(downloadUrl);
+                startForeground();
+                Toast.makeText(DownloadService.this, "Downloading...", Toast.LENGTH_SHORT).show();
+            }
+        }
+        public void pauseDownload(){
+            if (downloadTask != null){
+                downloadTask.pauseDownload();
+            }
+        }
+        
+        public void cancelDownload(){
+            if (downloadTask != null){
+                downloadTask.cancelDownload();
+            }else {
+                if (downloadUrl != null){
+                    //取消下载时需要将文件删除，并将通知关闭
+                    String fileName = downloadUrl.substring(downloadUrl.lastIndexOf("/"));
+                    String directory = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).getPath();
+                    File file = new File(directory+fileName);
+                    if (file.exists()){
+                        file.delete();
+                    }
+                    getNotificationManager().cancel(1);
+                    stopForeground(true);
+                    Toast.makeText(DownloadService.this, "Canceled", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    }
+
+    private NotificationManager getNotificationManager(){
+        return (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+    }
+
+    private Notification getNotification(String title, int progress, String channelId){
+        Intent intent = new Intent(this,MainActivity.class);
+        PendingIntent pi = PendingIntent.getActivity(this,0,intent,0);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this,channelId);
+        builder.setSmallIcon(R.mipmap.ic_launcher);
+        builder.setLargeIcon(BitmapFactory.decodeResource(getResources(),R.mipmap.ic_launcher));
+        builder.setContentIntent(pi);
+        builder.setContentTitle(title);
+        if (progress > 0){
+            //当progress大于或等于0时才需要显示下载进度
+            builder.setContentText(progress+"%");
+            builder.setProgress(100,progress,false);
+        }
+        return builder.build();
+    }
+
+    /**
+     * 启动前台服务
+     */
+    private void startForeground(){
+        // 8.0 以上需要特殊处理
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            channelId = createNotificationChannel("download","DownloadService");
+        } else {
+            channelId = "";
+        }
+        startForeground(1,getNotification("Downloading...",0, channelId));
+    }
+
+    /**
+     * 创建通知通道
+     * @param channelId 指定通道id
+     * @param channelName 指定通道名字
+     * @return
+     */
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private String createNotificationChannel(String channelId, String channelName){
+        NotificationChannel channel = new NotificationChannel(channelId,channelName,NotificationManager.IMPORTANCE_NONE);
+        channel.setLightColor(Color.BLUE);
+        channel.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+        NotificationManager service = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        service.createNotificationChannel(channel);
+        return channelId;
+    }
+}
+```
+
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
@@ -1732,5 +1896,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 </manifest>
 ```
 
-&emsp&emsp;其中，由于我们的程序使用到了网络和访问SD卡的功能，因此需要声明INTERNET和WRITE_EXTERNAL_STORAGE这两个权限，运行程序，如图所示： 
+&emsp;&emsp;其中，由于我们的程序使用到了网络和访问SD卡的功能，因此需要声明INTERNET和WRITE_EXTERNAL_STORAGE这两个权限，运行程序，如图所示： 
+
+![img_10.png](img_10.png)
+
+&emsp;&emsp;程序一启动立刻就会申请SD卡的权限，这里我们点击ALLOW，然后点击Start Download按钮就可以开始下载了。下载过程可以下拉系统状态栏查看实时的下载进度，如图所示。
+
+![img_11.png](img_11.png)
+
+&emsp;&emsp;同时，我们还可以点击Pause Download或Cancel Download，甚至于断网操作来测试这个下载程序的健壮性。最终下载完成后会弹出一个Download Success的通知，然后我们可以通过任意一个文件浏览器来查看SD卡的Download目录。如图所示：
+
+![img_12.png](img_12.png)
+
+&emsp;&emsp;可以看到，文件已经成功下载下来了。当然，我们还可以做一些更加丰富的操作，比如说再次点击Start Download按钮，你会发现程序会立刻弹出一个Download Success的提示，因为它检测到文件已经下载完成了，因而不会再重新去下载一遍。如果我们点击Cancel Download按钮先将下载文件删除掉，然后再点击Start Download按钮，你就会发现程序又会开始重新下载了。总体来说，这个下载示例的稳定性还是挺不错的，而且综合性很强，将这个示例完全掌握了之后，你的水平肯定又更进一步了。
 
