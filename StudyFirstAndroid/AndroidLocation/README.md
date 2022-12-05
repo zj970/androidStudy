@@ -41,4 +41,194 @@
 
 &emsp;&emsp;ak 就是我们访问的秘钥
 
-## 11.3 使用百度定位
+## 11.3 使用百度定位  
+&emsp;&emsp;现在正是乘热打铁的好时机，新建一个LBSTest项目，包名应该命名为之前所申请的包名一致。本章中所写的代码建议你都在手机上运行，虽然模拟器中也提供了模拟地理位置的功能，但在手机上可以得到真实的位置数据。  
+
+### 11.3.1 准备LBS SDK  
+&emsp;&emsp;在开始编码之前，我们还需要将百度LBS开发平台的SDK准备好，下载地址是：http://lbsyun.baidu.com/sdk/download。本章中我们会用到基础地图和定位功能这两个SDK，将其勾选上然后下载  
+![img_6.png](img_6.png)  
+
+&emsp;&emsp;下载完成后对该压缩包解压，其中会有一个libs目录，这里面的内容就是我们所需要的一切，如图所示：  
+![img_7.png](img_7.png)
+
+&emsp;&emsp;libs目录下的内容又分为两部分，BaiduLBS_Android.jar复制到项目中，接下来展开src/main目录，新建一个jniLibs目录，这里就是专门用来存放so文件的，然后把压缩包里的其他所有目录直接复制到这里。如图所示：  
+
+![img_8.png](img_8.png)
+
+&emsp;&emsp;在app/build.gradle文件都会默认配置以下声明：  
+
+```groovy
+dependencies{
+    implementation fileTree(dir: 'libs',includes: ['*.jar'])
+}
+```
+&emsp;&emsp;这表示会将libs目录下所有以.jar结尾的文件添加到当前项目的引用中。但是由于我们是直接将Jar包复制到libs目录下，并没有修改gradle文件，手动sync一下。  
+
+### 11。3.2 确定自己位置的经纬度  
+
+&emsp;&emsp;首先修改activity_main.xml中的代码，如下所示：  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
+    <TextView
+            android:id="@+id/position_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+</LinearLayout>
+```
+
+&emsp;&emsp;布局文件的内容非常简单，只有一个TextView控件，用于稍后显示当前的经纬度信息。然后修改AndroidManifest.xml文件中的代码，如下所示：  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools" package="com.zj970.lbstest">
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" tools:ignore="ProtectedPermissions"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <application
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/Theme.AndroidLocation">
+        <meta-data
+            android:name="com.baidu.lbsapi.API_KEY"
+            android:value="8FVkGlrR50ztPFPw4ST6vTm2lttMCQOh"
+        />
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <service
+                android:name="com.baidu.location.f"
+                android:enabled="true"
+                android:process=":remote">
+        </service>
+    </application>
+</manifest>
+```
+
+&emsp;&emsp;AndroidManifest.xml文件改动比较多，我们仔细阅读一下，可以看到，这里首先添加了很多行权限声明。每一个权限都是百度LBS SDK 内部要用到的。然后在<application>标签的内部添加了一个<meta-data>标签，这个标签的android:name部分是固定的，必须填写com.baidu.lbsapi.API_KEY。而android:value部分应该填入我们申请的API Key。最后，还需要再注册一个LBS SDK 中的服务，不用对这个服务的名字感到疑惑，因为在LBS SDK中的代码都是混淆过的。接下来修改ManiActivity中的代码。如下所示：  
+
+```java
+package com.zj970.lbstest;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import com.baidu.location.BDLocation;
+import com.baidu.location.BDLocationListener;
+import com.baidu.location.LocationClient;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MainActivity extends AppCompatActivity {
+    public LocationClient mLocationClient;
+    private TextView positionText;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        try {
+            mLocationClient = new LocationClient(getApplicationContext());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        mLocationClient.registerLocationListener(new MyLocationListener());
+        setContentView(R.layout.activity_main);
+        positionText = findViewById(R.id.position_text_view);
+        List<String> permissionList = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.READ_PHONE_STATE);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        if (!permissionList.isEmpty()){
+            String[] permissions = permissionList.toArray(new String[permissionList.size()]);
+            ActivityCompat.requestPermissions(MainActivity.this,permissions,1);
+        } else {
+            requestLocation();
+        }
+    }
+    private void requestLocation(){
+        mLocationClient.start();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case 1:
+                if (grantResults.length > 0){
+                    for (int result : grantResults){
+                        if (result != PackageManager.PERMISSION_GRANTED){
+                            Toast.makeText(this, "必须同意所有权限才能使用本程序", Toast.LENGTH_SHORT).show();
+                            finish();
+                            return;
+                        }
+                    }
+                    requestLocation();
+                }else {
+                    Toast.makeText(this, "发生未知错误", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    public class MyLocationListener implements BDLocationListener{
+
+        @Override
+        public void onReceiveLocation(BDLocation bdLocation) {
+            StringBuilder currentPosition = new StringBuilder();
+            currentPosition.append("纬度：").append(bdLocation.getLatitude()).append("\n");
+            currentPosition.append("经线：").append(bdLocation.getLongitude()).append("\n");
+            currentPosition.append("定位方式：");
+            if (bdLocation.getLocType() == BDLocation.TypeGpsLocation){
+                currentPosition.append("GPS");
+            } else if (bdLocation.getLocType() == BDLocation.TypeNetWorkLocation){
+                currentPosition.append("网络");
+            }
+            positionText.setText(currentPosition);
+        }
+    }
+}
+```
+
+&emsp;&emsp;可以看到，在onCreate()方法中，我们首先创建了一个LocationClient的实例，LocationClient的构建函数接收一个Context参数，这里调用getApplicationContext()方法来获取一个全局的Context参数并传入。然后调用LocationClient的registerLocationListener()方法来注册一个定位监听器，当获取到位置信息的时候，就会回调这个定位监听器。  
+&emsp;&emsp;接下来看一下这里运行权限的用法，由于我们在AndroidManifest.xml中声明了很多权限，参考一下 7.2.1 小节中的危险权限表格可以发现，气质ACCESS_COARSE_LOCATION、ACCESS_FINE_LOCATION、READ_PHONE_STATE、WRITE_EXTERNAL_STORAGE这4个权限是需要进行运行时权限处理。不过由于ACCESS_COARSE_LOCATION和ACCESS_FINE_LOCATION都是属于同一个权限组，因此两者只要申请其一就可以了。那么怎样才能运行时一次性申请3个权限呢？这里我们石永红了一种新的用法，首先创建一个空的List集合，然后依次判断这3个权限有没有被授权，如果没有被授权就添加到List集合中，最后将List转换为数组，再调用ActivityCompat.requestPermissions()方法一次性申请。  
+&emsp;&emsp;除此之外，onRequestPermissionsResult()方法中对权限申请结果的逻辑处理也和之前有所不同，这次我们通过一个循环将申请的每个权限进行了判断，如果有任何一个权限被拒绝，那么就直接调用finish()方法关闭当前程序，只有当所有权限都被用户同意了，才会调用requestLocation()方法开始地理位置定位。  
+&emsp;&emsp;requestLocation()方法中的代码比较简单，只是调用了一下LocationClient的start()方法就能开始定位了。定位的结果会回调到我们签名注册的监听器当中，也就是MyLocationListener。观察一下MyLocationListener的onReceiveLocation()方法中，在这里我们通过BDLocation的getLatitude()方法获取当前位置的纬度，通过getLongitude()方法获取当前位置的精度，通过getLocType()方法获取当前位置的纬度，通过getLongitude()方法获取当前位置的经度，通过getLocType()方法的当前定位方式，最终将结果组装成一个字符串，显示到TextView上面。
+&emsp;&emsp;现在我们可以运行来运行一下程序了，如图所示。毫无疑问，打开程序首先就会弹出运行时权限的申请对话框，注意看对话框的底部，提示我们一共有3项权限申请，全部点击允许，然后立刻开始定位了。
