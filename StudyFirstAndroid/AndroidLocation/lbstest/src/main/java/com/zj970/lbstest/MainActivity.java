@@ -2,6 +2,7 @@ package com.zj970.lbstest;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -23,6 +24,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        LocationClient.setAgreePrivacy(true);
         try {
             mLocationClient = new LocationClient(getApplicationContext());
         } catch (Exception e) {
@@ -85,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
             currentPosition.append("定位方式：");
             if (bdLocation.getLocType() == BDLocation.TypeGpsLocation){
                 currentPosition.append("GPS");
-            } else if (bdLocation.getLocType() == BDLocation.TypeNetWorkLocation){
+            } else if (bdLocation.getLocType() == BDLocation.TypeNetWorkLocation) {
                 currentPosition.append("网络");
             }
             positionText.setText(currentPosition);

@@ -231,4 +231,8 @@ public class MainActivity extends AppCompatActivity {
 &emsp;&emsp;接下来看一下这里运行权限的用法，由于我们在AndroidManifest.xml中声明了很多权限，参考一下 7.2.1 小节中的危险权限表格可以发现，气质ACCESS_COARSE_LOCATION、ACCESS_FINE_LOCATION、READ_PHONE_STATE、WRITE_EXTERNAL_STORAGE这4个权限是需要进行运行时权限处理。不过由于ACCESS_COARSE_LOCATION和ACCESS_FINE_LOCATION都是属于同一个权限组，因此两者只要申请其一就可以了。那么怎样才能运行时一次性申请3个权限呢？这里我们石永红了一种新的用法，首先创建一个空的List集合，然后依次判断这3个权限有没有被授权，如果没有被授权就添加到List集合中，最后将List转换为数组，再调用ActivityCompat.requestPermissions()方法一次性申请。  
 &emsp;&emsp;除此之外，onRequestPermissionsResult()方法中对权限申请结果的逻辑处理也和之前有所不同，这次我们通过一个循环将申请的每个权限进行了判断，如果有任何一个权限被拒绝，那么就直接调用finish()方法关闭当前程序，只有当所有权限都被用户同意了，才会调用requestLocation()方法开始地理位置定位。  
 &emsp;&emsp;requestLocation()方法中的代码比较简单，只是调用了一下LocationClient的start()方法就能开始定位了。定位的结果会回调到我们签名注册的监听器当中，也就是MyLocationListener。观察一下MyLocationListener的onReceiveLocation()方法中，在这里我们通过BDLocation的getLatitude()方法获取当前位置的纬度，通过getLongitude()方法获取当前位置的精度，通过getLocType()方法获取当前位置的纬度，通过getLongitude()方法获取当前位置的经度，通过getLocType()方法的当前定位方式，最终将结果组装成一个字符串，显示到TextView上面。
-&emsp;&emsp;现在我们可以运行来运行一下程序了，如图所示。毫无疑问，打开程序首先就会弹出运行时权限的申请对话框，注意看对话框的底部，提示我们一共有3项权限申请，全部点击允许，然后立刻开始定位了。
+&emsp;&emsp;现在我们可以运行来运行一下程序了，如图所示。毫无疑问，打开程序首先就会弹出运行时权限的申请对话框，注意看对话框的底部，提示我们一共有3项权限申请，全部点击允许，然后立刻开始定位了。  
+
+![img_9.png](img_9.png)
+
+&emsp;&emsp;可以看到。设备当前的经纬度信息已经成功定位了。不过，在默认情况下，调用LocationClient的start()方法只会定位一次，如果我们正在快速移动中，怎么才能实时更新当前的位置呢？为此，百度LBS SDK提供了一些列的设置方法，来允许我们更改默认的行为，修改MainActivity中代码，如下所示
