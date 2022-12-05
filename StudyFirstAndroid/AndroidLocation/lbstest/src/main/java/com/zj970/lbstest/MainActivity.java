@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat;
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
+import com.baidu.location.LocationClientOption;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
     private void requestLocation(){
+        initLocation();
         mLocationClient.start();
     }
 
@@ -75,6 +77,17 @@ public class MainActivity extends AppCompatActivity {
             default:
                 break;
         }
+    }
+    private void initLocation(){
+        LocationClientOption option = new LocationClientOption();
+        option.setScanSpan(5000);
+        mLocationClient.setLocOption(option);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mLocationClient.stop();
     }
 
     public class MyLocationListener implements BDLocationListener{
