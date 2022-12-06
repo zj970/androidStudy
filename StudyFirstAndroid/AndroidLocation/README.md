@@ -1197,3 +1197,7 @@ public class MainActivity extends AppCompatActivity {
 - 查看修改 fit diff origin/master
 
 - 同步代码 git pull origin master 这个命令相当于将fetch和merge这个命令放在一起执行了，它将远程修改和本地合并
+
+## 11.6 小结与点评  
+&emsp;&emsp;在这次的Android特色开发环节中，我们主要学习了基于位置服务的工作原理和用法，借助百度提供的LBS SDK，我们可以随时确定自己当前位置的经纬度，并且还能获取到具体的省、市、区、街道等地址。之后又学习了百度地图的用法，不仅成功地将地图信息显示出来，还综合利用了前面所学到的定位技术实现了一个较为完整的例子。  
+&emsp;&emsp;除了基于位置的服务之外，本章Git时间中继续对Git的用法进行了更深一步的探究，使得我们对分支和远程版本库的使用都有一定层次的了解
