@@ -976,3 +976,193 @@ public class MainActivity extends AppCompatActivity {
 &emsp;&emsp;写好了navigateTo()方法之后，剩下的事情就简单了，当定位到设备当前位置的时候吗，我们在onReceiveLocation()方法中直接把BDLocation对象传给navigateTo()方法，这样就能够让地图移动到设备所在位置了。现在重新运行一下程序：
 
 ![img_12.png](img_12.png)
+
+
+### 11.4.3 让“我”显示在地图上  
+&emsp;&emsp;现在我们已经可以让地图显示我们周边的环境了，但是相信在你平时使用手机地图时应该会注意到，通常情况下手机地图上应该都会有一个小光标，用于显示设备当前所在位置，并且如果设备正在移动的话，那么这个光标也会跟着一起移动。那么我们现在就继续对现有点名进行扩展，让“我”显示在地图上。  
+&emsp;&emsp;百度LBS SDK 当中提供了一个MyLocationData.Builder类，这个类是用于封装设备当前所在位置，并且如果设备正在移动的话，那么这个光标也会跟着一起移动。我们只需要将经纬度信息传入到这个类的相应方法中就可以了，如下所示：  
+
+```
+
+MyLocationData locationData = locationBuilder.build();
+baiduMap.setMyLocationData(loacationData);
+```
+&emsp;&emsp;大体思路就是这个样子，下面我们开始来实现一下，修改MainActivity中的代码：  
+
+```java
+package com.zj970.lbstest;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import com.baidu.location.*;
+import com.baidu.mapapi.SDKInitializer;
+import com.baidu.mapapi.map.*;
+import com.baidu.mapapi.model.LatLng;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * @author zj970
+ */
+public class MainActivity extends AppCompatActivity {
+    public LocationClient mLocationClient;
+    private TextView positionText;
+    private MapView mapView;
+    private BaiduMap baiduMap;
+    private boolean isFirstLocate = true;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        LocationClient.setAgreePrivacy(true);
+        try {
+            mLocationClient = new LocationClient(getApplicationContext());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        mLocationClient.registerLocationListener(new MyLocationListener());
+        SDKInitializer.setAgreePrivacy(getApplicationContext(),true);
+        SDKInitializer.initialize(getApplicationContext());
+        setContentView(R.layout.activity_main);
+        mapView = findViewById(R.id.mapView);
+        baiduMap = mapView.getMap();
+        positionText = findViewById(R.id.position_text_view);
+        List<String> permissionList = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.READ_PHONE_STATE);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        if (!permissionList.isEmpty()){
+            String[] permissions = permissionList.toArray(new String[permissionList.size()]);
+            ActivityCompat.requestPermissions(MainActivity.this,permissions,1);
+        } else {
+            requestLocation();
+        }
+    }
+    private void requestLocation(){
+        initLocation();
+        mLocationClient.start();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case 1:
+                if (grantResults.length > 0){
+                    for (int result : grantResults){
+                        if (result != PackageManager.PERMISSION_GRANTED){
+                            Toast.makeText(this, "必须同意所有权限才能使用本程序", Toast.LENGTH_SHORT).show();
+                            finish();
+                            return;
+                        }
+                    }
+                    requestLocation();
+                }else {
+                    Toast.makeText(this, "发生未知错误", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    private void initLocation(){
+        LocationClientOption option = new LocationClientOption();
+        option.setScanSpan(5000);
+        option.setLocationMode(LocationClientOption.LocationMode.Hight_Accuracy);
+        //可选，设置定位模式，默认高精度
+        //LocationMode.Hight_Accuracy：高精度；
+        //LocationMode.Battery_Saving：低功耗；
+        //LocationMode.Device_Sensors：仅使用设备；
+        //LocationMode.Fuzzy_Locating, 模糊定位模式；v9.2.8版本开始支持，可以降低API的调用频率，但同时也会降低定位精度
+        option.setIsNeedAddress(true);
+        mLocationClient.setLocOption(option);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mLocationClient.stop();
+        mapView.onDestroy();
+        baiduMap.setMyLocationEnabled(false);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mapView.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mapView.onPause();
+    }
+
+    private void navigateTo(BDLocation location){
+        if (isFirstLocate){
+            LatLng ll = new LatLng(location.getLatitude(),location.getLongitude());
+            MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(ll);
+            baiduMap.animateMapStatus(update);
+            update = MapStatusUpdateFactory.zoomTo(16f);
+            baiduMap.animateMapStatus(update);
+            isFirstLocate = false;
+        }
+
+        MyLocationData.Builder builder = new MyLocationData.Builder();
+        builder.latitude(location.getLatitude());
+        builder.longitude(location.getLongitude());
+        MyLocationData locationData = builder.build();
+        baiduMap.setMyLocationData(locationData);
+    }
+
+
+    public class MyLocationListener extends BDAbstractLocationListener {
+
+        @Override
+        public void onReceiveLocation(BDLocation bdLocation) {
+            if (bdLocation.getLocType() == BDLocation.TypeGpsLocation || bdLocation.getLocType() == BDLocation.TypeNetWorkLocation){
+                navigateTo(bdLocation);
+            }
+
+            StringBuilder currentPosition = new StringBuilder();
+            currentPosition.append("纬度：").append(bdLocation.getLatitude()).append("\n");
+            currentPosition.append("经线：").append(bdLocation.getLongitude()).append("\n");
+            currentPosition.append("国家：").append(bdLocation.getCountry()).append("\n");
+            currentPosition.append("省：").append(bdLocation.getProvince()).append("\n");
+            currentPosition.append("市：").append(bdLocation.getCity()).append("\n");
+            currentPosition.append("区：").append(bdLocation.getDistrict()).append("\n");
+            currentPosition.append("街道：").append(bdLocation.getStreet()).append("\n");
+            currentPosition.append("定位方式： ");
+            if (bdLocation.getLocType() == BDLocation.TypeGpsLocation){
+                currentPosition.append("GPS");
+            } else if (bdLocation.getLocType() == BDLocation.TypeNetWorkLocation) {
+                currentPosition.append("网络");
+            }
+            positionText.setText(currentPosition);
+        }
+    }
+
+}
+```
+
+&emsp;&emsp;可以看到，在navigateYo()方法中，我们添加了MyLocationData的构建逻辑，将Location中包含的经纬度分别封装到了MyuLocationData.Builder当中，最后把MyLocationData设置到了BaiduMap的setMyLocationData()方法当中。注意这段逻辑必须卸载isFirstLocate这个if条件语句的外面，因为让地图移动到我们这个当前的位置只需要第一次定位的时候执行，但是设备在地图上显示的位置却应该是随着设备的移动而实时改变的。  
+&emsp;&emsp;另外，根据百度地图的限制，如果我们想要使用这一功能，一定要实现调用BaiduMap的setMyLocationEnabled()方法将此功能开启，否则设备的位置将无法在地图上显示。而在程序退出的时候，也要记得将此功能给关闭掉。现在重新运行一下程序：  
+![img_13.png](img_13.png)
+&emsp;&emsp;这样的话，用户就可以非常清晰地看出自己当前是在哪里。关于LBS SDK的各种用法可以看官方文档： https://lbsyun.baidu.com
