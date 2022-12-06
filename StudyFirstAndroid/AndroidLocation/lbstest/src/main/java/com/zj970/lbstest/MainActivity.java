@@ -2,7 +2,6 @@ package com.zj970.lbstest;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -10,14 +9,14 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
-import com.baidu.location.BDLocation;
-import com.baidu.location.BDLocationListener;
-import com.baidu.location.LocationClient;
-import com.baidu.location.LocationClientOption;
+import com.baidu.location.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * @author zj970
+ */
 public class MainActivity extends AppCompatActivity {
     public LocationClient mLocationClient;
     private TextView positionText;
@@ -90,7 +89,7 @@ public class MainActivity extends AppCompatActivity {
         mLocationClient.stop();
     }
 
-    public class MyLocationListener implements BDLocationListener{
+    public class MyLocationListener extends BDAbstractLocationListener {
 
         @Override
         public void onReceiveLocation(BDLocation bdLocation) {
