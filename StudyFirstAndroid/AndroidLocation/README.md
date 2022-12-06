@@ -1165,4 +1165,35 @@ public class MainActivity extends AppCompatActivity {
 &emsp;&emsp;可以看到，在navigateYo()方法中，我们添加了MyLocationData的构建逻辑，将Location中包含的经纬度分别封装到了MyuLocationData.Builder当中，最后把MyLocationData设置到了BaiduMap的setMyLocationData()方法当中。注意这段逻辑必须卸载isFirstLocate这个if条件语句的外面，因为让地图移动到我们这个当前的位置只需要第一次定位的时候执行，但是设备在地图上显示的位置却应该是随着设备的移动而实时改变的。  
 &emsp;&emsp;另外，根据百度地图的限制，如果我们想要使用这一功能，一定要实现调用BaiduMap的setMyLocationEnabled()方法将此功能开启，否则设备的位置将无法在地图上显示。而在程序退出的时候，也要记得将此功能给关闭掉。现在重新运行一下程序：  
 ![img_13.png](img_13.png)
-&emsp;&emsp;这样的话，用户就可以非常清晰地看出自己当前是在哪里。关于LBS SDK的各种用法可以看官方文档： https://lbsyun.baidu.com
+&emsp;&emsp;这样的话，用户就可以非常清晰地看出自己当前是在哪里。关于LBS SDK的各种用法可以看官方文档： https://lbsyun.baidu.com  
+
+## 11.5 Git 高级用法
+
+### 11.5.1 分支的用法
+
+&emsp;&emsp;分支是版本控制工具中比较高级且比较重要的一个概念，它主要的作用就是在现有代码的基础上开辟一个分叉口，使得代码可以在主线程和分支线同时进行开发，且相互之间不会影响。分支的工作原理示意图如下所示。
+
+![img_14.png](img_14.png)
+
+&emsp;&emsp;查看当前版本库有哪些分支，可以使用git branch，
+- 创建分支 git branch version1  
+- 切换分支 git checkout version1  
+- 删除分支 git branch -D version
+- 合并分支 git checkout master & git merge version1
+
+
+&emsp;&emsp; 需要注意的是,在分支上修改提交的代码不会影响到master分支，合并出现的冲突需要自己解决。
+
+### 11.5.2 与远程版本库协作  
+
+&emsp;&emsp;多人协作开发，将远程版本库的Git地址下载到本地
+
+- 下载 git clone xxx
+
+- 上传代码 git push origin master(origin部分指定远程版本库的Git地址，master部分指定的是同步哪一个分支上)
+
+- 同步代码 git fetch origin master 同步下来代码不会合并到任何分支上，而是存放到一个origin/master分支上，之后修改在执行 git merge origin/master 
+
+- 查看修改 fit diff origin/master
+
+- 同步代码 git pull origin master 这个命令相当于将fetch和merge这个命令放在一起执行了，它将远程修改和本地合并
