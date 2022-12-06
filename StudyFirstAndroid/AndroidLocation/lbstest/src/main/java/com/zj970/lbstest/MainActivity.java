@@ -34,6 +34,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         positionText = findViewById(R.id.position_text_view);
         List<String> permissionList = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        }
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
             permissionList.add(Manifest.permission.ACCESS_FINE_LOCATION);
         }
@@ -80,6 +83,13 @@ public class MainActivity extends AppCompatActivity {
     private void initLocation(){
         LocationClientOption option = new LocationClientOption();
         option.setScanSpan(5000);
+        option.setLocationMode(LocationClientOption.LocationMode.Hight_Accuracy);
+        //可选，设置定位模式，默认高精度
+        //LocationMode.Hight_Accuracy：高精度；
+        //LocationMode.Battery_Saving：低功耗；
+        //LocationMode.Device_Sensors：仅使用设备；
+        //LocationMode.Fuzzy_Locating, 模糊定位模式；v9.2.8版本开始支持，可以降低API的调用频率，但同时也会降低定位精度
+        option.setIsNeedAddress(true);
         mLocationClient.setLocOption(option);
     }
 
@@ -96,7 +106,12 @@ public class MainActivity extends AppCompatActivity {
             StringBuilder currentPosition = new StringBuilder();
             currentPosition.append("纬度：").append(bdLocation.getLatitude()).append("\n");
             currentPosition.append("经线：").append(bdLocation.getLongitude()).append("\n");
-            currentPosition.append("定位方式：");
+            currentPosition.append("国家：").append(bdLocation.getCountry()).append("\n");
+            currentPosition.append("省：").append(bdLocation.getProvince()).append("\n");
+            currentPosition.append("市：").append(bdLocation.getCity()).append("\n");
+            currentPosition.append("区：").append(bdLocation.getDistrict()).append("\n");
+            currentPosition.append("街道：").append(bdLocation.getStreet()).append("\n");
+            currentPosition.append("定位方式： ");
             if (bdLocation.getLocType() == BDLocation.TypeGpsLocation){
                 currentPosition.append("GPS");
             } else if (bdLocation.getLocType() == BDLocation.TypeNetWorkLocation) {

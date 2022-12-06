@@ -351,4 +351,260 @@ public class MainActivity extends AppCompatActivity {
 
 &emsp;&emsp;这里增加了一个initLocation()方法，在initLocation()方法中我们创建了一个LocationClientOption对象，然后调用它的setScanSpan（）方法来设置更新的间隔。这里传入了5000,表示每5秒会更新一下当前的位置。  
 &emsp;&emsp;最后要记得，在活动被销毁的时候一定要调用LocationClient的stop()方法来停止定位，不然程序会持续在后台不停地进行定位，从而严重消耗手机的电量。  
-&emsp;&emsp;现在重新运行一下程序，然后拿着手机随处移动，界面上的经纬度信息也会跟着一起变化。
+&emsp;&emsp;现在重新运行一下程序，然后拿着手机随处移动，界面上的经纬度信息也会跟着一起变化。  
+
+### 11.3.3 选择定位模式  
+&emsp;&emsp;还记得在本章刚开始的时候说过，Android中主要有两种定位方式吗？一种是通过GPS定位，一种是通过网络定位。从上一小节中可以看出，我们一直都是使用的网络定位。那么如何才能切换到精确度更高的GPS定位呢?  
+&emsp;&emsp;首先，GPS定位功能必须必须由用户主动去启用才行，不然热河应用程序都无法使用GPS获取到手机当前的位置信息。  
+&emsp;&emsp;开启了GPS定位功能之后，再回来看一下代码，我们可以在InitLocation()方法中对百度LBS SDK的定位模式进行指定，一共有3种模式可选：Hight_Accuracy、Battery_Saving和Device_sensors。Hight_Accuracy表示高精度模式。会在GPS信号正常的情况下优先使用GPS，在无法接收GPS信号的时候使用网络定位。Battery_Saving表示节电模式，只会使用网络进行定位。Device_Sensors表示传感器模式，只会使用GPS进行定位。其中，Hight_Accuracy是默认的模式，也就是说，我们即使不修改任何代码，只要拿着手机走到室外去，让手机可以接收到GPS信号，就会自动切换到GPS进行定位模式了。  
+&emsp;&emsp;当然我们也可以强制指定只使用GPS进行定位，修改MainActivity中的代码：  
+
+```java
+package com.zj970.lbstest;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import com.baidu.location.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * @author zj970
+ */
+public class MainActivity extends AppCompatActivity {
+    public LocationClient mLocationClient;
+    private TextView positionText;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        LocationClient.setAgreePrivacy(true);
+        try {
+            mLocationClient = new LocationClient(getApplicationContext());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        mLocationClient.registerLocationListener(new MyLocationListener());
+        setContentView(R.layout.activity_main);
+        positionText = findViewById(R.id.position_text_view);
+        List<String> permissionList = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.READ_PHONE_STATE);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        if (!permissionList.isEmpty()){
+            String[] permissions = permissionList.toArray(new String[permissionList.size()]);
+            ActivityCompat.requestPermissions(MainActivity.this,permissions,1);
+        } else {
+            requestLocation();
+        }
+    }
+    private void requestLocation(){
+        initLocation();
+        mLocationClient.start();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case 1:
+                if (grantResults.length > 0){
+                    for (int result : grantResults){
+                        if (result != PackageManager.PERMISSION_GRANTED){
+                            Toast.makeText(this, "必须同意所有权限才能使用本程序", Toast.LENGTH_SHORT).show();
+                            finish();
+                            return;
+                        }
+                    }
+                    requestLocation();
+                }else {
+                    Toast.makeText(this, "发生未知错误", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    private void initLocation(){
+        LocationClientOption option = new LocationClientOption();
+        option.setScanSpan(5000);
+        option.setLocationMode(LocationClientOption.LocationMode.Device_Sensors);
+        //可选，设置定位模式，默认高精度
+        //LocationMode.Hight_Accuracy：高精度；
+        //LocationMode.Battery_Saving：低功耗；
+        //LocationMode.Device_Sensors：仅使用设备；
+        //LocationMode.Fuzzy_Locating, 模糊定位模式；v9.2.8版本开始支持，可以降低API的调用频率，但同时也会降低定位精度
+        mLocationClient.setLocOption(option);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mLocationClient.stop();
+    }
+
+    public class MyLocationListener extends BDAbstractLocationListener {
+
+        @Override
+        public void onReceiveLocation(BDLocation bdLocation) {
+            StringBuilder currentPosition = new StringBuilder();
+            currentPosition.append("纬度：").append(bdLocation.getLatitude()).append("\n");
+            currentPosition.append("经线：").append(bdLocation.getLongitude()).append("\n");
+            currentPosition.append("定位方式：");
+            if (bdLocation.getLocType() == BDLocation.TypeGpsLocation){
+                currentPosition.append("GPS");
+            } else if (bdLocation.getLocType() == BDLocation.TypeNetWorkLocation) {
+                currentPosition.append("网络");
+            }
+            positionText.setText(currentPosition);
+        }
+    }
+}
+```
+
+&emsp;&emsp;这里调用了setLocationMode()方法来将定位模式指定成传感器模式，也就是说只能使用GPS进行定位。
+
+### 11.3.4 看得懂的位置信息  
+&emsp;&emsp;话说回来，刚才我们虽然成功获取到了设备当前位置的经纬度信息，但遗憾的是，这种经纬度的值一般人是根据看不懂的，我们只需要进行一些简单的接口调用就能得到当前位置各种丰富的地址信息。修改MainActivity.java中的代码：  
+
+```java
+package com.zj970.lbstest;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import com.baidu.location.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * @author zj970
+ */
+public class MainActivity extends AppCompatActivity {
+    public LocationClient mLocationClient;
+    private TextView positionText;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        LocationClient.setAgreePrivacy(true);
+        try {
+            mLocationClient = new LocationClient(getApplicationContext());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        mLocationClient.registerLocationListener(new MyLocationListener());
+        setContentView(R.layout.activity_main);
+        positionText = findViewById(R.id.position_text_view);
+        List<String> permissionList = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.READ_PHONE_STATE);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        if (!permissionList.isEmpty()){
+            String[] permissions = permissionList.toArray(new String[permissionList.size()]);
+            ActivityCompat.requestPermissions(MainActivity.this,permissions,1);
+        } else {
+            requestLocation();
+        }
+    }
+    private void requestLocation(){
+        initLocation();
+        mLocationClient.start();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case 1:
+                if (grantResults.length > 0){
+                    for (int result : grantResults){
+                        if (result != PackageManager.PERMISSION_GRANTED){
+                            Toast.makeText(this, "必须同意所有权限才能使用本程序", Toast.LENGTH_SHORT).show();
+                            finish();
+                            return;
+                        }
+                    }
+                    requestLocation();
+                }else {
+                    Toast.makeText(this, "发生未知错误", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    private void initLocation(){
+        LocationClientOption option = new LocationClientOption();
+        option.setScanSpan(5000);
+        option.setLocationMode(LocationClientOption.LocationMode.Device_Sensors);
+        //可选，设置定位模式，默认高精度
+        //LocationMode.Hight_Accuracy：高精度；
+        //LocationMode.Battery_Saving：低功耗；
+        //LocationMode.Device_Sensors：仅使用设备；
+        //LocationMode.Fuzzy_Locating, 模糊定位模式；v9.2.8版本开始支持，可以降低API的调用频率，但同时也会降低定位精度
+        option.setIsNeedAddress(true);
+        mLocationClient.setLocOption(option);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mLocationClient.stop();
+    }
+
+    public class MyLocationListener extends BDAbstractLocationListener {
+
+        @Override
+        public void onReceiveLocation(BDLocation bdLocation) {
+            StringBuilder currentPosition = new StringBuilder();
+            currentPosition.append("纬度：").append(bdLocation.getLatitude()).append("\n");
+            currentPosition.append("经线：").append(bdLocation.getLongitude()).append("\n");
+            currentPosition.append("国家：").append(bdLocation.getCountry()).append("\n");
+            currentPosition.append("省：").append(bdLocation.getProvince()).append("\n");
+            currentPosition.append("市：").append(bdLocation.getCity()).append("\n");
+            currentPosition.append("区：").append(bdLocation.getDistrict()).append("\n");
+            currentPosition.append("街道：").append(bdLocation.getStreet()).append("\n");
+            currentPosition.append("定位方式： ");
+            if (bdLocation.getLocType() == BDLocation.TypeGpsLocation){
+                currentPosition.append("GPS");
+            } else if (bdLocation.getLocType() == BDLocation.TypeNetWorkLocation) {
+                currentPosition.append("网络");
+            }
+            positionText.setText(currentPosition);
+        }
+    }
+}
+```
+
+&emsp;&emsp;首先在initLocation()方法中，我们调用了LocationClientOption的setIsNeedAddress()方法，并传入true，这就表示我们需要获取当前位置详细信息。  
+&emsp;&emsp;接下来在MyLocationListener的onReceiveLocation()方法就可以获取到各种丰富的地址信息了，调用getCountry()方法可以得到当前所在国家，调用getProvince()方法可以得到当前所在省份，以此类推。另外还有一点需要注意，由于获取地址信息一定需要网络，因此我们即使将定位模式指定成了Device_Sensors，也会自动开启网络定位功能。
+
+![img_10.png](img_10.png)
