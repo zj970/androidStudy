@@ -235,7 +235,7 @@ public class MainActivity extends AppCompatActivity {
 
 ![img_9.png](img_9.png)
 
-&emsp;&emsp;可以看到。设备当前的经纬度信息已经成功定位了。不过，在默认情况下，调用LocationClient的start()方法只会定位一次，如果我们正在快速移动中，怎么才能实时更新当前的位置呢？为此，百度LBS SDK提供了一些列的设置方法，来允许我们更改默认的行为，修改MainActivity中代码，如下所示:  
+&emsp;&emsp;可以看到。设备当前的经纬度信息已经成功定位了。另外本程序需要设置同意隐私才能使用。不过，在默认情况下，调用LocationClient的start()方法只会定位一次，如果我们正在快速移动中，怎么才能实时更新当前的位置呢？为此，百度LBS SDK提供了一些列的设置方法，来允许我们更改默认的行为，修改MainActivity中代码，如下所示:  
 
 ```java
 package com.zj970.lbstest;
@@ -608,3 +608,371 @@ public class MainActivity extends AppCompatActivity {
 &emsp;&emsp;接下来在MyLocationListener的onReceiveLocation()方法就可以获取到各种丰富的地址信息了，调用getCountry()方法可以得到当前所在国家，调用getProvince()方法可以得到当前所在省份，以此类推。另外还有一点需要注意，由于获取地址信息一定需要网络，因此我们即使将定位模式指定成了Device_Sensors，也会自动开启网络定位功能。
 
 ![img_10.png](img_10.png)
+
+## 11.4 使用百度地图
+
+&emsp;&emsp;现在手机地图的应用真的可以算得上是非常广泛了，和PC上的地图相比，手机地图能够随时随地进行查看，并且轻松构建出行路线，使用起来明显更加地方便。但是你有没有想过，其实我们在自己的应用程序中也是可以加入地图功能，比如优步中使用的就是百度地图。  
+
+### 11.4.1 让地图显示出来  
+&emsp;&emsp;修改activity_main.xml中的代码：  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
+    <TextView
+            android:id="@+id/position_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"/>
+    <com.baidu.mapapi.map.MapView
+            android:id="@+id/mapView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clickable="true"/>
+
+</LinearLayout>
+```
+
+&emsp;&emsp;这里在布局文件中新放置了一个MapView，并让它填充满整个屏幕。这个MapView是由百度提供的自定义控件，所以在使用它的时候需要将完整的包名加上。另外，之前用于显示定位信息的TextView现在暂时用不到了，我们将它的visibility属性指定成gone，让他在界面上隐藏起来。接下来修改MainActivity中的代码：  
+
+```java
+package com.zj970.lbstest;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import com.baidu.location.*;
+import com.baidu.mapapi.SDKInitializer;
+import com.baidu.mapapi.map.MapView;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * @author zj970
+ */
+public class MainActivity extends AppCompatActivity {
+    public LocationClient mLocationClient;
+    private TextView positionText;
+    private MapView mapView;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        LocationClient.setAgreePrivacy(true);
+        try {
+            mLocationClient = new LocationClient(getApplicationContext());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        mLocationClient.registerLocationListener(new MyLocationListener());
+        SDKInitializer.initialize(getApplicationContext());
+        setContentView(R.layout.activity_main);
+        mapView = findViewById(R.id.mapView);
+        positionText = findViewById(R.id.position_text_view);
+        List<String> permissionList = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.READ_PHONE_STATE);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        if (!permissionList.isEmpty()){
+            String[] permissions = permissionList.toArray(new String[permissionList.size()]);
+            ActivityCompat.requestPermissions(MainActivity.this,permissions,1);
+        } else {
+            requestLocation();
+        }
+    }
+    private void requestLocation(){
+        initLocation();
+        mLocationClient.start();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case 1:
+                if (grantResults.length > 0){
+                    for (int result : grantResults){
+                        if (result != PackageManager.PERMISSION_GRANTED){
+                            Toast.makeText(this, "必须同意所有权限才能使用本程序", Toast.LENGTH_SHORT).show();
+                            finish();
+                            return;
+                        }
+                    }
+                    requestLocation();
+                }else {
+                    Toast.makeText(this, "发生未知错误", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    private void initLocation(){
+        LocationClientOption option = new LocationClientOption();
+        option.setScanSpan(5000);
+        option.setLocationMode(LocationClientOption.LocationMode.Hight_Accuracy);
+        //可选，设置定位模式，默认高精度
+        //LocationMode.Hight_Accuracy：高精度；
+        //LocationMode.Battery_Saving：低功耗；
+        //LocationMode.Device_Sensors：仅使用设备；
+        //LocationMode.Fuzzy_Locating, 模糊定位模式；v9.2.8版本开始支持，可以降低API的调用频率，但同时也会降低定位精度
+        option.setIsNeedAddress(true);
+        mLocationClient.setLocOption(option);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mLocationClient.stop();
+        mapView.onDestroy();
+    }
+
+    public class MyLocationListener extends BDAbstractLocationListener {
+
+        @Override
+        public void onReceiveLocation(BDLocation bdLocation) {
+            StringBuilder currentPosition = new StringBuilder();
+            currentPosition.append("纬度：").append(bdLocation.getLatitude()).append("\n");
+            currentPosition.append("经线：").append(bdLocation.getLongitude()).append("\n");
+            currentPosition.append("国家：").append(bdLocation.getCountry()).append("\n");
+            currentPosition.append("省：").append(bdLocation.getProvince()).append("\n");
+            currentPosition.append("市：").append(bdLocation.getCity()).append("\n");
+            currentPosition.append("区：").append(bdLocation.getDistrict()).append("\n");
+            currentPosition.append("街道：").append(bdLocation.getStreet()).append("\n");
+            currentPosition.append("定位方式： ");
+            if (bdLocation.getLocType() == BDLocation.TypeGpsLocation){
+                currentPosition.append("GPS");
+            } else if (bdLocation.getLocType() == BDLocation.TypeNetWorkLocation) {
+                currentPosition.append("网络");
+            }
+            positionText.setText(currentPosition);
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mapView.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mapView.onPause();
+    }
+}
+```
+
+&emsp;&emsp;可以看到，这里的代码也非常简单。首先需要调用SDKInitializer的initialize()方法来进行初始化操作，initialize()方法接收一个Context参数，这里我们调用getApplicationContext()方法来获取一个全局的Context参数并传入。注意初始化操作一定要在setContextView()方法前调用，不然的话就会出错。接下来我们调用findViewById()方法获取到了MapView的实例，这个实例在后面的功能中还会用到。  
+&emsp;&emsp;另外还需要重写onResume()、onPause()和onDestroy()这3个方法，在这里对MapView进行管理，以保证资源能够及时地得到释放。现在运行一下程序，效果如图所示：  
+![img_11.png](img_11.png)
+
+### 11.4.1 移动到我的位置  
+
+&emsp;&emsp;地图是成功显示出来了，但也许并不是你想要的。因为这时一张默认的地图，显示的是北京市中心的位置，而你可能希望看到更加精细的地图信息，比如说自己所在位置的周边环境。显然，通过缩放和移动的方式来慢慢找到自己的位置是一种很愚蠢的做法，那么如何才能在地图中快速移动到自己的位置？  
+&emsp;&emsp;百度LBS SDK 的API中提供了一个BaiduMap类，它是地图的总控制器，调用MApView的getMap()方法就能获取到BaiduMap的实例，如下所示：BaiduMap baiduMAp = mapView.getMap();有了baiduMap之后，我们就能对地图进行各种各样的操作了，比如设置地图的缩放级别以及将地图移动到某一个经纬度上。  
+&emsp;&emsp;百度地图将缩放几倍的取值范围限定在3到19之间，其中小数点的值也是可以取得，取值越大，地图显示的信息就越精细。比如我们想要将缩放级别设置成12.5，就可以这样写：MapStatusUpdate update = MapStatusUpdateFactory.zoomTo(12.5f);baiduMap.animateMapStatus(update);  
+&emsp;&emsp;其中MapStatusUpdateFactory的zoomTo()方法返回一个MapStatusUpdate对象，我们把这个对象传入BaiduMap的animateMapStatus()方法当中即可完成缩放功能。  
+&emsp;&emsp;那么怎样才能让地图移动某一个经纬度上呢？这就需要借助LatLng类了。它的构造方法接收两个参数，第一个参数是纬度值，第二个参数是经度值。之后调用MaoStatusUpdateFactory的newLatLng()方法将LatLng对象传入，newLatLng()方法返回的也是一个MapStatusUpdate对象，我们再把这个对象传入BaiduMap的animateMapStatus()方法当中，就可以将地图移动到指定的经纬度上。写法如下：
+```
+LatLng ll =new LatLng(39.915,116.404);
+MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(ll);
+baiduMap.animateMapStatus(update);
+```
+&emsp;&emsp;上述代码就能实现将地图移动到北纬39.915度、东经116.404度这个位置的功能。了解了这些我，我们继续完善代码，加入“移动到我的位置”这个代码。修改MainActivity中的代码:  
+
+```java
+package com.zj970.lbstest;
+
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import com.baidu.location.*;
+import com.baidu.mapapi.SDKInitializer;
+import com.baidu.mapapi.map.BaiduMap;
+import com.baidu.mapapi.map.MapStatusUpdate;
+import com.baidu.mapapi.map.MapStatusUpdateFactory;
+import com.baidu.mapapi.map.MapView;
+import com.baidu.mapapi.model.LatLng;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * @author zj970
+ */
+public class MainActivity extends AppCompatActivity {
+    public LocationClient mLocationClient;
+    private TextView positionText;
+    private MapView mapView;
+    private BaiduMap baiduMap;
+    private boolean isFirstLocate = true;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        LocationClient.setAgreePrivacy(true);
+        try {
+            mLocationClient = new LocationClient(getApplicationContext());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        mLocationClient.registerLocationListener(new MyLocationListener());
+        SDKInitializer.setAgreePrivacy(getApplicationContext(),true);
+        SDKInitializer.initialize(getApplicationContext());
+        setContentView(R.layout.activity_main);
+        mapView = findViewById(R.id.mapView);
+        baiduMap = mapView.getMap();
+        positionText = findViewById(R.id.position_text_view);
+        List<String> permissionList = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.READ_PHONE_STATE);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        if (!permissionList.isEmpty()){
+            String[] permissions = permissionList.toArray(new String[permissionList.size()]);
+            ActivityCompat.requestPermissions(MainActivity.this,permissions,1);
+        } else {
+            requestLocation();
+        }
+    }
+    private void requestLocation(){
+        initLocation();
+        mLocationClient.start();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case 1:
+                if (grantResults.length > 0){
+                    for (int result : grantResults){
+                        if (result != PackageManager.PERMISSION_GRANTED){
+                            Toast.makeText(this, "必须同意所有权限才能使用本程序", Toast.LENGTH_SHORT).show();
+                            finish();
+                            return;
+                        }
+                    }
+                    requestLocation();
+                }else {
+                    Toast.makeText(this, "发生未知错误", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    private void initLocation(){
+        LocationClientOption option = new LocationClientOption();
+        option.setScanSpan(5000);
+        option.setLocationMode(LocationClientOption.LocationMode.Hight_Accuracy);
+        //可选，设置定位模式，默认高精度
+        //LocationMode.Hight_Accuracy：高精度；
+        //LocationMode.Battery_Saving：低功耗；
+        //LocationMode.Device_Sensors：仅使用设备；
+        //LocationMode.Fuzzy_Locating, 模糊定位模式；v9.2.8版本开始支持，可以降低API的调用频率，但同时也会降低定位精度
+        option.setIsNeedAddress(true);
+        mLocationClient.setLocOption(option);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mLocationClient.stop();
+        mapView.onDestroy();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        mapView.onResume();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mapView.onPause();
+    }
+
+    private void navigateTo(BDLocation location){
+        if (isFirstLocate){
+            LatLng ll = new LatLng(location.getLatitude(),location.getLongitude());
+            MapStatusUpdate update = MapStatusUpdateFactory.newLatLng(ll);
+            baiduMap.animateMapStatus(update);
+            update = MapStatusUpdateFactory.zoomTo(16f);
+            baiduMap.animateMapStatus(update);
+            isFirstLocate = false;
+        }
+    }
+
+
+    public class MyLocationListener extends BDAbstractLocationListener {
+
+        @Override
+        public void onReceiveLocation(BDLocation bdLocation) {
+            if (bdLocation.getLocType() == BDLocation.TypeGpsLocation || bdLocation.getLocType() == BDLocation.TypeNetWorkLocation){
+                navigateTo(bdLocation);
+            }
+
+            StringBuilder currentPosition = new StringBuilder();
+            currentPosition.append("纬度：").append(bdLocation.getLatitude()).append("\n");
+            currentPosition.append("经线：").append(bdLocation.getLongitude()).append("\n");
+            currentPosition.append("国家：").append(bdLocation.getCountry()).append("\n");
+            currentPosition.append("省：").append(bdLocation.getProvince()).append("\n");
+            currentPosition.append("市：").append(bdLocation.getCity()).append("\n");
+            currentPosition.append("区：").append(bdLocation.getDistrict()).append("\n");
+            currentPosition.append("街道：").append(bdLocation.getStreet()).append("\n");
+            currentPosition.append("定位方式： ");
+            if (bdLocation.getLocType() == BDLocation.TypeGpsLocation){
+                currentPosition.append("GPS");
+            } else if (bdLocation.getLocType() == BDLocation.TypeNetWorkLocation) {
+                currentPosition.append("网络");
+            }
+            positionText.setText(currentPosition);
+        }
+    }
+
+}
+```
+
+&emsp;&emsp;这里并没有新增多少代码，主要是加入了一个navigateTO()方法。这个方法中的代码也很好理解，先是将BDLocation对象中的地理位置信息取出并封装到LatLng对象中，然后调用MapStatusUpdateFactory的newLatLng()方法并将LatLng对象传入，接着将返回的MapStatusUpdate对象作为参数传入到BaiduMap的animateMapStatus()方法中，和上面介绍的用法是一模一样。并且这里为了让地图显示的更加丰富些，我们将缩放级别设置了16.另外还有一点需要注意，我们使用了一个isFirstLocate变量。这个变量的作用是为了防止多次调用animateMapStatus()方法，因为将地图移动到我们当前的位置只需要在程序第一次定位的时候调用一次就可以了。  
+&emsp;&emsp;写好了navigateTo()方法之后，剩下的事情就简单了，当定位到设备当前位置的时候吗，我们在onReceiveLocation()方法中直接把BDLocation对象传给navigateTo()方法，这样就能够让地图移动到设备所在位置了。现在重新运行一下程序：
+
+![img_12.png](img_12.png)
