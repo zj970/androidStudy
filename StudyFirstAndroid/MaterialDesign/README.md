@@ -202,3 +202,115 @@ public class MainActivity extends AppCompatActivity {
 &emsp;&emsp;非常简单，我们在onCreateOptionsMenu()方法中加载了toolbar.xml这个菜单文件，然后在onOptionsItemSelected()方法中处理各个按钮的点击事件。现在重新运行一下程序，效果如下所示：
 ![img_3.png](img_3.png)
 &emsp;&emsp;可以看到，Toolbar上面现在出现了两个action按钮，这时因为Backup按钮指定的显示位置是always，Delete按钮指定的显示位置是ifRoom，而现在屏幕控件很充足，因此两个按钮都会显示在Toolbar中。另外一个Settings按钮由于指定的显示位置never，所以不会显示在Toolbar中，点击一下最右边的菜单按钮来展开菜单项，你就能找到Settings按钮了。另外这些action按钮都是可以响应点击事件的。
+
+## 12.3 滑动菜单  
+&emsp;&emsp;滑动菜单可以说是Material Design中最常见的效果之一了，在许多著名的应用（如Gmail、Google+等）中，都有滑动菜单的功能。虽说这个功能看上去好像挺复杂的，不过借助谷歌提供的各种工具，我们可以很轻松地实现非常炫酷的滑动菜单效果。  
+### 12.3.1 DrawerLayout  
+&emsp;&emsp;所谓的滑动菜单就是将一些菜单选项隐藏起来，而不是放置在主屏幕上，然后可以通过滑动的方式将菜单显示出来。这种方式既节省了屏幕空间、又实现了非常好的动画效果，是Material Design中推荐的做法。  
+&emsp;&emsp;不过如果我们全靠自己去实现上述功能的话，难度恐怕就很大了。幸运的是，谷歌提供了一个DrawerLayout控件，借助这个控件，实现滑动菜单简单又方便。  
+&emsp;&emsp;先来简单介绍一下DrawerLayout的用法。首先它是一个布局，在布局中允许两个直接子控件，第一个子控件是主屏幕中显示的内容，第二个子控件是滑动菜单中显示的内容。因此，我们就可以对activity_main.xml中的代码做如下修改：  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.drawerlayout.widget.DrawerLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        tools:context=".MainActivity"
+        android:id="@+id/drawer_layout">
+    <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?android:attr/actionBarSize"
+                android:background="?android:attr/colorPrimary"
+                android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+    </FrameLayout>
+
+    <TextView android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:layout_gravity="start"
+              android:textColor="This is menu"
+              android:textSize="30sp"
+              android:background="#FFF"/>
+</androidx.drawerlayout.widget.DrawerLayout>
+
+```
+&emsp;&emsp;可以看到，这里最外层的控件使用了DrawerLayout，DrawerLayout中放置了两个子控件，第一个子控件是FrameLayout，用于作为主屏幕中显示的内容，当然里面还有我们刚刚定义的Toolbar。第二个子控件这里使用了一个TextView,用于作为滑动菜单中显示的内容，其实使用什么都可以，DrawerLayout并没有限制只能使用固定的控件。  
+&emsp;&emsp;但是关于第二个子控件有一点需要注意，layout_gravity这个属性是必须指定的，因为我们需要告诉DrawerLayout滑动菜单是在屏幕的左边还是右边，指定left表示在滑动菜单在左边，指定right表示滑动菜单在右边。这里指定了start，表示会根据系统语言进行判断，如果系统语言是从左往右的，比如英语、汉语、滑动菜单就在左边，如果系统系统语言是右往左，比如阿拉伯语，滑动菜单就在右边。只需要改动这么多就可以了，现在重新运行一下程序，然后在屏幕的左侧边缘向右拖动，就可以让滑动菜单显示出来，如图所示： 
+
+![img_2.png](img_2.png)
+
+&emsp;&emsp;然后向左滑动菜单，或者点击一下菜单以外的区域，都可以让滑动菜单关闭，从而回到主界面。不论是展示还是隐藏滑动菜单，都是有非常流畅的动画过渡的。  
+&emsp;&emsp;可以看到，我们只是稍微改动了一下布局文件，就能实现如此炫酷的效果，是不是觉得挺激动的。不过现在的滑动还是有点问题，因为只有在屏幕的左侧边缘进行拖动时才能将菜单拖出来，而很多用户可能根本就不知道有这个功能，那么该怎样提示它们呢？  
+&emsp;&emsp;Material Design建议的做法是在Toolbar的最左边加入一个导航按钮，点击了按钮也会滑动菜单的内容展示出来。这样就相当于给用户提供两种打开滑动菜单的方式，防止一些用户不知道屏幕的左侧边缘是可以拖动的。然后修改MainActivity中的代码，如下所示：  
+
+```java
+package com.zj970.materialtest;
+
+import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+
+public class MainActivity extends AppCompatActivity {
+    private DrawerLayout mDrawerLayout;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null){
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.toolbar,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()){
+            case android.R.id.home:
+                mDrawerLayout.openDrawer(GravityCompat.START);
+                break;
+            case R.id.backup:
+                Toast.makeText(this, "You clicked Backup", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.delete:
+                Toast.makeText(this, "You clicked Delete", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.settings:
+                Toast.makeText(this, "You clicked Settings", Toast.LENGTH_SHORT).show();
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+}
+```
+
+&emsp;&emsp;这里我们并没有改动多少代码，首先调用findViewById()方法得到了DrawerLayout的实例，然后调用getSupportActionBar()方法得到了ActionBar的实例，虽然这个ActionBar的具体实现是由Toolbar来实现。接着调用ActionBar的setDisplayHomeAsUpEnabled()方法让导航按钮显示出来，又调用了setHomeAdUpIndicator()方法来设置一个导航按钮图标。实际上，Toolbar最左侧的这个按钮就叫做HomeAsUp按钮，它默认的图标是一个返回的箭头，含义是返回上一个活动。很明显，这里我们将它默认的样式和作用进行了修改。  
+&emsp;&emsp;接下来在onOptionsItemSelected()方法中对HomeAsUp按钮的点击事件进行处理，HomeAsUp按钮的id永远都是android.R.id.home。然后调用DrawerLayout的openDrawer()方法将滑动菜单展示出来，注意openDrawer()方法要求传入一个Gravity参数，为了保证这里的行为和XML中定义的一致，我们传入了GravityCompat.START。现在运行一下程序：  
+![img_4.png](img_4.png)

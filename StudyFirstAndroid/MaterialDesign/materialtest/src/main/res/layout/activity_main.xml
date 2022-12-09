@@ -1,16 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout
+
+<androidx.drawerlayout.widget.DrawerLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
-        xmlns:tools="http://schemas.android.com/tools"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        tools:context=".MainActivity">
-    <androidx.appcompat.widget.Toolbar
-            android:id="@+id/toolbar"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:id="@+id/drawer_layout">
+    <FrameLayout
             android:layout_width="match_parent"
-            android:layout_height="?android:attr/actionBarSize"
-            android:background="?android:attr/colorPrimary"
-            android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
-</FrameLayout>
+            android:layout_height="match_parent">
+        <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?android:attr/actionBarSize"
+                android:background="?android:attr/colorPrimary"
+                android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+    </FrameLayout>
+
+    <TextView android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:layout_gravity="start"
+              android:text="This is menu"
+              android:textSize="30sp"
+              android:background="#FFF"/>
+</androidx.drawerlayout.widget.DrawerLayout>
