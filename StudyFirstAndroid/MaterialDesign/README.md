@@ -314,3 +314,141 @@ public class MainActivity extends AppCompatActivity {
 &emsp;&emsp;这里我们并没有改动多少代码，首先调用findViewById()方法得到了DrawerLayout的实例，然后调用getSupportActionBar()方法得到了ActionBar的实例，虽然这个ActionBar的具体实现是由Toolbar来实现。接着调用ActionBar的setDisplayHomeAsUpEnabled()方法让导航按钮显示出来，又调用了setHomeAdUpIndicator()方法来设置一个导航按钮图标。实际上，Toolbar最左侧的这个按钮就叫做HomeAsUp按钮，它默认的图标是一个返回的箭头，含义是返回上一个活动。很明显，这里我们将它默认的样式和作用进行了修改。  
 &emsp;&emsp;接下来在onOptionsItemSelected()方法中对HomeAsUp按钮的点击事件进行处理，HomeAsUp按钮的id永远都是android.R.id.home。然后调用DrawerLayout的openDrawer()方法将滑动菜单展示出来，注意openDrawer()方法要求传入一个Gravity参数，为了保证这里的行为和XML中定义的一致，我们传入了GravityCompat.START。现在运行一下程序：  
 ![img_4.png](img_4.png)
+
+## 12.4 悬浮按钮和可交互提示  
+&emsp;&emsp;立面设计是Material Design 中一条非常重要的设计思想，也就是说，按照Material Design的理念，应用程序的界面不仅仅只是一个平面，而应该是有立体效果的。在官方给出的示例中，最简单且最代表性的立面设计就是悬浮按钮了，这种按钮不属于主界面平面的一部分，而是位于另外一个纬度，因此就给人一种悬浮的感觉。  
+&emsp;&emsp;本节中我们会对这个悬浮按钮的效果进行学习，另外还会学习一种可交互式的提示工具。关于提示工具，我们之前一直都是使用Toast，但是Toast只能用于告知用户某某事情已经发生了，用户却不能对此做出任何的响应，那么今天我们就将在这一方面进行扩展。  
+
+### 12.4.1 FloatingActionButton  
+&emsp;&emsp;FloatingActionButton是Design Support库中提供的一个控件，这个控件可以帮助我们比较轻松地实现悬浮按钮的效果。其实在之前图中，我们就已经预览过悬浮按钮是长什么样子的了，它默认会使用colorAccent来作为按钮的颜色，我们还可以通过给按钮指定一个图标来表明这个按钮的作用是什么。  
+&emsp;&emsp;下面开始来具体实现。首先仍然需要提前准备好一个图标，然后修改activity_main.xml中的代码，如下所示：  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.drawerlayout.widget.DrawerLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:id="@+id/drawer_layout">
+    <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?android:attr/actionBarSize"
+                android:background="?android:attr/colorPrimary"
+                android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="16dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+    </FrameLayout>
+
+    <TextView android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:layout_gravity="start"
+              android:text="This is menu"
+              android:textSize="30sp"
+              android:background="#FFF"/>
+</androidx.drawerlayout.widget.DrawerLayout>
+
+```
+&emsp;&emsp;可以看到，layout_width 和layout_height属性都指定成wrap_content，layout_gravity属性指定将这个控件放置于屏幕的右下角，其中end的工作原理和之前的start是一样的，即如果系统语言是从左往右，那么end就表示在右边。如果系统语言是右往左的，那么end就表示在左边。然后通过layout_margin属性给控件的四周留边距，紧贴着屏幕边缘肯定是不好看的，最后通过src属性给FloatingActionButton设置了一个图标。效果如下：  
+![img_5.png](img_5.png)
+
+&emsp;&emsp;一个漂亮的悬浮按钮就在屏幕的右下方出现了。  
+&emsp;&emsp;如果你仔细观察的话，会发现这个悬浮按钮的下面还有一点阴影。其实这很好理解，因为FloatingActionButton是悬浮在当前界面上的，既然是悬浮，那么就理所应当会有投影，Design Support库连这种细节都帮我们考虑到了。  
+&emsp;&emsp;说到悬浮，其实我们还可以指定FloatingActionButton的悬浮高度，如下所示：  
+
+
+```
+<com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="16dp"
+                app:elevation="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+```
+
+&emsp;&emsp;这里使用app:elevation属性来给FloatingActionButton指定一个高度值，高度值越大，投影范围越大，但是投影效果越淡，高度值越小，投影范围越小，但是投影效果越浓。当然这些效果的差异其实并不怎么明显，我个人感觉使用默认的FloatingActionButton效果就已经足够了。接下来我们看一下FloatingActionButton是如何处理点击事件的，毕竟，一个按钮首先要能点击才有意义。修改MainActivity中的代码，如下所示：  
+
+```java
+package com.zj970.materialtest;
+
+import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
+public class MainActivity extends AppCompatActivity {
+    private DrawerLayout mDrawerLayout;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null){
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
+        }
+
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainActivity.this, "FAB clicked", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        getMenuInflater().inflate(R.menu.toolbar,menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()){
+            case android.R.id.home:
+                mDrawerLayout.openDrawer(GravityCompat.START);
+                break;
+            case R.id.backup:
+                Toast.makeText(this, "You clicked Backup", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.delete:
+                Toast.makeText(this, "You clicked Delete", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.settings:
+                Toast.makeText(this, "You clicked Settings", Toast.LENGTH_SHORT).show();
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+}
+```
+
+&emsp;&emsp;如果你在期待FloatingActionButton会有什么特殊用法的话，那可能就要让你失望了，它和普通的Button其实没什么两样，都是调用setOnClickListener()方法来注册一个监听器，当点击按钮时，就会执行监听器中的onClick()方法，这里我们在onClick()方法中弹出一个Toast。现在重新运行一下程序，并点击FloatingActionButton，效果如图所示：  
+![img_6.png](img_6.png)
+
