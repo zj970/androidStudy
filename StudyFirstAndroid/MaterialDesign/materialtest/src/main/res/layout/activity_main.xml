@@ -6,7 +6,7 @@
         android:layout_height="match_parent"
         android:layout_width="match_parent"
         android:id="@+id/drawer_layout">
-    <FrameLayout
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent">
         <androidx.appcompat.widget.Toolbar
@@ -23,7 +23,7 @@
                 app:elevation="8dp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>
-    </FrameLayout>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
     <TextView android:layout_width="match_parent"
               android:layout_height="match_parent"
