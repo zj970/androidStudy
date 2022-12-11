@@ -590,3 +590,309 @@ public class MainActivity extends AppCompatActivity {
 &emsp;&emsp;另外悬浮按钮的向上和向下偏移也是伴随这动画效果，且和Snackbar完全同步，整体效果看上去特别赏心悦目。  
 &emsp;&emsp;不过我们回过头再思考一下，刚才说的是CoordinatorLayout可以监听其所有子控件的各种事件，但是Snackbar好像并不是CoordinatorLayout的子控件吧，为什么它却可以被监听到呢？  
 &emsp;&emsp;其实道理很简单，还记得我们在Snackbar的make()方法中传入的第一个参数呢？这个参数就是用来指定Snackbar是基于哪个View来触发的，刚才我们传入的是FloatingActionButton本身，而FloatingActionButton是CoordinatorLayout中的子控件，因此这个事件就理所应当能被监听到了。你可以自己再做个实验，如果给Snackbar的make()方法传入一个DrawerLayout，那么Snackbar就会再次遮挡住悬浮按钮，因为DrawerLayout不是CoordinatorLayout中的子控件，CoordinatorLayout也就无法监听到Snackbar的弹出和隐藏事件了。接下来我们继续丰富MaterialTest项目，加入卡片式布局效果。  
+
+## 12.5 卡片式布局  
+&emsp;&emsp;虽然现在MaterialTest中已经应用了非常多的Material Design效果，不过你会发现，界面上最主要的一块区域还处于空白状态，这块区域通常都是用来放置应用的主体内容的。我准备使用一些精美的水果图片来填充这部分区域。  
+&emsp;&emsp;那么为了要让水果图片也能Material化，本节中我们将会学习如何实现卡片式布局的效果。卡片式布局也是Materials Design中提出的一个新的概念，它可以让页面中的元素看起来就像在卡片中一样，并且还能拥有圆角和投影，下面我们就开始具体学习一下。  
+
+### 12.5.1 CardView  
+&emsp;&emsp;CardView是用于实现卡片式布局效果的重要控件，实际上CardView也是一个FrameLayout，只是额外提供了圆角和阴影等效果，看上去会有立体的感觉。我们先来看一下CardView的基本用法吧，其实非常简单，如下所示：  
+
+```xml
+    <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="4dp"
+            app:cardElevation="5dp">
+        <TextView
+                android:id="@+id/info_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+    </androidx.cardview.widget.CardView>
+```
+
+&emsp;&emsp;这里定义了一个CardView布局，我们可以通过app:cardCornerRadius属性指定卡片圆角的弧度，数值越大，圆角的弧度也越大。另外还可以通过app:cardElevation属性指定卡片的高度，高度值越大，投影范围也越大，但是投影效果越淡，高度值越小，投影范围也越小，但是投影效果越浓，这一点和FloatingActionButton是一致的。然后我们在CardView布局中放置了一个TextView,那么这个TextView就会显示在一张卡片当中了，CardView的用法就是这么简单。  
+&emsp;&emsp;但是我们显然不可能在如此宽阔的一块空白区域内只放置了一张卡片，为了能够充分利用屏幕的空间，这里用第3章中学到的知识，使用RecyclerView来填充MaterialTest项目的主界面部分。还记得之前实现过的水果列表效果吗？这次我们将升级一下，实现一个高配版的水果列表效果。  
+&emsp;&emsp;然后由于我们还需要用到RecyclerView、CardView这几个控件，这里我使用的是Androidx库。可以多加一个Glide库依赖。Glide是一个超级强大的图片加载库，它不仅可以用于加载本地图片，还可以加载网络图片、GIF图片、甚至是本地视频。最重要的是Glide的用法非常简单，只需要一行代码就能轻松实现复杂的图片加载功能，因此这里我们准备用它来加载水果图片。Glide的项目主页地址是：https://github.com/bumptech/glide。接下来开始具体的代码实现，修改activity_main.xml中的代码，如下所示： 
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.drawerlayout.widget.DrawerLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:id="@+id/drawer_layout">
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        <androidx.appcompat.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?android:attr/actionBarSize"
+                android:background="?android:attr/colorPrimary"
+                android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+        <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="16dp"
+                app:elevation="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <TextView android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:layout_gravity="start"
+              android:text="This is menu"
+              android:textSize="30sp"
+              android:background="#FFF"/>
+</androidx.drawerlayout.widget.DrawerLayout>
+
+```
+
+&emsp;&emsp;这里我们在CoordinatorLayout中添加了一个RecyclerView,，给它指定了一个id，然后将宽度和高度都设置为match_parent，这样RecyclerView也就占满了整个布局的空间。接着定义一个实体类，代码如下所示：
+
+```java
+package com.zj970.materialtest.entity;
+
+/**
+ * <p>
+ * fruit_entity
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/11
+ */
+public class Fruit {
+    private String name;
+    private int imageId;
+
+    public Fruit(String name, int imageId) {
+        this.name = name;
+        this.imageId = imageId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public int getImageId() {
+        return imageId;
+    }
+}
+
+```
+&emsp;&emsp;Fruit类中只有两个字段，name表示水果对应图片的资源id。然后需要为RecyclerView的子项指定一个我们自定义的布局，在layout目录下新建一个fruit_item.xml，代码如下所示：  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+                                   xmlns:androidx="http://schemas.android.com/apk/res-auto"
+                                   xmlns:app="http://schemas.android.com/tools"
+                                   android:layout_margin="5dp"
+                                   app:cardCornerRadius="4dp"
+                                   android:layout_width="match_parent"
+                                   android:layout_height="wrap_content" app:ignore="NamespaceTypo">
+    <LinearLayout android:layout_width="match_parent"
+                  android:layout_height="wrap_content"
+                  android:orientation="vertical">
+        <ImageView android:id="@+id/fruit_image" android:layout_width="match_parent" android:layout_height="100dp" android:scaleType="centerCrop"/>
+        <TextView android:id="@+id/fruit_name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="center_horizontal" android:layout_margin="5dp" android:textSize="16sp"/>
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
+```
+&emsp;&emsp;这里使用了CardView来作为子项的最外层布局，从而使得RecyclerView中的每个元素都是在卡片当中的。CardView由于是一个FrameLayout，因此它没有什么方便的定位方式，这里我们只好在CardView再嵌套一个LinearLayout，然后在LinearLayout中放置具体的内容。  
+&emsp;&emsp;内容倒也没有什么特殊的地方，就是定义了一个ImageView用于显示水果的图片，又定义了一个TextView用于显示水果的名称，并让TextView在水平向上居中显示。注意在ImageView中我们使用了一个scaleType属性，这个属性可以指定图片的缩放模式。由于各种水果图片的长宽比例可能都不一致，为了让所有的图片都能填充整个ImageView，这里使用了centerCrop模式，它可以让图片保持原有比例填充满ImageView，并将超出屏幕的部分裁剪掉。接下来需要为RecyclerView准备一个适配器，新建FruitAdapter类，让这个适配器继承自RecyclerView.Adapter，并将泛型指定为FruitAdapter.ViewHolder，代码如下所示：  
+
+```java
+package com.zj970.materialtest;
+
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
+import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
+import com.zj970.materialtest.entity.Fruit;
+
+import java.util.List;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/11
+ */
+public class FruitAdapter  extends RecyclerView.Adapter<FruitAdapter.ViewHolder>{
+    private Context mContext;
+    private List<Fruit> mFruitList;
+
+    public FruitAdapter(List<Fruit> mFruitList) {
+        this.mFruitList = mFruitList;
+    }
+
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (mContext == null) {
+            mContext = parent.getContext();
+        }
+        View view = LayoutInflater.from(mContext).inflate(R.layout.item_fruit, parent, false);
+        return new ViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        Fruit fruit = mFruitList.get(position);
+        holder.fruitName.setText(fruit.getName());
+        Glide.with(mContext).load(fruit.getImageId()).into(holder.fruitImage);
+    }
+
+    @Override
+    public int getItemCount() {
+        return mFruitList.size();
+    }
+
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        CardView cardView;
+        ImageView fruitImage;
+        TextView fruitName;
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            cardView = (CardView) itemView;
+            fruitImage = cardView.findViewById(R.id.fruit_image);
+            fruitName = cardView.findViewById(R.id.fruit_name);
+        }
+    }
+}
+
+```
+&emsp;&emsp;上述代码相信你一定很熟悉，和我们在第3章中编写的FruitAdapter几乎一模一样。唯一需要注意的是，在onBindViewHolder()方法中我们使用了Glide来加载水果图片。  
+&emsp;&emsp;那么这里就顺便来看一下Glide的使用方法，其实并没有太多好讲的，因为Glide的用法实在太简单了。首先调用Glide.with()方法并传入一个Context、Activity或Fragment参数，然后调用into()方法将图片设置具体一个ImageView中就可以了。  
+&emsp;&emsp;那么我们为什么要使用Glide而不是传统的设置图片方式呢？因为我们的水果图片像素都非常高，如果不进行压缩就直接展示的话，很容易就会引起内存溢出。而使用Glide就完全不需要担心这件事，因为Glide在内部做了许多复杂的逻辑操作，其中就包括了图片压缩，我们只需要安心按照Glide的标准用法去加载图片就可以了。这样我们就将RecyclerView的适配器也准备好了，最后修改MainActivity中的代码中的代码，如下所示：  
+
+```java
+package com.zj970.materialtest;
+
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
+import com.zj970.materialtest.entity.Fruit;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class MainActivity extends AppCompatActivity {
+    private DrawerLayout mDrawerLayout;
+    private Fruit[] fruits = {new Fruit("Apple", R.drawable.apple), new Fruit("watermelon", R.drawable.watermelon),
+            new Fruit("Orange", R.drawable.orange), new Fruit("Pear", R.drawable.pear),
+            new Fruit("Strawberry", R.drawable.strawberry), new Fruit("Pineapple", R.drawable.pineapple),
+            new Fruit("Banana", R.drawable.banana), new Fruit("Mango", R.drawable.mango),
+            new Fruit("Grape", R.drawable.grape), new Fruit("cherry", R.drawable.cherry)};
+    private List<Fruit> fruitList = new ArrayList<Fruit>();
+    private FruitAdapter mAdapter;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
+        }
+
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Snackbar.make(v, "Data deleted", Snackbar.LENGTH_LONG)
+                        .setAction("Undo", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Toast.makeText(MainActivity.this, "FAB clicked", Toast.LENGTH_LONG).show();
+                            }
+                        }).show();
+            }
+        });
+        initFruits();
+        RecyclerView recyclerView = findViewById(R.id.recycler_view);
+        GridLayoutManager layoutManager = new GridLayoutManager(this,2);
+        recyclerView.setLayoutManager(layoutManager);
+        mAdapter = new FruitAdapter(fruitList);
+        recyclerView.setAdapter(mAdapter);
+    }
+
+    private void initFruits() {
+        fruitList.clear();
+        for (int i = 0; i < fruits.length; i++) {
+            Random random = new Random();
+            int index = random.nextInt(fruits.length);
+            fruitList.add(fruits[index]);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                mDrawerLayout.openDrawer(GravityCompat.START);
+                break;
+            case R.id.backup:
+                Toast.makeText(this, "You clicked Backup", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.delete:
+                Toast.makeText(this, "You clicked Delete", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.settings:
+                Toast.makeText(this, "You clicked Settings", Toast.LENGTH_SHORT).show();
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+}
+```
+&emsp;&emsp;在MainActivity中我们首先定义了一个数组，数组里面存放了很多个Fruit的实例，每个实例都代表着一个水果。然后在initFruits()方法中，先是清空了一下fruitList的数据，接着使用一个随机函数，从刚才定义的Fruit数组中随机挑选一个水果放入fruitList当中，这样每次打开程序看到的水果数据都会是不同的。另外，为了让界面上的数据多一些，这里使用了一个循环，随机挑选50个水果。  
+&emsp;&emsp;之后的用法就是RecyclerView的标准用法了，不过这里使用了GridLayoutManager这种布局方式。在第三章中我们已经学过了LinearLayoutManager和StaggeredGridLayoutManager，现在终于将所有的布局方式都补齐了。GridLayoutManager的用法也没有什么特别之处，它的构建函数接收两个参数，第一个是Context，第二个是列数，现在重新运行一下程序，效果如下所示:  
+![img_9.png](img_9.png)
+
+&emsp;&emsp;可以看到，精美的水果图片成功展示出来。每个水果都是在一张单独的卡片当中，并且还拥有圆角和投影，是不是非常美观？另外，由于我们是使用随机的方式来获取水果数据的，因此界面上会有一些重复的水果出现，这属于正常现象。  
+&emsp;&emsp;当你陶醉于当前精美的界面的时候，你是不是忽略了一个细节？我们的Toolbar不见了？仔细观察一下原来是被RecyclerView给挡住了。这个问题又该怎么解决呢？这就需要借助到另外一个工具了——AppBarLayout。
