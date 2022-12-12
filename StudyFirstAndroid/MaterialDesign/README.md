@@ -895,4 +895,118 @@ public class MainActivity extends AppCompatActivity {
 ![img_9.png](img_9.png)
 
 &emsp;&emsp;可以看到，精美的水果图片成功展示出来。每个水果都是在一张单独的卡片当中，并且还拥有圆角和投影，是不是非常美观？另外，由于我们是使用随机的方式来获取水果数据的，因此界面上会有一些重复的水果出现，这属于正常现象。  
-&emsp;&emsp;当你陶醉于当前精美的界面的时候，你是不是忽略了一个细节？我们的Toolbar不见了？仔细观察一下原来是被RecyclerView给挡住了。这个问题又该怎么解决呢？这就需要借助到另外一个工具了——AppBarLayout。
+&emsp;&emsp;当你陶醉于当前精美的界面的时候，你是不是忽略了一个细节？我们的Toolbar不见了？仔细观察一下原来是被RecyclerView给挡住了。这个问题又该怎么解决呢？这就需要借助到另外一个工具了——AppBarLayout。  
+
+### 12.5.2 AppBarLayout  
+&emsp;&emsp;首先我们来分析一下为什么RecyclerView会把Toolbar给挡住了。其实并不难理解，由于RecyclerView和Toolbar都是放置在CoordinatorLayout中的，前面已经说过，CoordinatorLayout就是一个加强版的FrameLayout，那么FrameLayout中的所有控件在不进行明确定位的情况下，默认都会拜访在布局的左上角，从而也就产生了遮挡的现象。其实这已经不是你第一次遇到这种情况了，我们在3.3.3小节中学习FrameLayout的时候就早已见识过控件与控件之间遮挡的效果。  
+&emsp;&emsp;既然已经找到了问题的原因，那么该如何解决呢？传统情况下，使用偏移是唯一的解决办法，即让RecyclerView向下偏移一个Toolbar的高度，从而保证不会遮挡住Toolbar。不过我们使用的并不是普通的FrameLayout，而是CoordinatorLayout，因此自然会有一些更加巧妙的解决方法。  
+&emsp;&emsp;这里我准备使用Design Support库中提供的另外一个工具——AppBarLayout。AppBarLayout实际上是一个垂直方向的LinearLayout。它在内部做了很多滚动事件的封装，并应用了一些Material Design的设计理念。  
+&emsp;&emsp;那么我们怎样使用AppbarLayout才能解决前面的覆盖问题呢？其实只需要两步就可以了，第一步将Toolbar嵌套到AppBarLayout中，第二步给RecyclerView指定一个布局行为。修改activity_main.xml中的代码，如下所示：  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.drawerlayout.widget.DrawerLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:id="@+id/drawer_layout">
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        <com.google.android.material.appbar.AppBarLayout android:layout_width="match_parent"
+                                                         android:layout_height="wrap_content">
+
+            <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?android:attr/actionBarSize"
+                    android:background="?android:attr/colorPrimary"
+                    android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+                    app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+        </com.google.android.material.appbar.AppBarLayout>
+        <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                android:layout_height="match_parent"/>
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="16dp"
+                app:elevation="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <TextView android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:layout_gravity="start"
+              android:text="This is menu"
+              android:textSize="30sp"
+              android:background="#FFF"/>
+</androidx.drawerlayout.widget.DrawerLayout>
+
+```
+
+&emsp;&emsp;可以看到，布局文件并没有什么太大的变化。我们首先定义了一个AppBarLayout，并将Toolbar放置在了AppBarLayout里面，然后在RecyclerView中使用app:layout_behavior属性指定一个布局行为。其中appbar_scrolling_view_behavior这个字符串也是由Design Support库提供的。现在重新运行一下程序，你就会发现一切都正常了，如图所示：  
+
+![img_10.png](img_10.png)  
+
+&emsp;&emsp;虽说使用AppbarLayout已经成功解决了RecyclerView遮挡Toolbar的问题，但是刚才有提到过，说AppBarLayout中应用了Material Design的设计理念，好像从上面的例子完全体现不出来。事实上，当RecyclerView滚动的时候就已经将滚动事件都通知给AppBarLayout了，只是我们还没进行处理而已。那么下面就让我们来进一步优化，看看AppBarLayout到底能实现什么样的Material Design效果。  
+&emsp;&emsp;当AppBarLayout接收到滚动事件的时候，它内部的子控件其实是可以指定如何去影响这些事件的，通过app:layout_scrollFlags 属性就能实现。修改activity_main.xml中的代码。如下所示：  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.drawerlayout.widget.DrawerLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:id="@+id/drawer_layout">
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        <com.google.android.material.appbar.AppBarLayout android:layout_width="match_parent"
+                                                         android:layout_height="wrap_content">
+
+            <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?android:attr/actionBarSize"
+                    android:background="?android:attr/colorPrimary"
+                    android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+                    app:layout_scrollFlags="scroll|enterAlways|snap"
+                    app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+        </com.google.android.material.appbar.AppBarLayout>
+        <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recycler_view"
+                android:layout_width="match_parent"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                android:layout_height="match_parent"/>
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="16dp"
+                app:elevation="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <TextView android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:layout_gravity="start"
+              android:text="This is menu"
+              android:textSize="30sp"
+              android:background="#FFF"/>
+</androidx.drawerlayout.widget.DrawerLayout>
+
+```
+
+&emsp;&emsp;这里在Toolbar中添加了一个app:layout_scrollFlags属性，并将这个属性的值指定成了scroll|enterAlways|snap。其中，scroll表示当RecyclerView向上滚动的时候，Toolbar会跟着一起向上滚动并实现影藏；enterAlways表示当RecyclerView向下滚动的时候，Toolbar会跟着一起向下滚动并重新显示。snap表示当Toolbar还没有完全隐藏或显示的时候，会根据当前滚动的距离，自动选择是隐藏还是显示。现在重新运行程序，并向上滚动，效果如下：  
+![img_11.png](img_11.png)
+
+&emsp;&emsp;可以看到，随着我们向上滚动RecyclerView，Toolbar竟然消失了，而向下滚动RecyclerView，Toolbar又会重新出现。这其实也是Material Design中的一项重要设计思想，因为当用户在向上滚动RecyclerView的时候，其注意力肯定是在RecyclerView的内容上面的，这个时候如果Toolbar还占据着屏幕空间，就会在一定程度上影响用户的阅读体验，而将Toolbar隐藏则可以让阅读体验达到最佳状态。当用户需要操作Toolbar上的功能时，只需要轻微向下滚动，Toolbar就会重新出现。这种设计方式，既保证了用户的最佳阅读效果，又不影响任何功能上的操作，Material Design考虑得就是这么细致入微。  
+&emsp;&emsp;当然了，像这种功能，如果是使用ActionBar的话，那就完全不可能实现了，Toolbar的出现为我们提供了更多的可能。
