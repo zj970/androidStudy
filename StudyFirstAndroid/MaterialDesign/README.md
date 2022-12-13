@@ -1009,4 +1009,218 @@ public class MainActivity extends AppCompatActivity {
 ![img_11.png](img_11.png)
 
 &emsp;&emsp;可以看到，随着我们向上滚动RecyclerView，Toolbar竟然消失了，而向下滚动RecyclerView，Toolbar又会重新出现。这其实也是Material Design中的一项重要设计思想，因为当用户在向上滚动RecyclerView的时候，其注意力肯定是在RecyclerView的内容上面的，这个时候如果Toolbar还占据着屏幕空间，就会在一定程度上影响用户的阅读体验，而将Toolbar隐藏则可以让阅读体验达到最佳状态。当用户需要操作Toolbar上的功能时，只需要轻微向下滚动，Toolbar就会重新出现。这种设计方式，既保证了用户的最佳阅读效果，又不影响任何功能上的操作，Material Design考虑得就是这么细致入微。  
-&emsp;&emsp;当然了，像这种功能，如果是使用ActionBar的话，那就完全不可能实现了，Toolbar的出现为我们提供了更多的可能。
+&emsp;&emsp;当然了，像这种功能，如果是使用ActionBar的话，那就完全不可能实现了，Toolbar的出现为我们提供了更多的可能。  
+
+## 12.6 下拉刷新  
+&emsp;&emsp;下拉刷新这种功能早就不是什么新鲜的东西了，几乎所有的应用都会有这个功能。不过市面上现有的下拉刷新功能在风格上都各不相同，并且和Material Design还有些格格不入的感觉。因此，谷歌为了让Android下拉刷新风格能有一个统一的标准，于是在Material Design中制定了一个官方的设计规范。当然，我们并不需要去深入了解这个规范是什么样的，因为谷歌早就提供了现成的控件，我们只需要在项目中直接使用就可以了。  
+&emsp;&emsp;SwipeRefreshLayout就是用于实现下拉刷新功能的核心类，我们把想要实现下拉刷新功能的控件放置到SwipeRefreshLayout中，就可以迅速让这个控件支持下拉刷新。那么在MaterialTest项目中，应该支持下拉刷新功能的控件自然就是RecyclerView了。  
+&emsp;&emsp;这里我使用的是androidx的库，需要在build.gradle中添加依赖，修改activity_main.xml中的代码： 
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+
+<androidx.drawerlayout.widget.DrawerLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:id="@+id/drawer_layout">
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+        <com.google.android.material.appbar.AppBarLayout android:layout_width="match_parent"
+                                                         android:layout_height="wrap_content">
+
+            <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?android:attr/actionBarSize"
+                    android:background="?android:attr/colorPrimary"
+                    android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+                    app:layout_scrollFlags="scroll|enterAlways|snap"
+                    app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+        </com.google.android.material.appbar.AppBarLayout>
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+                android:id="@+id/swipe_refresh_layout"
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+            <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/recycler_view"
+                    android:layout_width="match_parent"
+                    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                    android:layout_height="match_parent"/>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="16dp"
+                app:elevation="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"/>
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+    <TextView android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:layout_gravity="start"
+              android:text="This is menu"
+              android:textSize="30sp"
+              android:background="#FFF"/>
+</androidx.drawerlayout.widget.DrawerLayout>
+
+```
+&emsp;&emsp;可以看到，这里我们在RecyclerView的外面又嵌套了一层SwipeRefreshLayout，这样RecyclerView就自动拥有下拉刷新功能了。另外需要注意，由于RecyclerView现在变成了SwipeRefreshLayout的子控件，因此之前使用的app:layout_behavior声明的布局行为现在也要移到SwipeRefreshLayout中才行。  
+&emsp;&emsp;不过这还没有结束，虽然RecyclerView已经支持下拉刷新功能了，但是我们还要在代码中处理具体的刷新逻辑才行。修改MainActivity中的代码：
+
+```java
+package com.zj970.materialtest;
+
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Switch;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.snackbar.Snackbar;
+import com.zj970.materialtest.entity.Fruit;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class MainActivity extends AppCompatActivity {
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private DrawerLayout mDrawerLayout;
+    private Fruit[] fruits = {
+            new Fruit("Apple", R.drawable.apple),
+            new Fruit("watermelon", R.drawable.watermelon),
+            new Fruit("Orange", R.drawable.orange),
+            new Fruit("Pear", R.drawable.pear),
+            new Fruit("Strawberry", R.drawable.strawberry),
+            new Fruit("Pineapple", R.drawable.pineapple),
+            new Fruit("Banana", R.drawable.banana),
+            new Fruit("Mango", R.drawable.mango),
+            new Fruit("Grape", R.drawable.grape),
+            new Fruit("cherry", R.drawable.cherry)};
+    private List<Fruit> fruitList = new ArrayList<Fruit>();
+    private FruitAdapter mAdapter;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
+        }
+
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Snackbar.make(v, "Data deleted", Snackbar.LENGTH_LONG)
+                        .setAction("Undo", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Toast.makeText(MainActivity.this, "FAB clicked", Toast.LENGTH_LONG).show();
+                            }
+                        }).show();
+            }
+        });
+        initFruits();
+        RecyclerView recyclerView = findViewById(R.id.recycler_view);
+        GridLayoutManager layoutManager = new GridLayoutManager(this,2);
+        recyclerView.setLayoutManager(layoutManager);
+        mAdapter = new FruitAdapter(fruitList);
+        recyclerView.setAdapter(mAdapter);
+
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
+        swipeRefreshLayout.setColorSchemeResources(R.color.design_default_color_primary);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                refreshFruits();
+            }
+        });
+    }
+    private  void  refreshFruits(){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        initFruits();
+                        mAdapter.notifyDataSetChanged();
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
+                });
+            }
+        }).start();
+    }
+
+    private void initFruits() {
+        fruitList.clear();
+        for (int i = 0; i < fruits.length; i++) {
+            Random random = new Random();
+            int index = random.nextInt(fruits.length);
+            fruitList.add(fruits[index]);
+        }
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.toolbar, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                mDrawerLayout.openDrawer(GravityCompat.START);
+                break;
+            case R.id.backup:
+                Toast.makeText(this, "You clicked Backup", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.delete:
+                Toast.makeText(this, "You clicked Delete", Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.settings:
+                Toast.makeText(this, "You clicked Settings", Toast.LENGTH_SHORT).show();
+                break;
+            default:
+                break;
+        }
+        return true;
+    }
+}
+```
+
+&emsp;&emsp;这段代码应该还是比较好理解的，首先通过findViewById()方法拿到SwipeRefreshLayout的实例，然后调用setColorSchemeResources()方法来设置下拉进度刷新进度条的颜色，这里我们就使用主题的colorPrimary作为进度条的颜色了。接着调用setOnRefreshListener()方法来设置一个下拉刷新的监听器，当触发了下拉刷新操作的时候就会回调这个监听器的onRefresh()方法，然后我们在这里去处理具体的刷新逻辑就可以了。  
+&emsp;&emsp;通常情况下，onRefresh()方法中应该是去网络上请求最新的数据，然后再将这些数据展示出来。这里简单起见，我们就不和网络进行交互了，而是调用一个refreshFruits()方法进行本地刷新操作。refreshFruits()方法中先是开启了一个线程，然后将线程沉睡两秒钟。之所以这么做，是因为本地刷新操作速度非常快，如果不将线程沉睡的话，刷新立刻就结束了，从而看不到刷新的过程。沉睡结束之后，这里使用了runOnUiThread()方法将线程切回主线程，然后调用initFruits()，接着再调用FruitAdapter的notifyDataSetChanged()方法通知数据发生了变化，最后调用SwipeRefreshLayout的setRefreshing()方法并传入false，用于表述刷新事件结束，并隐藏刷新进度条。现在重新运行一下程序，下拉滑动，会有一个下拉刷新的进度条出现，松手后就自动刷新了，效果如下所示：
+
+![img_12.png](img_12.png)
+
+&emsp;&emsp;下拉刷新的进度条只停留两秒钟，之后就会自动消失了，界面的水果数据也会随之更新。这样我们就把下拉刷新的功能也成功实现了并且这就是Material Design中规定的最标准的下拉刷新效果，还有什么会比这个更好看呢？目前我们的项目中已经应用了众多Material Design的效果。接下来学习可折叠式标题栏。
