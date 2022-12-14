@@ -9,8 +9,11 @@
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
             android:theme="@style/Theme.MaterialDesign">
-        <activity android:name=".MainActivity"
-                  android:label="Fruits">
+        <activity android:name=".FruitActivity">
+        </activity>
+        <activity
+                android:name=".MainActivity"
+                android:label="Fruits">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 

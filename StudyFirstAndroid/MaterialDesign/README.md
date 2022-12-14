@@ -1223,4 +1223,238 @@ public class MainActivity extends AppCompatActivity {
 
 ![img_12.png](img_12.png)
 
-&emsp;&emsp;下拉刷新的进度条只停留两秒钟，之后就会自动消失了，界面的水果数据也会随之更新。这样我们就把下拉刷新的功能也成功实现了并且这就是Material Design中规定的最标准的下拉刷新效果，还有什么会比这个更好看呢？目前我们的项目中已经应用了众多Material Design的效果。接下来学习可折叠式标题栏。
+&emsp;&emsp;下拉刷新的进度条只停留两秒钟，之后就会自动消失了，界面的水果数据也会随之更新。这样我们就把下拉刷新的功能也成功实现了并且这就是Material Design中规定的最标准的下拉刷新效果，还有什么会比这个更好看呢？目前我们的项目中已经应用了众多Material Design的效果。接下来学习可折叠式标题栏。  
+
+## 12.7 可折叠式标题栏  
+&emsp;&emsp;虽然我们现在的标题栏是使用Toolbar来编写的，不过它看上去和传统的ActionBar其实没什么两样，只不过可以响应RecyclerView的滚动事件来进行隐藏和显示。而Material Design中并没有限定标题栏必须是长这个样子的，事实上，我们可以根据自己的喜好随意定制标题栏的样式。那么本节中我们就来实现一个可折叠式标题栏的效果，需要借助CollapsingToolbarLayout这个工具。  
+
+### 12.7.1 CollapsingToolbarLayout
+
+&emsp;&emsp;顾名思义，CollapsingToolbarLayout是一个作用于Toolbar基础上的布局，CollapsingToolbarLayout可以让Toolbar的效果更加丰富，不仅仅是展示一个标题栏，而是能够实现非常华丽的效果。  
+&emsp;&emsp;不过，CollapsingToolbarLayout是不能独立存在的，它在设计的时候被限定只能作为AppBarLayout的直接子布局来使用。而AppBarLayout又必须是CoordinatorLayout的子布局，因此本节中我们要实现的功能其实需要综合运用前面所学的各种知识。  
+&emsp;&emsp;首先我们需要一个额外的活动来作为水果的详情展示界面，创建一个FruitActivity，并将布局名指定成activity_fruit.xml，然后我们开始编写水果详细展示界面的布局。  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appBar"
+            android:layout_width="match_parent"
+            android:layout_height="250dp">
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+                android:id="@+id/collapsing_toolbar"
+                android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+                app:contentScrim="?android:attr/colorPrimary"
+                app:layout_scrollFlags="scroll|exitUntilCollapsed"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+            <ImageView
+                    android:id="@+id/fruit_image_view"
+                    android:scaleType="centerCrop"
+                    app:layout_collapseMode="parallax"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+            <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?android:attr/actionBarSize"
+                    app:layout_collapseMode="pin"/>
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+    <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <androidx.cardview.widget.CardView android:layout_width="wrap_content"
+                                                   android:layout_height="wrap_content"
+                                                   android:layout_marginBottom="15dp"
+                                                   android:layout_marginLeft="15dp"
+                                                   android:layout_marginRight="15dp"
+                                                   android:layout_marginTop="35dp"
+                                                   app:cardCornerRadius="4dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/fruit_content_text" android:layout_margin="10dp"/>
+                </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton android:layout_width="wrap_content"
+                                                                           android:layout_height="wrap_content"
+                                                                           android:layout_margin="16dp"
+                                                                           android:src="@drawable/ic_comment"
+                                                                           app:layout_anchor="@id/appBar"
+                                                                           app:layout_anchorGravity="bottom|end"/>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+```
+&emsp;&emsp;首先根布局是CoordinatorLayout，始终记得要定义一个xmlns:app的命名空间，在Material Design的开发中会经常用到它。接着我们这爱CoordinatorLayout中嵌套一个AppBarLayout，然后给AppBarLayout定义一个id，将它的宽度指定为match_parent，高度指定为250dp，这里的高度可以随意指定，不过尝试之后发现250dp感觉效果最好。  
+&emsp;&emsp;接下来在AppBarLayout中再嵌套一个CollapsingToolbarLayout，android:theme属性指定了一个ThemeOverlay.AppCompat.ActionBar的主题，其实对于这部分我们并不陌生，因为在之前activity_main.xml中给Toolbar指定的也是这个主题，只不过这里要实现更加高级的Toolbar效果，因此需要将这个主题的指定提到上一层来。app:contentScrim属性用于指定CollapsingToolbarLayout在趋于折叠状态以及折叠之后的背景色，其实CollapsingToolbarLayout在折叠之后就是一个普通的Toolbar，那么背景色肯定应该是colorPrimary了，具体的效果我们待会就能看到。app:layout_scrollFlags属性我们也是见过的，只不过之前是给Toolbar指定的，现在也移到外面来了。其中,scroll表示CollapsingToolbarLayout会随着水果内容详情当然滚动一起滚动，exitUntilCollapsed表示当CollapsingToolbarLayout随着滚动完成折叠后就保留在界面上，不再移出屏幕。  
+&emsp;&emsp;接下来在CollapsingToolbarLayout中定义标题栏的具体内容，可以看到，我们在CollapsingToolbarLayout中定义了一个ImageView和一个Toolbar，也就意味着，这个高级版的标题栏是由普通的标题栏加上图片组合而成的。这里定义的大多数属性我们都是见过的，只有一个app:layout_collapseMode比较陌生。它用于指定当前控件在CollapsingToolbarLayout折叠过程中的折叠模式，其中Toolbar指定成了pin，表示在折叠的过程中位置始终保持不变，ImageView指定成parallax，表示会在折叠过程中产生一定的错位偏移，这种模式的视觉会非常好。  
+&emsp;&emsp;下面开始编写水果内容详细部分，水果内容详细的最外层布局使用了一个NestedScrollView，注意它和AppBarLayout是平级的，我们在9.2.1小节学过ScrollView的用法，它允许使用滚动的方式来查看屏幕以外的数据，而NestedScrollView在此基础上还增加了嵌套响应滚动事件的功能。由于CoordinatorLayout本身已经可以响应滚动事件了，因此我们在它的内部就需要使用NestedScrollView或RecyclerView这样的布局。另外，这里还通过app:layout_behavior属性指定了一个布局行为，这和之前在RecyclerView中的用法是一模一样。不过是ScrollView还是NestedScrollView，它们的内部都只允许存在一个直接子布局。因此，如果我们想要在这里放入很多东西的话，通常都会先嵌套一个LinearLayout，然后再在LinearLayout中放入具体的内容就可以了。这里嵌套一个垂直方向的LinearLayout，并将layout_width设置为match_parent，将layout_height设置为wrap_content。  
+&emsp;&emsp;接下来在LinearLayout中放入具体的内容，这里使用一个TextView来显示水果的内容详情，并将TextView放在一个卡片式布局当中。这里为了让界面上更加美观，我在CardView和TextView上都加了一些边距。我中CardView的marginTop加了35dp的边距，这是为下面要编写的东西留出空间。  
+&emsp;&emsp;这样就把水果标题栏和水果内容详情的界面都编写完了，不过我们还可以在界面上再添加了一个悬浮按钮。这个按钮不是必需的，根据具体的需求添加就可以了，如果加入了的话，我们将免费获得一些额外的动画效果，这里加入了一个悬浮按钮，它和AppBarLayout以及NestedScrollView是平级的。FloatingActionButton中使用app:layout_anchorGravity属性指定了一个锚点，我们将锚点设置为AppBarLayout，这样悬浮按钮就会出现在水果标题栏的区域内，接着又使用app:layout_anchorGravity属性阿静悬浮按钮定位在标题栏区域的右下角。界面完成后，接下来我们开始编写功能逻辑，修改FruitActivity中的代码：  
+
+```java
+package com.zj970.materialtest;
+
+import android.content.Intent;
+import android.view.MenuItem;
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.appcompat.widget.Toolbar;
+import com.bumptech.glide.Glide;
+import com.google.android.material.appbar.CollapsingToolbarLayout;
+
+public class FruitActivity extends AppCompatActivity {
+    public static final String FRUIT_NAME = "fruit_name";
+    public static final String FRUIT_IMAGE_ID = "fruit_image_id";
+    private static final int MAX_ITEMS = 500;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_fruit);
+        Intent intent = getIntent();
+        String fruitName = intent.getStringExtra(FRUIT_NAME);
+        int fruitImageId = intent.getIntExtra(FRUIT_IMAGE_ID, 0);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        CollapsingToolbarLayout layout = (CollapsingToolbarLayout)findViewById(R.id.collapsing_toolbar);
+        ImageView fruitImageView = (ImageView) findViewById(R.id.fruit_image_view);
+        TextView fruitContentText = (TextView) findViewById(R.id.fruit_content_text);
+        setSupportActionBar(toolbar);
+        ActionBar actionBar = getSupportActionBar();
+        if (actionBar!= null) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
+        layout.setTitle(fruitName);
+        Glide.with(this).load(fruitImageId).into(fruitImageView);
+        String fruitContent = generateFruitContent(fruitName);
+        fruitContentText.setText(fruitContent);
+    }
+
+    private String generateFruitContent(String fruitName) {
+        StringBuilder fruitContent = new StringBuilder();
+        for (int i = 0; i < MAX_ITEMS; i++){
+            fruitContent.append(fruitName);
+        }
+        return fruitContent.toString();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch(item.getItemId()) {
+            case android.R.id.home:
+                finish();
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+}
+```
+
+&emsp;&emsp;FruitActivity中的代码并不是很复杂。首先，在onCreate()方法中，我们通过Intent货物到传入的水果名和水果图片的资源id，然后通过findViewById()方法拿到刚才在布局文件中定义的各个控件的实例。由于HomeAsUp按钮按钮的默认图标就是一个返回箭头，这正是我们所期望的，因此就不用再额外设置别的图标了。  
+&emsp;&emsp;接下来开始填充界面上的内容，调用CollapsingToolbarLayout的setTitle()方法将水果名设置成当前界面的标题，然后使用Glide加载传入的水果图片，并设置到标题栏的ImageView上面。接着需要填充水果的内容详情，由于这只是一个示例程序，并不需要什么真实的数据，所以我使用了一个generateFruitContent()方法将水果名循环拼接500次，从而生成了一个比较长的字符串，将它设置了TextView上面。  
+&emsp;&emsp;最后，我们在onOptionsItemSelected()方法中处理了HomeAsUp按钮的点击事件，当点击了这个按钮时，就调用finish()方法关闭当前的活动，从而返回上一个活动。  
+&emsp;&emsp;最终我们需要处理RecyclerView的点击事件，修改FruitAdapter中的代码，如下所示：
+
+```java
+package com.zj970.materialtest;
+
+import android.content.Context;
+import android.content.Intent;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
+import androidx.recyclerview.widget.RecyclerView;
+import com.bumptech.glide.Glide;
+import com.zj970.materialtest.entity.Fruit;
+
+import java.util.List;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/11
+ */
+public class FruitAdapter  extends RecyclerView.Adapter<FruitAdapter.ViewHolder>{
+    private Context mContext;
+    private List<Fruit> mFruitList;
+
+    public FruitAdapter(List<Fruit> mFruitList) {
+        this.mFruitList = mFruitList;
+    }
+
+    @NonNull
+    @Override
+    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (mContext == null) {
+            mContext = parent.getContext();
+        }
+        View view = LayoutInflater.from(mContext).inflate(R.layout.item_fruit, parent, false);
+        final ViewHolder viewHolder = new ViewHolder(view);
+        viewHolder.cardView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int position = viewHolder.getAdapterPosition();
+                Fruit fruit = mFruitList.get(position);
+                Intent intent = new Intent(mContext,FruitActivity.class);
+                intent.putExtra(FruitActivity.FRUIT_NAME,fruit.getName());
+                intent.putExtra(FruitActivity.FRUIT_IMAGE_ID,fruit.getImageId());
+                mContext.startActivity(intent);
+            }
+        });
+        return viewHolder;
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+        Fruit fruit = mFruitList.get(position);
+        holder.fruitName.setText(fruit.getName());
+        Glide.with(mContext).load(fruit.getImageId()).into(holder.fruitImage);
+    }
+
+    @Override
+    public int getItemCount() {
+        return mFruitList.size();
+    }
+
+    static class ViewHolder extends RecyclerView.ViewHolder {
+        CardView cardView;
+        ImageView fruitImage;
+        TextView fruitName;
+        public ViewHolder(@NonNull View itemView) {
+            super(itemView);
+            cardView = (CardView) itemView;
+            fruitImage = cardView.findViewById(R.id.fruit_image);
+            fruitName = cardView.findViewById(R.id.fruit_name);
+        }
+    }
+}
+
+```
+
+&emsp;&emsp;最关键的一步其实也是最简单的，这里我们给CardView注册了一个点击事件监听器，然后在点击事件中获取点击项的水果名和水果图片资源id，把它们传入到Intent中，最后调用startActivity()方法启动FruitActivity。现在重新运行一下程序，并点击界面上的水果，效果如下：  
+
+![img_13.png](img_13.png)
+
+&emsp;&emsp;这个界面上的内容分为三部分，水果标题栏、水果内容详情和悬浮按钮。Toolbar和水果背景图完美地融合到了一起，既保证了图片的展示空间，又不影响Toolbar的任何功能，那个向左的箭头就是用于返回上一个活动的。当尝试向上拖动水果内容详情，会发现水果背景图上的标题会慢慢缩小，并且背景图会产生一些错位偏移的效果，如下所示：
+
+![img_14.png](img_14.png)
+
+&emsp;&emsp;这是由于用户想要查看水果的内容详情，此时界面的重点在具体的内容上面，因此标题栏会自动进行折叠，从而节省屏幕空间。一直往上拖动，标题栏的背景图片不见了，悬浮按钮也会自动消失了，现在水果标题栏变成了一个普通的Toolbar。
