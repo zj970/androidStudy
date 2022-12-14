@@ -1544,3 +1544,6 @@ public class FruitAdapter  extends RecyclerView.Adapter<FruitAdapter.ViewHolder>
 ![img_15.png](img_15.png)
 
 &emsp;&emsp;这里与之前的效果好多了。
+
+## 12.8 小节与总结  
+&emsp;&emsp;本章中我们充分利用了一些开源库来实现一个高度Material化的应用程序，Material Design 的设计思维和设计理解才是更加重要的东西，可以参考一下Material Design的官方文章：https://material.google.com。
