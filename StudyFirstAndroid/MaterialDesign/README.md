@@ -1458,3 +1458,89 @@ public class FruitAdapter  extends RecyclerView.Adapter<FruitAdapter.ViewHolder>
 ![img_14.png](img_14.png)
 
 &emsp;&emsp;这是由于用户想要查看水果的内容详情，此时界面的重点在具体的内容上面，因此标题栏会自动进行折叠，从而节省屏幕空间。一直往上拖动，标题栏的背景图片不见了，悬浮按钮也会自动消失了，现在水果标题栏变成了一个普通的Toolbar。
+
+### 12.7.2 充分利用系统状态栏空间
+
+&emsp;&emsp;虽说现在水果详情展示界面的效果已经非常华丽了但并不代表我们不能再进一步地提升。你会发现水果的背景图片和西戎的装贪婪的总会有一些不搭的感觉，如果我们能将背景图和状态栏融合到一起，那这个视觉体验绝对能提升好几个档次。  
+&emsp;&emsp;只不过可惜的是，在Android 5.0系统之前，我们是无法对状态栏的背景或颜色进行操作的，哪个时候也还没有Material Design的概念。但是在Android 5.0及以后的系统都是支持这个功能的，因此这里我们就实现一个系统差异型的效果，在Android 5.0及之后的系统中，使用背景图和状态栏融合的模式，在之前的系统中使用普通的模式。  
+&emsp;&emsp;想要让背景图能够和系统状态栏融合，需要借助android:fitsSystemWindows这个属性来实现。在CoordinatorLayout、AppBarLayout、CollapsingToolbarLayout这种嵌套结构的布局中，将控件的android:fitsSystemWindows属性指定成true，就表示该控件会出现在系统状态栏里。对应我们程序那就是水果栏中的ImageView应该设置这个属性了。不过只给ImageView设置这个属性是没有用的，我们必须将ImageView布局结构中的所有父布局都设置上这个属性才可以，修改activity_fruit.xml中的代码:  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:fitsSystemWindows="true"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+    <com.google.android.material.appbar.AppBarLayout
+            android:id="@+id/appBar"
+            android:fitsSystemWindows="true"
+            android:layout_width="match_parent"
+            android:layout_height="250dp">
+        <com.google.android.material.appbar.CollapsingToolbarLayout
+                android:id="@+id/collapsing_toolbar"
+                android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+                app:contentScrim="?android:attr/colorPrimary"
+                app:layout_scrollFlags="scroll|exitUntilCollapsed"
+                android:fitsSystemWindows="true"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+            <ImageView
+                    android:id="@+id/fruit_image_view"
+                    android:scaleType="centerCrop"
+                    app:layout_collapseMode="parallax"
+                    android:fitsSystemWindows="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"/>
+            <androidx.appcompat.widget.Toolbar
+                    android:id="@+id/toolbar"
+                    android:layout_width="match_parent"
+                    android:layout_height="?android:attr/actionBarSize"
+                    app:layout_collapseMode="pin"/>
+        </com.google.android.material.appbar.CollapsingToolbarLayout>
+    </com.google.android.material.appbar.AppBarLayout>
+    <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
+        <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+                <androidx.cardview.widget.CardView android:layout_width="wrap_content"
+                                                   android:layout_height="wrap_content"
+                                                   android:layout_marginBottom="15dp"
+                                                   android:layout_marginLeft="15dp"
+                                                   android:layout_marginRight="15dp"
+                                                   android:layout_marginTop="35dp"
+                                                   app:cardCornerRadius="4dp">
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:id="@+id/fruit_content_text" android:layout_margin="10dp"/>
+                </androidx.cardview.widget.CardView>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton android:layout_width="wrap_content"
+                                                                           android:layout_height="wrap_content"
+                                                                           android:layout_margin="16dp"
+                                                                           android:src="@drawable/ic_comment"
+                                                                           app:layout_anchor="@id/appBar"
+                                                                           app:layout_anchorGravity="bottom|end"/>
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+```
+
+&emsp;&emsp;但是，即使我们将android:fitsSystemWindows属性都设置好了还是没有用的，因为必须还要更改程序的主题中状态栏颜色指定成透明色。指定成透明色的方法很简单，在主题中将android:statusBarColor属性的值指定成@android:color/transaction就可以了。但问题在于，android:statusBarColor这个属性是从API 21，也就是Android 5.0 系统开始才有的，之前的系统无法指定这个属性。那么系统差异性功能实现就要从这里开始了。  
+&emsp;&emsp;右击res目录->New->Directory，创建一个values-v21目录，然后右击values-v21目录->New->Values resource file，创建一个styles.xml文件。接着对这个文件进行编写，代码如下所示：  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="FruitActivityTheme" parent="Theme.MaterialDesign">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+</resources>
+```
+&emsp;&emsp;这里我们定义了一个FruitActivityTheme主题，它是专门给FruitActivityT使用的。我们在此主题中将状态看指定成透明色，由于values-v21目录是只有Android 5.0 及以上的系统才回去读取的，因此这么声明是没有问题的。但是Android 5.0之前的系统去无法识别FruitActivityTheme这个主题，因此我们还需要对values/themes.xml中进行修改。最后还需要让FruitActivity使用这个主题，修改AndroidManifest中的代码，运行一下程序，效果如下：  
+
+![img_15.png](img_15.png)
+
+&emsp;&emsp;这里与之前的效果好多了。
