@@ -361,3 +361,72 @@ getIntent().getStringExtra("string_data");
 getIntent().getIntExtra("int_data",0);
 ```
 &emsp;&emsp;但是不知道你有没有发现，putExtra()方法中所支持的数据类型是有限的，虽然常用的一些数据类型它都会支持，但是当你想去传递一些自定义对象的时候，就会无从下手。不用担心，下面将就学习一下使用Intent来传递对象的技巧。  
+
+### 13.2.1 Serializable 方式
+
+&emsp;&emsp;使用Intent来传递对象通常有两种方式：Serializable和Parcelable，本小节中我们先来学习一下第一种实现方式。
+&emsp;&emsp;Serializable是序列化的意思，表示将一个对象转换成可存储或可传输的状态。序列化后的对象可以在网络上进行传输，也可以存储到本地。至于序列化的方法也很简单，只需要让一个类去实现Serializable这个接口就可以了。比如说有一个Person类，其中包含了name和age这两个字段，想要将它序列化就可以这样写：  
+
+```java
+package com.zj970.advanced.entity;
+
+import java.io.Serializable;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/15
+ */
+public class Person implements Serializable {
+    private int id;
+    private String name;
+    private int age;
+
+    public Person() {
+    }
+
+    public Person(int id, String name, int age) {
+        this.id = id;
+        this.name = name;
+        this.age = age;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+}
+
+```
+
+&emsp;&emsp;其中，get、set方法都是用于赋值和读取字段数据的，最重要的部分是在第一行。这里让Person类去实现了Serializable接口，这样所有的Person对象都是可序列化的了。接下来在FirstActivity中的写法非常简单：  
+```
+Person person = new Person(1,"李华",18);
+Intent intent = new Intent(FirstActivity.this,Serializable.class);
+intent.putExtra("person_data",person);
+startActivity(intent);
+```
+&emsp;&emsp;可以看到，这里我们创建了一个Person的实例，然后就直接将它传入到putExtra()方法中了。由于Person类实现了Serializable接口，所以才可以这样写。接下来在SecondActivity中获取这个对象也很简单，写法如下： Person peron = (person)getIntent().getSerializableExtra("person_data");  
+&emsp;&emsp;这里调用了getSerializableExtra()方法来获取通过参数传递过来的序列化对象，接着再将它向下转型成Person对象，这样我们就成功实现了使用Intent来传递对象的功能了。
