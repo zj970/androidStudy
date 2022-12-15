@@ -342,3 +342,22 @@ public class HttpUtil {
 ```
 
 &emsp;&emsp;其实道理也是一样的，因为经过这样的配置之后，LitePal就能在内部自动获取到Context了。不过这里你可能又会产生疑问了，如果我们已经配置过了自己的Application怎么办》这样岂不是和LitePalApplication冲突了？没错，任何一个项目都只能配置一个Application，对于这种情况，LitePal提供了很简单的解决方案，那就是在我们自己的Application中去调用LitePal的初始化方法就可以了，在onCreate()方法中加入 LitePalApplication.initialize(context)；皆就可以了。使用这种写法，就相当于我们把全局的Context对象通过参数传递给了LitePal，效果和在AndroidManifest.xml中配置LiteApplication是一模一样的。  
+
+
+## 13.2 使用Intent传递对象
+
+&emsp;&emsp;Intent的用法相信你已经比较熟悉了，我们可以借助它来启动活动、发送广播、启动服务等。在进行上述操作的时候，我们还可以在Intent中添加一些附加数据，以达到传值的效果，比如在FirstActivity中添加如下代码： 
+
+```
+Intent intent = new Intent(FirstActivity.this,SecondActivity.class);
+intent.putExtra("string_data","hello");
+intent.putExtra("int_data",100);
+startActivity(intent);
+```
+&emsp;&emsp;这里调用了Intent的putExtra()方法来添加要传递的数据，之后在SecondActivity中就可以得到这些值了，代码如下所示：
+
+```
+getIntent().getStringExtra("string_data");
+getIntent().getIntExtra("int_data",0);
+```
+&emsp;&emsp;但是不知道你有没有发现，putExtra()方法中所支持的数据类型是有限的，虽然常用的一些数据类型它都会支持，但是当你想去传递一些自定义对象的时候，就会无从下手。不用担心，下面将就学习一下使用Intent来传递对象的技巧。  
