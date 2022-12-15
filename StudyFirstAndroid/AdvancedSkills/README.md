@@ -430,3 +430,85 @@ startActivity(intent);
 ```
 &emsp;&emsp;可以看到，这里我们创建了一个Person的实例，然后就直接将它传入到putExtra()方法中了。由于Person类实现了Serializable接口，所以才可以这样写。接下来在SecondActivity中获取这个对象也很简单，写法如下： Person peron = (person)getIntent().getSerializableExtra("person_data");  
 &emsp;&emsp;这里调用了getSerializableExtra()方法来获取通过参数传递过来的序列化对象，接着再将它向下转型成Person对象，这样我们就成功实现了使用Intent来传递对象的功能了。
+
+### 13.2.2 Parcelable方式  
+&emsp;&emsp;除了Serializable之外，使用Parcelable也可以实现相同的效果，不过不同于将对象进行序列化，Parcelable方式的实现原理是将一个完整的对象进行分解，而分解后的每一部分都是Intent所支持的数据类型，这样也就实现传递对象的功能了。下面看一下Parcelable的实现方式，新建Dog，如下：  
+
+```java
+package com.zj970.advanced.entity;
+
+import android.os.Parcel;
+import android.os.Parcelable;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/15
+ */
+public class Dog implements Parcelable {
+    private String name;
+    private int age;
+
+    public Dog(String name, int age) {
+        this.name = name;
+        this.age = age;
+    }
+
+    protected Dog(Parcel in) {
+        name = in.readString();
+        age = in.readInt();
+    }
+
+    public static final Creator<Dog> CREATOR = new Creator<Dog>() {
+        @Override
+        public Dog createFromParcel(Parcel in) {
+            return new Dog(in);
+        }
+
+        @Override
+        public Dog[] newArray(int size) {
+            return new Dog[size];
+        }
+    };
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(name);
+        dest.writeInt(age);
+    }
+}
+
+```
+
+&emsp;&emsp;Parcelable的实现方式要稍微复杂一些。可以看到，首先我们让Dog类去实现了Parcelable接口，这样就必须重写describeContents()方法和writeToParcel()方法。其中describeContents()方法直接返回0就可以了，而writeToParcel()方法中我们需要调用Parcel的writeXxx()方法，将Dog类中的字段一一写出。注意，字符串类型数据就调用writeString()方法，整型数据就调用writeInt()方法，以此类推。  
+&emsp;&emsp;除此之外，我们还必须在Dog类中提供一个名为CREATOR的常量，这里创建Parcelable.Creator接口的一个实现，并将泛型指定为Dog。接着需要重写createFromParcel()方法和newArray()方法，在createFromParcel()方法中我要去读取刚才写出的name和age字段，并创建一个Dog对象返回，其中name和age都是调用Parcel的readXxx()方法读取到的，注意这里的读取顺序要和刚才的写出顺序一定要完全相同。而newArray()方法中的实现就简单多了，只需要new出一个Dog数组，并使用方法中传入的size作为数组大小就可以了。  
+&emsp;&emsp;接下来，在FirstActivity中我们仍然使用之前相同的代码来传递对象，只不过在SecondActivity中获取的时候需要进行改动，如下所示：
+
+```
+Dog dog = (Dog) getIntent().getParcelableExtra("dog_data");
+```
+&emsp;&emsp;注意，这里不再是调用getSerializableExtra()而是调用getParcelableExtra()方法，其他的地方都完全相同。这样我们就把是使用Intent来传递对象的两种实现方式都学习完了，对比一下，Serializable的方式比较简单，但是由于会把整个对象进行序列化，因此效率会比Parcelable方法低一些，所以在通常情况下还是更加推荐Parcelable的方式来实现Intent来传递对象的功能。
