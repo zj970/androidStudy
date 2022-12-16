@@ -584,4 +584,81 @@ public class LogUtil {
 
 ![img.png](img.png)
 
-&emsp;&emsp;这里会可以借鉴[大佬的文章](https://zhuanlan.zhihu.com/p/142128857)
+&emsp;&emsp;这里会可以借鉴[不正经的创造者的文章](https://zhuanlan.zhihu.com/p/142128857)
+
+## 13.5 创建定时任务
+
+&emsp;&emsp;Android中的定时任务一般有两种方式，一种是使用Java API里提供的Timer类，一种是使用Android的Alarm机制。这两种方式在多数情况下都能实现类似的效果，但Timer有一个明显的短板，它并不太适合用于那些需要长期在后台运行的定时任务。我们都知道，为了能让电池更加耐用，每种手机都会有自己的休眠策略，Android手机就会在长时间不操作的情况下自动让CPU进入睡眠状态，这就有可能导致Timer中的定时任务无法正常运行。而Alarm则居右唤醒CPU的功能，它可以保证在大多数情况下需要执行定时任务的时候CPU都能正常工作，需要注意，这里唤醒CPU和唤醒屏幕完全不是一个概念，千万不要产生混淆。  
+
+### 13.5.1 Alarm机制
+
+&emsp;&emsp;那么首先我们来看一下Alarm机制的用法吧，其实并不复杂，主要就是借助了AlarmManager类实现的。这个类和NotificationManager有点类似，都是通过调用Context的getSystemService()方法来获取实例的，只是这里需要传入的参数是Context.ALARM_SERVICE。因此，获取一个AlarManager的实例就可以写成：  
+> AlarmManager manager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
+
+&emsp;&emsp;接下来调用AlarmManager的set()方法就可以设置一个定时任务了，比如说想要设定一个任务在10秒钟后执行，就可以写成：  
+> long triggerAtTime = SystemClock.elapsedRealtime() + 10 * 1000;
+> manager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,triggerAtTime,pendingIntent);
+
+&emsp;&emsp;上面的两行代码你不一定能看得明白，因为set()方法中需要传入的3个参数稍微有点复杂，下面我们就来仔细地分析一下。第一个参数是一个整型参数，用于指定AlarmManager的工具类型，有4种值可选，分别是ELAPSED_REALTIME_WAKEUP、ELAPSED_REALTIME、RTC和RTC_WAKEUP。其中ELAPSED_REALTIME表示让定时任务的触发时间从系统开机开始算起，但不会唤醒CPU。ELAPSED_REALTIME_WAKEUP同样表示让定时任务的触发时间从系统开机开始算起，但会唤醒CPU。RTC表示让定时任务的触发时间从1970年1月1日0点开始算起，但不会唤醒CPU。RTC同样表示让定时任务的触发时间从1920年1月1日0点开始算起，但不会唤醒CPU。RTC_WAKEUP同样表示让定时任务的触发时间从1970年1月1日0点开始算起，但会唤醒CPU。使用SystemClock.elapsedRealtime()方法可以获取到系统开机至今所经历时间的毫秒数，使用System.currentTimeMillis()方法可以获取到1970年1月1日0点至今所经历时间的毫秒数。  
+&emsp;&emsp;然后看一下第二个参数，这个参数就好理解多了，就是定时任务触发的时间，以毫秒为单位。如果第一个参数使用的是ELAPSED_REALTIME_WAKEUP或ELAPSED_REALTIME，则这里传入开机至今的时间再加上延迟执行的时间。如果第一个参数使用的是RTC或RTC_WAKEUP，则这里传入1970年1月1日0点至今的时间再加上延迟执行的时间。  
+&emsp;&emsp;第三个参数是一个PendingIntent，对于它你应该已经不会陌生了吧。这里我们一般会调用getService()方法或者geiBroadcast()方法来获取一个能够执行服务或广播的PendingIntent。这样当定时任务被触发的时候，服务的onStartCommand()方法或广播接收器的onReceiver()方法就可以得到执行。  
+&emsp;&emsp;了解了set()方法的每个参数之后，你应该能想到，设定一个任务在10秒钟后执行也可以写成：  
+> long triggerAtTime = System.currentTimeMillis() + 10 * 1000;
+> manager.set(AlarmManager.RTC_WAKEUP,triggerAtTime,pendingIntent);
+
+&emsp;&emsp;那么，如果我们要实现一个长事件在后台定时运行的服务该怎么做呢？其实很简单，首先新建一个普通的服务，比如把它起名叫LongRunningService，然后将触发定时任务的代码写到onStartCommand()方法中，如下所示：  
+
+```java
+package com.zj970.advanced.service;
+
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.Intent;
+import android.os.IBinder;
+import android.os.SystemClock;
+import androidx.annotation.Nullable;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/16
+ */
+public class LongRunningService extends Service {
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null;
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                //在这里执行具体的逻辑操作
+            }
+        }).start();
+
+        AlarmManager manager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        int anHour = 60 * 60 * 1000;//这是一小时的毫秒数
+        long triggerAtTime = SystemClock.elapsedRealtime() + anHour ;
+        Intent i = new Intent(this, LongRunningService.class);
+        PendingIntent pi = PendingIntent.getActivity(this,0,i,0);
+        manager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,triggerAtTime,pi);
+        return super.onStartCommand(intent, flags, startId);
+    }
+}
+```
+&emsp;&emsp;可以看到，我们先是在onStartCommand()方法中开启了一个子线程，这样就可以在这里执行具体的逻辑操作了。之所以在子线程里执行逻辑操作，是因为逻辑操作也是需要耗时的，如果放在主线程里执行可能会定时任务的准确性造成轻微的影响。  
+&emsp;&emsp;创建线程之后的代码就是我们刚刚讲解的ALrm机制的用法了，显示获取到了AlarmManager的实例，然后定义任务的触发时间为一小时后，再使用PendingIntent指定处理定时任务的服务为LongRunningService，最后调用set()方法完成设定。  
+&emsp;&emsp;这样我们就将一个长时间在后台定时运行的服务成功实现了。因为一旦启动了LongRunningService，就会在onStartCommand()方法里设定一个定时任务，这样一小时后将会再次启动LongRunningService，从而也就形成一个永久的循环，保证LongRunningService的onStartCommand()方法可以每隔一小时就执行一次。  
+&emsp;&emsp;最后，只需要在你想要启动定时服务的时候调用如下代码即可：  
+> Intent intent = new Intent(context,LongRunningService);
+> context.startService(intent);
+
+&emsp;&emsp;另外需要注意的是，从Android 4.4系统开始，Alarm任务的触发时间将会变得不准确，有可能会延迟一段时间任务才能得到执行。这并不是bug，而是系统在耗电性能方面进行优化。系统会自动检测目前有多少Alarm任务存在，然后将触发时间相近的几个任务放在一起执行，这就可以大幅度地减少CPU被唤醒的次数，从而有效延长电池的使用时间。  
+&emsp;&emsp;当然，如果你要求Alarm 任务的执时间必须准确无误，Android仍然提供了解决方案，使用AlarmManager的setExact()方法来替代set()方法，就基本上可以保证任务能够准时执行了。
