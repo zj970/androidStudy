@@ -511,4 +511,70 @@ public class Dog implements Parcelable {
 ```
 Dog dog = (Dog) getIntent().getParcelableExtra("dog_data");
 ```
-&emsp;&emsp;注意，这里不再是调用getSerializableExtra()而是调用getParcelableExtra()方法，其他的地方都完全相同。这样我们就把是使用Intent来传递对象的两种实现方式都学习完了，对比一下，Serializable的方式比较简单，但是由于会把整个对象进行序列化，因此效率会比Parcelable方法低一些，所以在通常情况下还是更加推荐Parcelable的方式来实现Intent来传递对象的功能。
+&emsp;&emsp;注意，这里不再是调用getSerializableExtra()而是调用getParcelableExtra()方法，其他的地方都完全相同。这样我们就把是使用Intent来传递对象的两种实现方式都学习完了，对比一下，Serializable的方式比较简单，但是由于会把整个对象进行序列化，因此效率会比Parcelable方法低一些，所以在通常情况下还是更加推荐Parcelable的方式来实现Intent来传递对象的功能。  
+
+## 13.3 定制自己的日志工具  
+&emsp;&emsp;早在第1章的1.4节中我们就已经学习过了Android日志工具的用法，并且日志工具也确实贯穿了我们整本书的学习，基本上每一章都有用过。虽然Android中自带的日志工具非常强大，但也不能说是完全没有缺点，例如在打印日志的控制方面就做得不够好。  
+&emsp;&emsp;打个比方，你正在编写一个比较庞大的项目，期间为了方便调试，在代码的很多地方都打印了大量的日志。最近项目已经基本完成了，但是却有一个非常让人头疼的问题，之前用于调试的哪些日志，在项目正式上线之后仍然会照常打印，这样不仅会降低程序的运行效率，还有可能将一些机密性的数据泄露出去。  
+&emsp;&emsp;那该怎么办呢？难道要一行一行地把所有打印日志的代码都删掉？显然这不是什么好点子。不仅费时费力，而且以后你继续维护这个项目的时候可能还需要这些日志。因此，最理想的情况是能够自由地控制日志的打印，当程序处于开发阶段时就让日志打印出来，当程序上线之后就把日志屏蔽掉。  
+&emsp;&emsp;看起来好像是挺高级的一个功能，其实并不复杂，我们只需要定制一个自己的日志工具就可以轻松完成了。比如新建一个LogUtil类，代码如下所示：  
+
+```java
+package com.zj970.advanced.utils;
+
+import android.util.Log;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/16
+ */
+public class LogUtil {
+    public static final int VERBOSE = 1;
+    public static final int DEBUG = 2;
+    public static final int INFO = 3;
+    public static final int WARN = 4;
+    public static final int ERROR = 5;
+    public static final int NOTHING = 6;
+    public static final int level = VERBOSE;
+
+    public static void v(String tag, String msg) {
+        if (level <= VERBOSE) {
+            Log.v(tag, msg);
+        }
+    }
+
+    public static void d(String tag, String msg) {
+        if (level <= DEBUG) {
+            Log.d(tag, msg);
+        }
+    }
+
+    public static void i(String tag, String msg) {
+        if (level <= INFO) {
+            Log.i(tag, msg);
+        }
+    }
+
+    public static void w(String tag, String msg) {
+        if (level <= WARN) {
+            Log.w(tag, msg);
+        }
+    }
+
+    public static void e(String tag, String msg) {
+        if (level <= ERROR) {
+            Log.e(tag, msg);
+        }
+    }
+}
+
+```
+
+&emsp;&emsp;可以看到，我们在LogUtil中先是定义了VERBOSE、DEBUG、INFO、WARN、ERROR、NOTHING这6个整型常量，并且它们对应的值都是递增的。然后又定义了一个静态变量level，可以将它的值指定为上面6个常量的任意一个。  
+&emsp;&emsp;接下来我们提供了v()、d()、i()、w()、e()这5个自定义的日志方法，在其内部分别调用了Log.v()、Log.d()、Log.i()、Log.w()、Log.e()这5个方法来打印日志，只不过在这些自定义的方法中我们都加入了一个if判断，只有当level的值小于或等于对应日志级别的时候，才会将日志打印出来。  
+&emsp;&emsp;这样就把一个自定义的日志创建好了，之后在项目我们可以像使用普通的日志工具一样使用LogUtil，比兔打印一行DEBUG级别的日志就可以这样写：LogUtil.d("TAG", "debug log");打印一行WARN级别的日志就可以这样写：LogUtil.w("TAG", "warn log");  
+&emsp;&emsp;然后我们只需要修改level变量的值，就可以自由地控制日志的打印行为了。比如让level等于VERBOSE就可以把所有的日志都打印出来，让level等于WARN就可以只打印警告以上级别的日志，让level等于NOTHING就可以把所有屏蔽掉。使用了这种方法之后，刚才所说的那个问题就不复存在了，你只需要在开发阶段将level指定成VERBOSE，当项目正式上线的时候将level指定成NOTHING就可以了。
