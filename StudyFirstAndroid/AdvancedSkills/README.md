@@ -661,4 +661,22 @@ public class LongRunningService extends Service {
 > context.startService(intent);
 
 &emsp;&emsp;另外需要注意的是，从Android 4.4系统开始，Alarm任务的触发时间将会变得不准确，有可能会延迟一段时间任务才能得到执行。这并不是bug，而是系统在耗电性能方面进行优化。系统会自动检测目前有多少Alarm任务存在，然后将触发时间相近的几个任务放在一起执行，这就可以大幅度地减少CPU被唤醒的次数，从而有效延长电池的使用时间。  
-&emsp;&emsp;当然，如果你要求Alarm 任务的执时间必须准确无误，Android仍然提供了解决方案，使用AlarmManager的setExact()方法来替代set()方法，就基本上可以保证任务能够准时执行了。
+&emsp;&emsp;当然，如果你要求Alarm 任务的执时间必须准确无误，Android仍然提供了解决方案，使用AlarmManager的setExact()方法来替代set()方法，就基本上可以保证任务能够准时执行了。  
+
+### 15.4.2 Doze模式  
+&emsp;&emsp;虽然Android的每个系统版本都在手机电量方面努力进行优化，不过一直没能解决后台服务泛滥、手机电量消耗过快的问题。于是在Android 6.0 系统中，谷歌加入了一个全新的Doze模式，从而就可以极大幅度地延长电池的使用寿命。本小节中我们就来了解一下这个模式，并且掌握一些编程时的注意事项。  
+&emsp;&emsp;首先看一下到底什么是Doze模式。当用户的设备是Android 6.0 或以上系统时，如果该设备未插电源，处于静止状态(Android 7.0 中删除了这一条件)，且屏幕关闭了一段时间之后，就会进入到Doze模式。在Doze模式下，系统会对CPU、网络、Alarm等活动进行限制，从而延长了电池的使用寿命。  
+&emsp;&emsp;当然，系统并不会一直处于Doze模式，而是会间歇性地退出Doze模式一小段时间，在这段时间中，应用就可以完成它们的同步操作、Alarm任务等等。下图完整描述了Doze模式的工作过程。
+
+![img_1.png](img_1.png)
+
+&emsp;&emsp;可以看到，随着设备进入Doze模式的时间越长，间歇性地退出Doze模式的时间间隔也会越长。因为如果设备长时间不适用的话，是没必要频繁退出Doze模式来执行同步等操作的，Android在这些细节上的把控使得电池寿命进一步得到延长。  
+&emsp;&emsp;接下来我们具体看一看在Doze模式下有哪些功能会受到限制：  
+- 网络访问被禁止
+- 系统忽略唤醒CPU或者屏幕操作。
+- 系统不再执行WIFI扫描
+- 系统不再执行同步服务
+- Alarm任务将会在下次退出Doze模式的时候执行。  
+
+&emsp;&emsp;注意其中的最后一条，也就是说，在Doze模式下，我们的Alarm任务将会变得不准时。当然吗，这在大多数情况写都是合理的，因为只有当用户长时间不使用手机的时候才会进入Doze模式，通常这种情况下对Alarm任务的准时性要求并没有那么高。  
+&emsp;&emsp;不过，如果你真的有非常特殊的需求，要求Alarm任务即使在Doze模式下也必须正常执行，Android还是提供了解决方案。调用AlarmManager的setAndAllowWhileIdle()或setExactAndAllowWhileIdle()方法就能让定时任务即使在Doze模式下也能正常执行了，这两个方法之间的区别和set()、setExact()方法之间的区别是一样的。
