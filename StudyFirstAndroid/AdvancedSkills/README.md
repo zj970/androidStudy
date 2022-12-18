@@ -680,3 +680,137 @@ public class LongRunningService extends Service {
 
 &emsp;&emsp;注意其中的最后一条，也就是说，在Doze模式下，我们的Alarm任务将会变得不准时。当然吗，这在大多数情况写都是合理的，因为只有当用户长时间不使用手机的时候才会进入Doze模式，通常这种情况下对Alarm任务的准时性要求并没有那么高。  
 &emsp;&emsp;不过，如果你真的有非常特殊的需求，要求Alarm任务即使在Doze模式下也必须正常执行，Android还是提供了解决方案。调用AlarmManager的setAndAllowWhileIdle()或setExactAndAllowWhileIdle()方法就能让定时任务即使在Doze模式下也能正常执行了，这两个方法之间的区别和set()、setExact()方法之间的区别是一样的。
+
+## 13.6 多敞口模式编程  
+&emsp;&emsp;由于手机屏幕大小的限制，传统情况下一个手机只能同时打开一个应用程序，不论是Android、IOS还是Windows Phone都是如此。我们也早就对此习以为常，认为这是理所当然的事情。而Android 7.0 系统中却引入了一个非常有特色的功能——多敞口模式，它允许我们在同一个屏幕中同时打开两个应用程序。对于手机屏幕越来越大的今天，这个功能确实越发重要了，那么本节中我们就将针对这一主题进行学习。  
+### 13.6.1 进入多窗口模式  
+&emsp;&emsp;首先你需要知道，我们不用编写任何额外的代码来让应用程序支持多窗口模式。但是这并不意味着我们就不需要对多窗口模式进行学习，因为系统化地了解这些知识点才能编写出多窗口模式下兼容性更好的程序。  
+&emsp;&emsp;在多窗口模式下，整个应用的界面会缩小很多，那么编写程序时就应该多考虑使用match_parent属性、RecyclerView、ListView、ScrollView等控件，来让应用的界面能够更好地适配各种不同尺寸的屏幕，尽量不要出现屏幕尺寸变化过大时界面就无法正常显示的情况。  
+
+## 13.6.2 多窗口模式下的生命周期  
+c接下来我们学习一下多窗口模式下的生命周期。其实多窗口模式并不会改变活动原有的生命周期，只是会将用户最近交互过的那个活动设置成运行状态，而将多窗口模式下另外一个可见的活动设置为暂停状态。如果这时用户又去和暂停的活动进行交互，那么该活动就变成运行状态，之前处于运行状态的活动变成暂停状态。新建一个MaterialTest项目，修改MainActivity中的代码，如下所示：
+
+```java
+package com.zj970.materialtest;
+
+import android.util.Log;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+
+public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Log.d(TAG, "onCreate: ");
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart: ");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume: ");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause: ");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d(TAG, "onStop: ");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy: ");
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.d(TAG, "onRestart: ");
+    }
+    
+}
+
+
+```
+&emsp;&emsp;这里我们在Activity的7个生命周期回调方法分别打印了一句日志。然后在advancedSkills中修改MainActivity的代码，如下所示：  
+
+```java
+package com.zj970.advanced;
+
+import android.util.Log;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+
+public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "LBS";
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Log.d(TAG, "onCreate: ");
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d(TAG, "onStart: ");
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG, "onResume: ");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause: ");
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        Log.d(TAG, "onStop: ");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "onDestroy: ");
+    }
+
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.d(TAG, "onRestart: ");
+    }
+}
+```
+
+&emsp;&emsp;这里同样也是在Activity的7个生命周期回调方法中分别打印了一句日志。只是在这两处日志的TAG是不一样的，方便面我们进行区分。现在将两个程序都安装运行在模式器上，然后启动MaterialTest程序。此时onCreate()、onStart()和onResume()方法会依次得到执行，然后长按Overview按钮，进入多窗口模式，此时MaterialTest中的MainActivity经历了一个重新创建的过程。其实这个是正常现象，因为进入多窗口模式后活动的大小发生了比较大的变化，此时默认是重新创建活动的。除此之外，像横竖屏也是会重新创建活动的。进入多窗口模式后，MaterialTest变成暂停状态。接着在Overview按钮选中advanced程序，然后此程序的onCreate()、onStart()和onResume()方法依次得到执行，说明现在advanced程序变成了运行状态。接下来我们随意操作一下MaterialTest程序，然后观察Logcat中的打印日志，现在advanced程序的onPause()方法得到了执行，而MaterialTest的onResume()方法得到了执行，说明advanced变成了暂停状态，MaterialTest则变成运行状态.  
+&emsp;&emsp;了解了多窗口模式下活动的生命周期规则，那么我们在编写程序的时候，就可以将一些关键性的点考虑进去了。比如说，在多窗口模式下，用户仍然可以处于暂停状态的应用，那么像视频播放器之类的应用在此时就可以继续播放视频才对。因此，我们最好不要在活动的onPause()方法中去处理视频播放器的暂停逻辑，而是应该在onStop()方法中去处理，并且在onStart()方法去恢复视频的播放。  
+&emsp;&emsp;另外，针对进入多窗口模式时活动会被重新创建，如果你想要改变这一默认行为，可以在AndroidManifest.xml中对活动进行如下配置：  
+```xml
+<activity 
+    android:name=".MainActivity"
+    android:label="Fruits"
+    android:configChanges="orientation|keyboardHidden|screenSize|screenLayout">
+    
+</activity>
+```
+&emsp;&emsp;加入了这行配置，不管是进入多窗口模式，还是横竖屏切换，活动都不会被重新创建，而是会将屏幕发生辩护的事件通知到Activity的onConfigurationChanged()方法当中。因此，如果你想在屏幕发生变化的时候进行相应的逻辑处理，那么在活动中重写onConfigurationChanged()方法即可。
