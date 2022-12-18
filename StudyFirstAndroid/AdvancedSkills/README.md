@@ -687,7 +687,7 @@ public class LongRunningService extends Service {
 &emsp;&emsp;首先你需要知道，我们不用编写任何额外的代码来让应用程序支持多窗口模式。但是这并不意味着我们就不需要对多窗口模式进行学习，因为系统化地了解这些知识点才能编写出多窗口模式下兼容性更好的程序。  
 &emsp;&emsp;在多窗口模式下，整个应用的界面会缩小很多，那么编写程序时就应该多考虑使用match_parent属性、RecyclerView、ListView、ScrollView等控件，来让应用的界面能够更好地适配各种不同尺寸的屏幕，尽量不要出现屏幕尺寸变化过大时界面就无法正常显示的情况。  
 
-## 13.6.2 多窗口模式下的生命周期  
+### 13.6.2 多窗口模式下的生命周期  
 c接下来我们学习一下多窗口模式下的生命周期。其实多窗口模式并不会改变活动原有的生命周期，只是会将用户最近交互过的那个活动设置成运行状态，而将多窗口模式下另外一个可见的活动设置为暂停状态。如果这时用户又去和暂停的活动进行交互，那么该活动就变成运行状态，之前处于运行状态的活动变成暂停状态。新建一个MaterialTest项目，修改MainActivity中的代码，如下所示：
 
 ```java
@@ -814,3 +814,18 @@ public class MainActivity extends AppCompatActivity {
 </activity>
 ```
 &emsp;&emsp;加入了这行配置，不管是进入多窗口模式，还是横竖屏切换，活动都不会被重新创建，而是会将屏幕发生辩护的事件通知到Activity的onConfigurationChanged()方法当中。因此，如果你想在屏幕发生变化的时候进行相应的逻辑处理，那么在活动中重写onConfigurationChanged()方法即可。
+
+### 13.6.3 禁用多窗口模式
+
+&emsp;&emsp;多窗口模式虽然功能非常强大，但是未必就适用所有的程序。比如说，手机游戏就非常不适合在多窗口模式下运行，很难想象我们如何一边玩着游戏，一边又操作着其他应用。因此，Android还是给我们提供了禁用多窗口模式的选项，如果你非常不希望自己的应用能够在多窗口模式下运行，那么就可以将这个功能关闭掉。  
+&emsp;&emsp;禁用多窗口模式的方法非常简单，只需要在AndroidManifest.xml中的<application>或<activity>标签中加入如下属性即可：  
+> android:resizableActivity=["true"|"false"]
+
+&emsp;&emsp;其中，true表示支持多窗口模式，false表示应用不支持多窗口模式，如果不配置这个属性，那么默认值为true。当我们设置false后应用是无法进入到多窗口模式，而且屏幕下方还会弹出一个Toast提示来告知用户，当前应用不支持多窗口模式。  
+&emsp;&emsp;虽说android:resizableActivity这个属性的用法很简单，而且它还存在着一个问题，就是这个属性只有当项目的targetSdkVersion指定成24或者跟高的时候才会有用，否则这个属性就是无敌的，那么比如时候我们将项目的targetSdkVersion指定成23，这个时候尝试进入多窗口模式，但是界面上弹出了一个提示，告知我们此应用在多窗口模式下可能无法正常工作，但还是进入了多窗口模式。那这样我们就非常头疼了，因为有很多的老项目，它们的targetSdkVersion都没有指定到24，岂不是这些老项目都无法禁用多窗口模式了？  
+&emsp;&emsp;针对这个情况，还有一种解决方案。Android规定，如果项目指定的targetSdkVersion低于24，并且活动是不允许横竖切换，难么该应用也将多支持多窗口模式。  
+&emsp;&emsp;默认情况下，我们的应用都是可以随着手机的旋转手机的旋转自由地横竖屏，那么就需要在AndroidManifest.xml的<activity>标签中加入如下配置：  
+> android:screenOrientation=["portrait"|"landscape"]
+
+&emsp;&emsp;其中，portrait表示活动中支持竖屏，landscape表示活动只支持横屏。当然android:screenOrientation属性中还有很多其他可选值，不过最常用的就是portrait和landscape。
+
