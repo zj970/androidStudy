@@ -829,3 +829,148 @@ public class MainActivity extends AppCompatActivity {
 
 &emsp;&emsp;其中，portrait表示活动中支持竖屏，landscape表示活动只支持横屏。当然android:screenOrientation属性中还有很多其他可选值，不过最常用的就是portrait和landscape。
 
+## 13.7 Lambda表达式  
+&emsp;&emsp;Java 8 中着实引入了一些非常有特色的功能，如Lambda表达式、stream API 、接口默认实现等等。虽说我们本地安装的JDK就是Java 8的版本。  
+&emsp;&emsp;现在能够立即应用到项目当中的也就只有Lambda表达式而已，因为stream API 和接口默认实现等特性都只支持Android 7.0及以上的系统，我们显然不可能为了使用这些新特性而放弃兼容众多低版本的Android手机了。  
+&emsp;&emsp;Lambda表达式本质上是一种匿名方法，它既没有方法名，也即没有访问修饰符和返回值类型，使用它来编写代码将会更加简洁，也更加易读。  
+&emsp;&emsp;如果想使用Lambda表达式或者Java 8的其他新特性，我们需要在build.gradle中进行配置：  
+```
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+```
+&emsp;&emsp;只有就可以使用Lambda表达式来编写代码，比如说传统情况下开启一个子线程的写法如下：  
+
+```
+new Thread(new Runnable() {
+    @Override
+    public void run() {
+        //处理具体的逻辑
+    }
+}).start();
+
+//而使用Lambda表达式则可以这样写：  
+new Thread(() ->{
+    //处理具体的逻辑
+}).start();
+```
+&emsp;&emsp;不管从代码行数还是缩进结构上来看，Lambda表达式的写法明显要更加精简。那么为什么我们可以使用这么神奇的写法呢？首先Lambda表达式的使用前提必须是函数式接口和可推导可省略。因为Thread类的构造函数接收的参数是一个Runnable接口，并且该接口中只有一个待实现方法。我们查看一下Runnable接口的源码，如下所示：  
+
+```java
+@FunctionalInterface
+public interface Runnable {
+    /**
+     * When an object implementing interface <code>Runnable</code> is used
+     * to create a thread, starting the thread causes the object's
+     * <code>run</code> method to be called in that separately executing
+     * thread.
+     * <p>
+     * The general contract of the method <code>run</code> is that it may
+     * take any action whatsoever.
+     *
+     * @see     java.lang.Thread#run()
+     */
+    public abstract void run();
+}
+
+```
+&emsp;&emsp;凡是这种只有一个待实现方法的接口，都可以使用Lambda表达式的写法。比如说，通常创建一个类似于上述接口的匿名类实现需要这样写：  
+
+```
+Runnable runnable = new Runnable(){
+    @Override
+    public void run() {
+        //处理具体的逻辑
+    }
+};
+//而有了Lambbda表达式
+Runnable runnable = () ->{
+    //处理具体的逻辑
+};
+```
+&emsp;&emsp;了解了Lambda表达式的基本写法，接下来我们尝试自定义一个接口，然后再使用Lambda表达式的方法进行实现。新建一个MyListener接口，代码如下所示：  
+```java
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @create: 2022/12/18
+ * @FileName: MyListener
+ */
+
+
+package com.zj970.materialtest;
+
+/**
+ * <p>
+ *
+ * </p>
+ * @author: zj970
+ * @date: 2022/12/18
+ */
+public interface MyListener {
+    /**
+     *
+     * @param a
+     * @param b
+     * @return
+     */
+    String doSomething(String a, int b);
+}
+```
+
+&emsp;&emsp;MyListener接口中也只有一个待实现方法，这和Runnable接口的结构是基本一致的。唯一不同的是，MyListener中的doSomething()方法是有参数并且有返回值的，那么我们就来看一看这种情况下该如何使用Lambda表达式进行实现。  
+&emsp;&emsp;其实写法也比较相似的，使用Lambda表达式创建MyListener接口的匿名实现写法如下：  
+```
+MyListener listener = (String a, int b) -> {
+    String result = a + b;
+    return result;
+};
+```
+&emsp;&emsp;可以看到，doSomething()方法的参数直接写在括号里面就可以了，而返回值仍然像往常一样，写在具体实现的最后一行即可。另外，Java还可以根据上下文自动推断出Lambda表达式中的参数类型，因此上面的代码也可以简化如下写法：  
+```
+MyListener listener = (a, b) -> {
+    String result = a + b;
+    return result;
+};
+```
+&emsp;&emsp;Java将会自动退出参数a是String类型，参数b是int类型，从而使得我们的代码变得更加精简了。接下来举个具体的例子，比如说现在有一个方法是接收MyListener参数的，如下所示：  
+```
+public void hello(MyListener listener){
+    String a = "hello lambda";
+    int b = 1024;
+    String result = listener.doSomething(a,b);
+    Log.d(TAG, result);
+}
+```
+
+&emsp;&emsp;我们在调用hello()方法的时候就可以这样写：  
+```
+hello((a, b) -> {
+    String result = a + b;
+    return result;
+});
+```
+&emsp;&emsp;那么doSomething()方法就会将a和b两个参数进行相加，从而最终的打印结果就会是"hello doSomething1024"。现在你已经将Lambda表达式表达式的写法基本都掌握了，接下来我们看一看在Android当中有哪些常用的功能是可以使用Lambda表达式进行替换的。  
+&emsp;&emsp;其实只要是符合接口中只有一个待实现方法这个规则的功能，都是可以使用Lambda表达式来编写。除了刚才举例说明的开启子线程之外，还有像设置点击事件之类的功能也是非常适合使用Lambda表达式的。传统情况下，我们给一个按钮设置点击事件需要这样写：  
+```
+Button button = findViewById(R.id.button);
+button.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View v) {
+        //处理点击事件
+    }
+});
+//而使用Lambda表达式之后，就可以将代码简化成这个样子了：
+button.setOnClickListener((v)->{
+    //处理点击事件
+});
+//另外，当接口的待实现方法有且只有一个参数的时候，我们还可以进一步简化，将参数外面的括号去掉，如下所示： 
+button.setOnClickListener(v ->{
+    //处理点击事件
+});
+```
+&emsp;&emsp;这样我们就将Lambda表达式的主要内容都掌握了。当然，有些人可能并不喜欢Lambda表达式这种极简主义的写法。不管你喜欢与否，Java 8对于哪一种写法都是完全支持的，至于到底要不要使用Lambda表达式其实全凭个人，多一种选择总归不是一件坏事情。
