@@ -479,7 +479,7 @@ import lombok.Setter;
  */
 @Setter
 @Getter
-public class City {
+public class City extends LitePalSupport {
     private int id;
     /**
      * 市的名字
@@ -513,7 +513,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class County {
+public class County extends LitePalSupport {
     private int id;
     /**
      * 县名
@@ -550,23 +550,27 @@ public class County {
 package com.coolweather.android.base;
 
 import android.app.Application;
+import android.content.Context;
 import org.litepal.LitePal;
 
 /**
  * <p>
- *
+ *  全局获取Context
  * </p>
  *
  * @author: zj970
  * @date: 2022/12/19
  */
 public class MyApplication extends Application {
+    public static Context context;
     @Override
     public void onCreate() {
         super.onCreate();
+        context = this;
         LitePal.initialize(this);
     }
 }
+
 ```
 &emsp;&emsp;最后还需要修改AndroidManifest.xml中的代码，如下所示：
 
@@ -586,3 +590,469 @@ public class MyApplication extends Application {
 
 </manifest>
 ```
+## 14.3 遍历全国省市县数据
+
+&emsp;&emsp;在第阶段中，我们准备把遍历全国省市县的功能加入，这一阶段需要编写的代码量比较大。我们已经知道，全国所有省市县的数据都是从服务器端获取到的，因此这里和服务器的交互是必不可少的，所以我们可以在util包先增加一个HttpUtil类，代码如下所示：  
+```java
+package com.coolweather.android.util;
+
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+
+/**
+ * <p>
+ * 网络工具类
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/19
+ */
+public class HttpUtil {
+    public static void sendOkHttpRequest(String address, okhttp3.Callback callback){
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder().url(address).build();
+        client.newCall(request).enqueue(callback);
+    }
+}
+
+```
+&emsp;&emsp;由于OkHttp的出色封装，这里和服务器进行交互的代码非常简单，仅仅3行就完成了。现在我们发起一条HTTP请求只需要调用sendOkHttpRequest()方法，传入请求地址，并注册一个回调来处理服务器响应就可以了。  
+&emsp;&emsp;另外，由于服务器返回的省市县数据都是JSON格式的，所有我们最好再提供一个工具来解析和处理这种数据。在util包下新建一个Utility类，代码如下所示：  
+```java
+package com.coolweather.android.util;
+
+import android.text.TextUtils;
+import com.coolweather.android.db.City;
+import com.coolweather.android.db.County;
+import com.coolweather.android.db.Province;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+/**
+ * <p>
+ * 处理数据
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/19
+ */
+public class Utility {
+    /**
+     * 解析和处理服务器返回的省级数据
+     * @param response 请求返回体
+     * @return
+     */
+    public static boolean handleProvinceResponse(String response) {
+        if (!TextUtils.isEmpty(response)){
+            try {
+                JSONArray allProvinces = new JSONArray(response);
+                for (int i = 0; i < allProvinces.length(); i++) {
+                    JSONObject provinceObject = allProvinces.getJSONObject(i);
+                    Province province = new Province();
+                    province.setProvinceName(provinceObject.getString("name"));
+                    province.setProvinceCode(provinceObject.getInt("id"));
+                    province.save();
+                }
+                return true;
+            } catch (JSONException e){
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 解析和处理服务器返回的市级数据
+     * @param response 请求返回体
+     * @param provinceId 省级id
+     * @return
+     */
+    public static boolean handleCityResponse(String response, int provinceId){
+        if (!TextUtils.isEmpty(response)) {
+            try {
+                JSONArray allCities = new JSONArray(response);
+                for (int i = 0; i < allCities.length(); i++) {
+                    JSONObject cityObject = allCities.getJSONObject(i);
+                    City city = new City();
+                    city.setCityName(cityObject.getString("name"));
+                    city.setCityCode(cityObject.getInt("id"));
+                    city.setProvinceId(provinceId);
+                    city.save();
+                }
+                return true;
+            } catch (JSONException e){
+                e.printStackTrace();
+            }
+
+        }
+        return false;
+    }
+
+    /**
+     * 解析和处理服务器返回的县级数据
+     * @param response 请求返回体
+     * @param cityId 市id
+     * @return
+     */
+    public static boolean handleCountyResponse(String response, int cityId){
+        if (!TextUtils.isEmpty(response)) {
+            try {
+                JSONArray allCounties = new JSONArray(response);
+                for (int i = 0; i < allCounties.length(); i++) {
+                    JSONObject countyObject = allCounties.getJSONObject(i);
+                    County county = new County();
+                    county.setCountyName(countyObject.getString("name"));
+                    county.setWeatherId(countyObject.getString("weather_id"));
+                    county.setCityId(cityId);
+                    county.save();
+                }
+                return true;
+            } catch (JSONException e){
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+}
+
+```
+
+&emsp;&emsp;可以看到，我们提供了handleProvinceResponse()、handleCityResponse()和handleCountyResponse()这3个方法，分别用于解析和处理服务器返回的省级、市级和县级数据。处理的方式都是类似的，先使用JSONArray和JSONObject将数据解析出来，然后组装成实体类对象，再调用save()方法将数据存储到数据库当中。由于这里的JSON数据结构比较简单，我们就不使用GSON来进行解析了。  
+&emsp;&emsp;需要准备的工具类就这么多，现在可以开始写界面了。由于遍历全国省市县的功能我们在后面还会复用，因此不写在活动里面，而是写在碎片里面。这样复用的时候直接在布局里面引用碎片就可以了。在res/layout目录中新建choose_area.xml布局，代码如下所示：  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:background="#fff"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="?android:attr/actionBarSize"
+        android:background="?android:attr/colorPrimary">
+        <TextView
+            android:id="@+id/title_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:textColor="#fff"
+            android:textSize="20sp"/>
+        <Button
+            android:id="@+id/back_button"
+            android:layout_width="25dp"
+            android:layout_height="25dp"
+            android:layout_marginLeft="10dp"
+            android:layout_alignParentLeft="true"
+            android:background="@drawable/ic_back"/>
+    </RelativeLayout>
+    <ListView
+        android:id="@+id/list_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+</LinearLayout>
+```
+
+&emsp;&emsp;布局文件的内容并不复杂，我们先是定义了一个头布局来作为标题栏，将布局高度设置为actionBar的高度，背景色设置为colorPrimary。然后在头布局中放置了一个TextView用于显示标题内容放置了Button用于执行返回操作。这里之所以要自己定义标题栏，是因为碎片中最好不要直接使用ActionBar或Toolbar，不然在复用的时候可能会出现一些你不想看到的效果。  
+&emsp;&emsp;接下来在头布局的下面定义了一个ListView，省市县的数据就将显示在这里。之所以这次使用了ListView，是因为它会自动给每个子项之间添加一条分割线，而如果使用RecyclerView想实现同样的功能则会比较麻烦，这里我们总是选择最优的实现方案。接下来也是最关键的一步，我们需要编写用于遍历省市县数据的碎片了。新建ChooseAreaFragment继承自Fragment，代码如下所示：  
+```java
+package com.coolweather.android;
+
+import android.app.ProgressDialog;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.*;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+import com.coolweather.android.db.City;
+import com.coolweather.android.db.County;
+import com.coolweather.android.db.Province;
+import com.coolweather.android.util.HttpUtil;
+import com.coolweather.android.util.Utility;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+import org.jetbrains.annotations.NotNull;
+import org.litepal.LitePal;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/19
+ */
+public class ChooseAreaFragment extends Fragment {
+    public static final int LEVEL_PROVINCE = 0;
+    public static final int LEVEL_CITY = 1;
+    public static final int LEVEL_COUNTY = 2;
+    private TextView titleText;
+    private Button backButton;
+    private ListView listView;
+    private ArrayAdapter<String> adapter;
+    private List<String> dataList = new ArrayList<String>();
+    private static final String URL = "http://guolin.tech/api/china";
+    private ProgressDialog progressDialog;
+    /**
+     * 省列表
+     */
+    private List<Province> provinceList;
+    /**
+     * 市列表
+     */
+    private List<City> cityList;
+    /**
+     * 县列表
+     */
+    private List<County> countyList;
+
+    /**
+     * 选中的省份
+     */
+    private Province selectedProvince = null;
+    /**
+     * 选中的城市
+     */
+    private City selectedCity = null;
+    /**
+     * 选中的级别
+     */
+    private int currentLevel;
+
+    @Nullable
+    @org.jetbrains.annotations.Nullable
+    @Override
+    public View onCreateView(@NonNull @NotNull LayoutInflater inflater, @Nullable @org.jetbrains.annotations.Nullable ViewGroup container, @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.choose_area, container, false);
+        titleText = view.findViewById(R.id.title_text);
+        backButton = view.findViewById(R.id.back_button);
+        listView = view.findViewById(R.id.list_view);
+        adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, dataList);
+        listView.setAdapter(adapter);
+        return view;
+    }
+
+    @Override
+    public void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (currentLevel == LEVEL_PROVINCE) {
+                    selectedProvince = provinceList.get(position);
+                    queryCities();
+                } else if (currentLevel == LEVEL_CITY) {
+                    selectedCity = cityList.get(position);
+                    queryCounties();
+                }
+            }
+        });
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (currentLevel == LEVEL_COUNTY) {
+                    queryCities();
+                } else if (currentLevel == LEVEL_CITY) {
+                    queryProvinces();
+                }
+            }
+        });
+        queryProvinces();
+    }
+
+    /**
+     * 查询全国所有的省，优先从数据库查询，如果没有查询到再去服务器上查询
+     */
+    private void queryProvinces() {
+        titleText.setText("中国");
+        backButton.setVisibility(View.GONE);
+        provinceList = LitePal.findAll(Province.class);
+        if (provinceList.size() > 0) {
+            dataList.clear();
+            for (Province province : provinceList) {
+                dataList.add(province.getProvinceName());
+            }
+            adapter.notifyDataSetChanged();
+            listView.setSelection(0);
+            currentLevel = LEVEL_PROVINCE;
+        } else {
+            String address = URL;
+            queryFromServer(address, "province");
+        }
+    }
+
+    /**
+     * 查询选中省内所有的市，优先从数据库查询，，如果没有查询到再去服务器上查询
+     */
+    private void queryCities() {
+        titleText.setText(selectedProvince.getProvinceName());
+        backButton.setVisibility(View.VISIBLE);
+        cityList = LitePal.where("provinceid = ?", String.valueOf(selectedProvince.getId())).find(City.class);
+
+        if (cityList.size() > 0) {
+            dataList.clear();
+            for (City city : cityList) {
+                dataList.add(city.getCityName());
+            }
+            adapter.notifyDataSetChanged();
+            listView.setSelection(0);
+            currentLevel = LEVEL_CITY;
+        } else {
+            int provinceCode = selectedProvince.getProvinceCode();
+            String address = URL + "/" + provinceCode;
+            queryFromServer(address, "city");
+        }
+    }
+
+    /**
+     * 查询选中市内所有县，优先从数据库查询，如果没有查询到再去服务器上查询
+     */
+    private void queryCounties() {
+        titleText.setText(selectedCity.getCityName());
+        backButton.setVisibility(View.VISIBLE);
+        countyList = LitePal.where("cityid = ?", String.valueOf(selectedCity.getId())).find(County.class);
+        if (countyList.size() > 0) {
+            dataList.clear();
+            for (County county : countyList) {
+                dataList.add(county.getCountyName());
+            }
+            adapter.notifyDataSetChanged();
+            listView.setSelection(0);
+            currentLevel = LEVEL_COUNTY;
+        } else {
+            int provinceCode = selectedProvince.getProvinceCode();
+            int cityCode = selectedCity.getCityCode();
+            String address = URL + "/" + provinceCode + "/" + cityCode;
+            queryFromServer(address, "county");
+        }
+    }
+
+    /**
+     * 根据传入的地址和类型从服务器上查询省市县数据
+     */
+    private void queryFromServer(String address, final String type){
+        showProgressDialog();
+        HttpUtil.sendOkHttpRequest(address, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                //通过runOnUiThread()方法回到主线程处理逻辑
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        closeProgressDialog();
+                        Toast.makeText(getActivity(), "加载失败",Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String responseText = response.body().string();
+                boolean result = false;
+                if ("province".equals(type)) {
+                    result = Utility.handleProvinceResponse(responseText);
+                } else if ("city".equals(type)){
+                    result = Utility.handleCityResponse(responseText,selectedProvince.getId());
+                } else if ("county".equals(type)){
+                    result = Utility.handleCountyResponse(responseText,selectedCity.getId());
+                }
+
+                if (result){
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            closeProgressDialog();
+                            if("province".equals(type)){
+                                queryProvinces();
+                            } else if("city".equals(type)){
+                                queryCities();
+                            } else if("county".equals(type)){
+                                queryCounties();
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    /**
+     * 显示进度对话框
+     */
+    private void showProgressDialog(){
+        if (progressDialog != null){
+            progressDialog = new ProgressDialog(getContext());
+            progressDialog.setMessage("正在加载...");
+            progressDialog.setCanceledOnTouchOutside(false);
+        }
+        progressDialog.show();
+    }
+
+    /**
+     * 关闭进度对话框
+     */
+    private void closeProgressDialog(){
+        if (progressDialog!= null){
+            progressDialog.dismiss();
+        }
+    }
+}
+
+```
+
+&emsp;&emsp;这个类里的代码虽然非常多，可是逻辑却不复杂，我们来慢慢理一下。在onCreate()方法中先是获取到了一些控件的实例，然后去初始化了ArrayAdapter，并将它设置为ListView的适配器。接着在onActivityCreated()方法中给ListView和Button设置了点击事件，到这里我们的初始化工作就算是完成了。  
+&emsp;&emsp;在onCreated()方法的最后，调用了queryProvinces()方法，也就是从这里开始加载省级数据。queryProvinces()方法首先会将有布局的标题设置成中国，将返回的按钮隐藏起来，因为省级列表已经不能再返回了。然后调用LitePal的查询接口来从数据库中读取省级数据，如果读取到了就直接将数据显示到界面上，如果没有读取到就按照14.1节讲述的接口组装出一个请求地址，然后调用queryFromServer()方法来从服务器上查询数据。  
+&emsp;&emsp;queryFromServer()方法中会调用HttpUtil的sendOkHttpRequest()方法来向服务器发送请求，响应的数据会回调到onResponse()方法中，然后我们在这里去调用Utility的handleProvinceResponse()方法来解析和处理服务器返回的数据，并存储到数据库中。接下来的一步很关键，在解析和处理完数据之后，我们再次调用了queryProvinces()方法重新加载省级数据，由于queryProvinces()方法牵扯到了UI操作，因此必须要在主线程中调用，这里借助了runOnUiThread()方法来实现从子线程切回主线程。现在数据库中已经存在了数据，因此调用queryProvinces()就会直接将数据显示到界面上。  
+&emsp;&emsp;当你点击了某个省份的时候会进入到ListView的onItemClick()方法中，这个时候会根据当前的级别来判断是去调用queryCities()方法还是queryCounties()方法，queryCities()方法是去查询市级数据，而queryCounties()方法是去查询县级数据，这两个方法内部的流程和queryProvinces()方法基本相同，这里就不重复讲解了。  
+&emsp;&emsp;另外还有一点需要注意，在返回按钮的点击事件里，会对当前ListView的列表级别进行判断。如果当前是县级列表，那么就返回市级列表，如果当前是市级列表，那么就返回到省级列表。当返回到省级列表时，返回按钮会自动隐藏，从而也就不需要再进一步的处理了。  
+&emsp;&emsp;这样我们就把遍历全国省市县的功能完成了，可是碎片是不能直接显示到界面上，因此我们还需要把它添加活动里面才行。修改activity_main.xml中的代码，如下所示：  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
+    <fragment
+        android:id="@+id/chose_area_fragment"
+        android:name="com.coolweather.android.ChooseAreaFragment"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+
+</FrameLayout>
+```
+
+&emsp;&emsp;布局文件很简单，只是定义了一个FrameLayout，然后将ChooseAreaFragment添加进来，并让它充满整个布局。另外，我们刚才在碎片的布局里面已经自定义了一个标题栏，因此就不再需要原生的ActionBar了，修改res/values/theme.xml中的代码，如下所示：  
+
+```xml
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Theme.CoolWeather" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorPrimaryVariant">@color/purple_700</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/teal_200</item>
+        <item name="colorSecondaryVariant">@color/teal_700</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor" tools:targetApi="l">?attr/colorPrimaryVariant</item>
+        <!-- Customize your theme here. -->
+    </style>
+</resources>
+```
+
+&emsp;&emsp;现在第二阶段的开发工作也完成得差不多了，我们可以运行一下运行看一看效果。在运行一下之前加入声明程序所需的权限。运行效果如下：  
+
+![img_1.png](img_1.png)

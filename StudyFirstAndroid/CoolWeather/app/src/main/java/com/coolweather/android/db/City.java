@@ -2,6 +2,7 @@ package com.coolweather.android.db;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.litepal.crud.LitePalSupport;
 
 /**
  * <p>
@@ -13,7 +14,7 @@ import lombok.Setter;
  */
 @Setter
 @Getter
-public class City {
+public class City extends LitePalSupport {
     private int id;
     /**
      * 市的名字
