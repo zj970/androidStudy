@@ -403,4 +403,186 @@
 ```
 
 &emsp;&emsp;所有天气数据均为模拟数据，仅用作学习目的使用，请勿当作真实的天气预报软件来使用。返回数据的格式大体上就是这个样子，其中status代表请求的状态，ok表示成功。basic中包含城市的一些基本信息，aqi中会包含当前空气质量的情况，now中会包含当前的天气信息，suggestion中会包含一些天气相关的生活建议,daily_forecast中会包含未来几天的天气信息。访问http://guolin.tech/api/weather/doc这个网站可以查看更加详细的文档说明。  
-&emsp;&emsp;数据都能获取到了之后，接下来就是JSON解析的工作了，这对于你来说应该很轻松了吧?确定了技术完全可行之后，接下来就可以开始编码了。至于将项目托管到github上这里就不赘述了。
+&emsp;&emsp;数据都能获取到了之后，接下来就是JSON解析的工作了，这对于你来说应该很轻松了吧?确定了技术完全可行之后，接下来就可以开始编码了。至于将项目托管到github上这里就不赘述了。  
+
+## 14.2 创建数据库和表  
+&emsp;&emsp;从本节开始，我们就要真正地动手编码了，为了要让项目能够有更好的结构，这里需要在com.coolweather.android包下再新建几个包，如图所示：  
+![img.png](img.png)
+
+&emsp;&emsp;其中db包用于存放数据库模型相关的代码，gson包用于存放GSON模型相关的代码，service包用于存放服务相关的代码，util包用于存放工具相关的代码。  
+&emsp;&emsp;根据14.1节进行的技术可行性分析，第一阶段我们要做的就是创建好数据库和表，这样从服务器获取到的数据才能存储到本地。关于数据库和表的创建方式，我们早在第6章中就已经学过了。那么为了简化数据库操作，这里我准备使用LitePal来管理酷欧天气的数据库。  
+&emsp;&emsp;首先需要将项目所需要的各种依赖库进行声明，编辑app/build.gradle文件，在dependencies闭包中添加如下内容：
+
+```groovy
+dependencies {
+
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'com.google.android.material:material:1.7.0'
+    testImplementation 'junit:junit:4.+'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.4'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
+    //https://github.com/guolindev/LitePal
+    implementation 'org.litepal.guolindev:core:3.2.3'
+    // define a BOM and its version
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.10.0"))
+    // define any required OkHttp artifacts without version
+    implementation("com.squareup.okhttp3:okhttp")
+    implementation("com.squareup.okhttp3:logging-interceptor")
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    implementation 'com.google.code.gson:gson:2.10'
+    // https://mvnrepository.com/artifact/com.github.bumptech.glide/glide
+    implementation 'com.github.bumptech.glide:glide:4.14.2'
+    // https://mvnrepository.com/artifact/org.projectlombok/lombok
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+}
+```
+
+&emsp;&emsp;这里声明的4个库我们之前都是使用过的，LitePal用于对数据库进行操作，OkHttp用于进行网络请求，GSON用于解析JSON数据，Glide用于加载和展示图片。酷欧天气将会对这几个库进行综合运用，这里直接一次性将它们都添加进来,lombok是一种java实用工具，可以帮助开发人员消除Java的冗长，尤其是对于简单的Java对象(POJO)。  
+&emsp;&emsp;然后我们来设计一下数据库的表结构，表的设计当然是仁者见仁，智者见智，并不是说哪种设计就是最规范最完美的。这里我准备建立3张表：province、city、county，分别用于存放省、市、县的数据信息。对应到实体类中的话，就应该建立Province、City、County这3个类。那么，在db包下新建一个Province类，代码如下所示：  
+```java
+package com.coolweather.android.db;
+
+import lombok.Getter;
+import lombok.Setter;
+import org.litepal.crud.LitePalSupport;
+
+/**
+ * <p>
+ * 省份实体类
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/19
+ */
+@Getter
+@Setter
+public class Province extends LitePalSupport {
+    private int id;
+    private String provinceName;
+    private int provinceCode;
+}
+```
+&emsp;&emsp;其中，id是每个实体类中应该有的字段，provinceName记录省的名字，provinceCode记录省的代号。另外，LitePal中的每一个实体类都是必须继承自LitePalSupport而不是DataSupport。接着在db下新建一个City类，代码如下所示:  
+```java
+package com.coolweather.android.db;
+
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+ * <p>
+ * 市实体类
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/19
+ */
+@Setter
+@Getter
+public class City {
+    private int id;
+    /**
+     * 市的名字
+     */
+    private String cityName;
+    /**
+     * 市的代号
+     */
+    private int cityCode;
+    /**
+     * 当前市所属省份的id
+     */
+    private int provinceId;
+}
+```
+&emsp;&emsp;其中，cityName记录市的名字，cityCode记录市的代号，provinceId记录当前市所属省的id值，然后在db包下新建一个County类，代码如下所示：  
+
+```java
+package com.coolweather.android.db;
+
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+ * <p>
+ * 城市实体类
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/19
+ */
+@Getter
+@Setter
+public class County {
+    private int id;
+    /**
+     * 县名
+     */
+    private String countyName;
+    /**
+     * 县所对应的天气id
+     */
+    private String weatherId;
+    /**
+     * 当前县所属市的id值
+     */
+    private int cityId;
+}
+
+```
+&emsp;&emsp;其中，countyName记录县的名字，weatherId记录县所对应的天气id，cityId记录当前县所属市的id值。可以看到，实体类的内容都非常简单，就是声明了一些需要的字段，并生成相应的getter和setter方法就可以了。  
+&emsp;&emsp;接下来需要配置litepal.xml文件。创建一个assets目录，然后新建此文件，并编辑litepal.xml文件中的内容，如下所示：  
+
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<litepal>
+    <dname value="cool_weather"></dname>
+    <version value="1"></version>
+    <list>
+        <mapping class="com.coolweather.android.db.Province"/>
+        <mapping class="com.coolweather.android.db.City"/>
+        <mapping class="com.coolweather.android.db.County"/>
+    </list>
+</litepal>
+```
+&emsp;&emsp;这里我们将数据名指定成cool_weather，数据库版本指定成1，并将Province、City和County这3个实体类添加到映射列表当中。最后还需要配置一下LitePalApplication，这里使用自定义Application，代码如下所示：  
+```java
+package com.coolweather.android.base;
+
+import android.app.Application;
+import org.litepal.LitePal;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/19
+ */
+public class MyApplication extends Application {
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        LitePal.initialize(this);
+    }
+}
+```
+&emsp;&emsp;最后还需要修改AndroidManifest.xml中的代码，如下所示：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.coolweather.android">
+
+    <application
+            android:name="com.coolweather.android.base.MyApplication"
+            android:allowBackup="true"
+            android:label="@string/app_name"
+            android:icon="@mipmap/ic_launcher"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/Theme.CoolWeather"/>
+
+</manifest>
+```
