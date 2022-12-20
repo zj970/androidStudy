@@ -1055,4 +1055,13 @@ public class ChooseAreaFragment extends Fragment {
 
 &emsp;&emsp;现在第二阶段的开发工作也完成得差不多了，我们可以运行一下运行看一看效果。在运行一下之前加入声明程序所需的权限。运行效果如下：  
 
+- 省份显示图
 ![img_1.png](img_1.png)
+
+- 市级显示图(江苏省)
+
+![img_2.png](img_2.png)
+
+- 县级显示图(苏州市)
+
+![img_3.png](img_3.png)

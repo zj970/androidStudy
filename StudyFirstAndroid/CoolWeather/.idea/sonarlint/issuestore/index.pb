@@ -24,3 +24,13 @@ X
 settings.gradle,0/5/05efc8b1657769a27696d478ded1e95f38737233
 }
 Mapp/src/androidTest/java/com/coolweather/android/ExampleInstrumentedTest.java,4/d/4d15a95f4a0679c0dbd396dd7368758254941b19
+=
+lombok.config,8/2/823fe80d2650ec87c2614800da17ca3a55af96a9
+k
+;app/src/main/java/com/coolweather/android/MainActivity.java,6/d/6db9939136654dca3b0473037fa708c5c9482fc4
+P
+ app/src/main/AndroidManifest.xml,8/c/8c55c3ccc257e5907959013f99656e4c8ec3903e
+@
+app/build.gradle,f/4/f4a01d6a4fcb971362ec00a83903fd3902f52164
+q
+Aapp/src/main/java/com/coolweather/android/base/MyApplication.java,a/1/a1935034fec909fa0fecf71e635c18497f7d39b0

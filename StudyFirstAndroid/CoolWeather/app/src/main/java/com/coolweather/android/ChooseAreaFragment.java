@@ -13,6 +13,7 @@ import com.coolweather.android.db.City;
 import com.coolweather.android.db.County;
 import com.coolweather.android.db.Province;
 import com.coolweather.android.util.HttpUtil;
+import com.coolweather.android.util.LogUtil;
 import com.coolweather.android.util.Utility;
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -33,6 +34,7 @@ import java.util.List;
  * @date: 2022/12/19
  */
 public class ChooseAreaFragment extends Fragment {
+    private static final String TAG = ChooseAreaFragment.class.getSimpleName();
     public static final int LEVEL_PROVINCE = 0;
     public static final int LEVEL_CITY = 1;
     public static final int LEVEL_COUNTY = 2;
@@ -91,6 +93,7 @@ public class ChooseAreaFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (currentLevel == LEVEL_PROVINCE) {
                     selectedProvince = provinceList.get(position);
+                    LogUtil.d(TAG, "LEVEL_PROVINCE");
                     queryCities();
                 } else if (currentLevel == LEVEL_CITY) {
                     selectedCity = cityList.get(position);
