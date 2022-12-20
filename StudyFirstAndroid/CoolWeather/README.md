@@ -1065,3 +1065,484 @@ public class ChooseAreaFragment extends Fragment {
 - 县级显示图(苏州市)
 
 ![img_3.png](img_3.png)
+
+## 14.4 显示天气信息  
+&emsp;&emsp;第三阶段中，我们就要开始去查询天气，并且把天气信息显示出来了。由于和风天气返回的JSON数据结构非常复杂，如果还使用JSONObject来解析就会很麻烦，这里我们就准备借助GSON对天气信息进行解析了。  
+### 14.4.1 定义GSON实体类  
+&emsp;&emsp;GSON的用法很简单，解析数据只需要一行代码就能完成了，但前提是要先将数据对应的实体类创建好。由于和风天气返回的数据内容非常多，这里我们不可能将所有的内容都利用起来，因此我刷选了一些比较重要的数据进行解析。首先回顾一下返回数据的大致格式：  
+```json
+{
+  "HeWeather": [
+    {
+      "status": "ok",
+      "basic": {},
+      "aqi": {},
+      "now": {},
+      "suggestion": {},
+      "daily_forecast": []
+    }
+  ]
+}
+
+```
+&emsp;&emsp;其中,basic、aqi、now、suggestion和daily_forecast的内部又都会有具体的内容，那么我们就可以将这5个部分定义成5个实体类。下面开始一个一个看，basic中的具体内容如下所示：  
+```
+"basic": {
+        "cid": "CN101190401",
+        "location": "苏州",
+        "parent_city": "苏州",
+        "admin_area": "江苏",
+        "cnty": "中国",
+        "lat": "26.07530212",
+        "lon": "119.30623627",
+        "tz": "+8.00",
+        "city": "苏州",
+        "id": "CN101190401",
+        "update": {
+          "loc": "2022-12-19 03:56",
+          "utc": "2022-12-19 03:56"
+        }
+```
+&emsp;&emsp;其中部分属性city表示城市名，id表示城市对应的天气id，update中的loc表示天气的更新时间。我们按照此结构就可以在gson包下新建一个Basic类，代码如下所示：  
+```java
+package com.coolweather.android.gson;
+
+import com.google.gson.annotations.SerializedName;
+
+import java.io.Serializable;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/20
+ */
+public class Basic implements Serializable {
+    @SerializedName("city")
+    public String cityName;
+    @SerializedName("id")
+    public String weatherId;
+
+    public Update update;
+
+    public class Update implements Serializable {
+        @SerializedName("loc")
+        public String updateTime;
+    }
+
+}
+
+```
+&emsp;&emsp;由于JSON中的一些字段可能不太适合直接作为Java字段来命名，因此这里使用了@SerializedName注解的方式来让JSON字段和Java字段之间建立映射关系。这样我们就将Basic类定义好了，还是挺容易理解的？其余几个实体类也是类似的，我们使用同样的方式来定义就可以了。如下所示：  
+&emsp;&emsp;AQI类代码如下所示：  
+```java
+package com.coolweather.android.gson;
+
+import java.io.Serializable;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/20
+ */
+public class AQI implements Serializable {
+    public AQICity city;
+    public class AQICity{
+        public String aqi;
+        public String pm25;
+    }
+}
+
+```
+&emsp;&emsp;Now类代码如下所示：
+```java
+package com.coolweather.android.gson;
+
+import com.google.gson.annotations.SerializedName;
+
+import java.io.Serializable;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/20
+ */
+public class Now implements Serializable {
+    @SerializedName("tmp")
+    public String temperature;
+    public More more;
+    public class More{
+        @SerializedName("txt")
+        public String info;
+    }
+}
+
+```
+&emsp;&emsp;Suggestion类代码如下所示：
+```java
+package com.coolweather.android.gson;
+
+import com.google.gson.annotations.SerializedName;
+
+import java.io.Serializable;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/20
+ */
+public class Suggestion implements Serializable {
+    @SerializedName("comf")
+    public Comfort comfort;
+    @SerializedName("cw")
+    public CarWash carWash;
+    public Sport sport;
+
+    public class Comfort{
+        @SerializedName("txt")
+        public String info;
+    }
+    public class CarWash {
+        @SerializedName("txt")
+        public String info;
+    }
+    public class Sport {
+        @SerializedName("txt")
+        public String info;
+    }
+}
+
+```
+&emsp;&emsp;当目前位置都还比较简单，不过接下来的一项数据就有点特殊了，daily_forecast中包含的是一个数组，数组中的每一项都代表着未来一天的天气信息。针对这种情况，我们只需要定义出单日天气的实体类就可以了，然后在声明实体类的引用的时候使用集合类型来进行声明。那么Forecast类代码如下所示：  
+```java
+package com.coolweather.android.gson;
+
+import com.google.gson.annotations.SerializedName;
+
+import java.io.Serializable;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/20
+ */
+public class Forecast implements Serializable {
+    public String date;
+    @SerializedName("tmp")
+    public Temperature temperature;
+    @SerializedName("cond")
+    public More more;
+    public class Temperature{
+        public String max;
+        public String min;
+    }
+    public class More{
+        @SerializedName("txt_d")
+        public String info;
+    }
+}
+
+```
+
+&emsp;&emsp;这样我们就把basic、aqi、now、suggestion和daily_forecast对应的实体类全部创建好了，接下来还需要再创建一个总的实例类来引用刚刚创建的各个实体类。在gson包下新建一个Weather类，代码如下所示：  
+```java
+package com.coolweather.android.gson;
+
+import com.google.gson.annotations.SerializedName;
+
+import java.io.Serializable;
+import java.util.List;
+
+/**
+ * <p>
+ *
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/20
+ */
+public class Weather implements Serializable {
+    public String status;
+    public Basic basic;
+    public AQI aqi;
+    public Now now;
+    public Suggestion suggestion;
+    @SerializedName("daily_forecast")
+    public List<Forecast> forecastList;
+}
+
+```
+&emsp;&emsp;在Weather类中，我们对Basic、AQI、Now、Suggestion和Forecast类进行了引用。其中，由于daily_forecast中包好的是一个数组，因此这里使用了List集合来引用Forecast类。另外，返回的天气数据中还会包含一项status数据，成功返回ok，失败则会返回具体的原因，那么这里也需要添加一个对应的status字段。现在所有的GSON实体类都定义好了，接下来我们开始编写天气界面。  
+
+### 14.4.2 编写天气界面
+&emsp;&emsp;首先创建一个用于显示天气信息的活动。右击com.coolweather.android包->New->Activity->Empty Activity，创建一个WeatherActivity，并将布局名指定成activity_weather.xml。由于所有的天气信息都将在同一个界面上显示，因此activity_weather.xml会是一个很长的布局文件。那么为了让里面的代码不至于混乱不堪，这里准备使用3.4.1小节学过的引入布局技术，即使界面的不同部分写在不同的布局文件里面，再通过引入布局的方式集成到activity_weather.xml中，这样整个布局文件就会显得非常工整。右击res/layout->New->Layout resource file，新建一个title.xml作为头布局，代码如下所示：  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="?android:attr/actionBarSize">
+    <TextView
+            android:id="@+id/title_city"
+            android:layout_centerInParent="true"
+            android:textColor="#fff"
+            android:textSize="20sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    <TextView
+            android:id="@+id/title_update_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="10dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:textSize="16sp"
+            android:textColor="#fff"/>
+</RelativeLayout>
+```
+&emsp;&emsp;这段代码还是比较简单的，头布局中放置了两个TextView，一个居中城市名，一个居右显示更新时间。然后新建一个now.xml作为当前天气信息的布局，代码如下所示：  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_margin="15dp"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <TextView
+            android:id="@+id/degree_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:textColor="#fff"
+            android:textSize="60sp"
+    />
+    <TextView
+            android:id="@+id/weather_info_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:textColor="#fff"
+            android:textSize="20sp"
+    />
+</LinearLayout>
+```
+&emsp;&emsp;当前天气信息的布局也是放置了两个TextView，一个用于显示当前气温，一个用于显示天气概况。然后新建forecast.xml作为未来几天天气信息的布局，代码如下所示：  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_margin="15dp"
+              android:background="#8000"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <TextView
+            android:layout_marginLeft="15dp"
+            android:layout_marginTop="15dp"
+            android:text="预报"
+            android:textColor="#fff"
+            android:textSize="20sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    <LinearLayout
+            android:id="@+id/forecast_layout"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+</LinearLayout>
+```
+
+&emsp;&emsp;这里最外层使用LinearLayout定义了一个半透明的背景，然后使用TextView定义了一个标题，接着又使用一个LinearLayout定义了一个用于显示未来几天天气信息的布局。不过这个布局中并没有放入任何内容，因为这是要根据服务器返回的数据在代码中动态添加的。  
+&emsp;&emsp;为此，我们还需要再定义一个未来天气信息的子项布局，创建forecast_item.xml文件，代码如下所示:  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_margin="15dp">
+    <TextView
+            android:id="@+id/date_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="2"
+            android:textColor="#fff"/>
+    <TextView
+            android:id="@+id/info_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="#fff"/>
+    <TextView
+            android:id="@+id/max_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:gravity="right"
+            android:textColor="#fff"/>
+    <TextView
+            android:id="@+id/min_text"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:gravity="right"
+            android:textColor="#fff"/>
+
+</LinearLayout>
+```
+&emsp;&emsp;子项布局中放置了4个TextView，一个用于显示天气预报日期，一个用于显示天气概括，另外两个分别用于显示当天的最高温度和最低温度。然后新建api.xml作为空气质量信息的布局，代码如下所示：  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_margin="15dp"
+              android:background="#8000"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="15dp"
+            android:layout_marginTop="15dp"
+            android:textColor="#fff"
+            android:text="空气质量"
+            android:textSize="20sp"/>
+    <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="15dp">
+        <RelativeLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+            <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_centerInParent="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                <TextView
+                        android:id="@+id/aqi_text"
+                        android:layout_gravity="center"
+                        android:textSize="40sp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+                <TextView
+                        android:layout_gravity="center"
+                        android:text="AQI指数"
+                        android:textColor="#fff"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
+            </LinearLayout>
+        </RelativeLayout>
+        <RelativeLayout
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+            <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_centerInParent="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                <TextView
+                        android:id="@+id/pm25_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:textColor="#fff"
+                        android:textSize="40sp"/>
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:text="PM2.5指数"
+                        android:textColor="#fff"/>
+            </LinearLayout>
+        </RelativeLayout>
+    </LinearLayout>
+</LinearLayout>
+```
+&emsp;&emsp;这个布局中的代码虽然看上去有点长，但是并不复杂。首先前面都是一样的。使用LinearLayout定义了一个半透明的背景，然后使用TextView定义了一个标题。接下来，这里使用LinearLayout和RelativeLayout嵌套的方式实现了一个左右平分并且居中对齐的布局，分别用于显示AQI指数和PM2.5指数，相信你只要仔细看一看，这个布局还是很好的理解的。然后新建suggestion.ml作为生活建议信息的布局，代码如下所示：  
+````xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_margin="15dp"
+              android:background="#8000"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="15dp"
+            android:layout_marginTop="15dp"
+            android:text="生活建议"
+            android:textColor="#fff"
+            android:textSize="20sp"/>
+    <TextView
+            android:id="@+id/comfort_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="15dp"
+            android:textColor="#fff"/>
+    <TextView
+            android:id="@+id/car_wash_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="15dp"
+            android:textColor="#fff"/>
+    <TextView
+            android:id="@+id/sport_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="15dp"
+            android:textColor="#fff"/>
+</LinearLayout>
+````
+&emsp;&emsp;这里同样也是定义了一个半透明的背景和一个标题，然后下面使用了3个TextView分别用于显示舒适度、洗车指数和运动建议的相关数据。这样我就把天气界面上每个部分的布局文件都编写好了，接下来的工作就是将它们引入到activity_weather.xml当中，如下所示：  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/material_on_primary_emphasis_high_type"
+        tools:context=".WeatherActivity">
+    <ScrollView
+            android:id="@+id/weather_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            android:overScrollMode="never">
+        <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+            <include layout="@layout/title"/>
+            <include layout="@layout/now"/>
+            <include layout="@layout/forecast"/>
+            <include layout="@layout/aqi"/>
+            <include layout="@layout/suggestion"/>
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>
+```
+&emsp;&emsp;可以看到，首先最外层布局使用了一个FrameLayout，并将它的背景色设置成material_on_primary_emphasis_high_type。然后在FrameLayout中嵌套了一个ScrollView，这是因为天气界面中的内容比较多，使用ScrollView可以允许我们通过滚动的方式查看屏幕以外的内容。由于ScrollView的内部只允许一个直接子布局，因此这里又嵌套了一个垂直方向的LinearLayout，然后在LinearLayout中将刚才定义的所有布局逐个引入。这样我们就把天气界面编写完成了，接下来开始编写业务逻辑，将天气显示到界面上。

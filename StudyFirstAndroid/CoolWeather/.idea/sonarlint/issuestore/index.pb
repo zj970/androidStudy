@@ -28,9 +28,21 @@ Mapp/src/androidTest/java/com/coolweather/android/ExampleInstrumentedTest.java,
 lombok.config,8/2/823fe80d2650ec87c2614800da17ca3a55af96a9
 k
 ;app/src/main/java/com/coolweather/android/MainActivity.java,6/d/6db9939136654dca3b0473037fa708c5c9482fc4
-P
- app/src/main/AndroidManifest.xml,8/c/8c55c3ccc257e5907959013f99656e4c8ec3903e
 @
 app/build.gradle,f/4/f4a01d6a4fcb971362ec00a83903fd3902f52164
 q
 Aapp/src/main/java/com/coolweather/android/base/MyApplication.java,a/1/a1935034fec909fa0fecf71e635c18497f7d39b0
+l
+<app/src/main/java/com/coolweather/android/util/HttpUtil.java,3/f/3f0f75c7504c2bf2c0973480ba418c1447ce3ae6
+f
+6app/src/main/java/com/coolweather/android/db/City.java,2/c/2c279c16d27b311eaa7863fcf0e41c5e3a41e59e
+h
+8app/src/main/java/com/coolweather/android/db/County.java,1/b/1be520f77795754f4e2b241d9c1767e28648d5fd
+k
+;app/src/main/java/com/coolweather/android/util/LogUtil.java,2/7/27bd25e97134db6c4ecc5b6656048dcb66f8b539
+q
+Aapp/src/main/java/com/coolweather/android/ChooseAreaFragment.java,4/5/458bc3b6b966c9a37d331acac2495adb0b83ae56
+j
+:app/src/main/java/com/coolweather/android/db/Province.java,6/5/65682a5553ed04c7f724d5c2f8ba8475d77ef25d
+k
+;app/src/main/java/com/coolweather/android/util/Utility.java,a/8/a8496c017c0d66653213296e0b59e7a292bd8df5
