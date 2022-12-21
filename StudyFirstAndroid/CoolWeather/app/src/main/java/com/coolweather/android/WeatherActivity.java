@@ -71,7 +71,7 @@ public class WeatherActivity extends AppCompatActivity {
         String weatherString = prefs.getString("weather", null);
         if (weatherString != null) {
             //有缓存时直接解析天气数据
-            Weather weather = Utility.handleWeatherResponse("weather_id");
+            Weather weather = Utility.handleWeatherResponse(weatherString);
             weatherLayout.setVisibility(View.INVISIBLE);
             showWeatherInfo(weather);
         } else {
