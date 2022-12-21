@@ -1545,4 +1545,325 @@ public class Weather implements Serializable {
     </ScrollView>
 </FrameLayout>
 ```
-&emsp;&emsp;可以看到，首先最外层布局使用了一个FrameLayout，并将它的背景色设置成material_on_primary_emphasis_high_type。然后在FrameLayout中嵌套了一个ScrollView，这是因为天气界面中的内容比较多，使用ScrollView可以允许我们通过滚动的方式查看屏幕以外的内容。由于ScrollView的内部只允许一个直接子布局，因此这里又嵌套了一个垂直方向的LinearLayout，然后在LinearLayout中将刚才定义的所有布局逐个引入。这样我们就把天气界面编写完成了，接下来开始编写业务逻辑，将天气显示到界面上。
+&emsp;&emsp;可以看到，首先最外层布局使用了一个FrameLayout，并将它的背景色设置成material_on_primary_emphasis_high_type。然后在FrameLayout中嵌套了一个ScrollView，这是因为天气界面中的内容比较多，使用ScrollView可以允许我们通过滚动的方式查看屏幕以外的内容。由于ScrollView的内部只允许一个直接子布局，因此这里又嵌套了一个垂直方向的LinearLayout，然后在LinearLayout中将刚才定义的所有布局逐个引入。这样我们就把天气界面编写完成了，接下来开始编写业务逻辑，将天气显示到界面上。  
+
+### 14.4.3 将天气显示到界面上  
+&emsp;&emsp;首先需要在Utility类中添加一个用于解析天气JSON数据的方法，如下所示：  
+ ```java
+package com.coolweather.android.util;
+
+import android.text.TextUtils;
+import com.coolweather.android.db.City;
+import com.coolweather.android.db.County;
+import com.coolweather.android.db.Province;
+import com.coolweather.android.gson.Weather;
+import com.google.gson.Gson;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+/**
+ * <p>
+ * 处理数据
+ * </p>
+ *
+ * @author: zj970
+ * @date: 2022/12/19
+ */
+public class Utility {
+    /**
+     * 解析和处理服务器返回的省级数据
+     * @param response 请求返回体
+     * @return
+     */
+    public static boolean handleProvinceResponse(String response) {
+        if (!TextUtils.isEmpty(response)){
+            try {
+                JSONArray allProvinces = new JSONArray(response);
+                for (int i = 0; i < allProvinces.length(); i++) {
+                    JSONObject provinceObject = allProvinces.getJSONObject(i);
+                    Province province = new Province();
+                    province.setProvinceName(provinceObject.getString("name"));
+                    province.setProvinceCode(provinceObject.getInt("id"));
+                    province.save();
+                }
+                return true;
+            } catch (JSONException e){
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 解析和处理服务器返回的市级数据
+     * @param response 请求返回体
+     * @param provinceId 省级id
+     * @return
+     */
+    public static boolean handleCityResponse(String response, int provinceId){
+        if (!TextUtils.isEmpty(response)) {
+            try {
+                JSONArray allCities = new JSONArray(response);
+                for (int i = 0; i < allCities.length(); i++) {
+                    JSONObject cityObject = allCities.getJSONObject(i);
+                    City city = new City();
+                    city.setCityName(cityObject.getString("name"));
+                    city.setCityCode(cityObject.getInt("id"));
+                    city.setProvinceId(provinceId);
+                    city.save();
+                }
+                return true;
+            } catch (JSONException e){
+                e.printStackTrace();
+            }
+
+        }
+        return false;
+    }
+
+    /**
+     * 解析和处理服务器返回的县级数据
+     * @param response 请求返回体
+     * @param cityId 市id
+     * @return
+     */
+    public static boolean handleCountyResponse(String response, int cityId){
+        if (!TextUtils.isEmpty(response)) {
+            try {
+                JSONArray allCounties = new JSONArray(response);
+                for (int i = 0; i < allCounties.length(); i++) {
+                    JSONObject countyObject = allCounties.getJSONObject(i);
+                    County county = new County();
+                    county.setCountyName(countyObject.getString("name"));
+                    county.setWeatherId(countyObject.getString("weather_id"));
+                    county.setCityId(cityId);
+                    county.save();
+                }
+                return true;
+            } catch (JSONException e){
+                e.printStackTrace();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 将返回的JSON数据解析成Weather实体类
+     */
+    public static Weather handleWeatherResponse(String response){
+        try {
+            JSONObject jsonObject = new JSONObject(response);
+            JSONArray jsonArray = jsonObject.getJSONArray("HeWeather");
+            String weatherContent = jsonArray.getJSONObject(0).toString();
+            return new Gson().fromJson(weatherContent, Weather.class);
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
+        return null;
+    }
+}
+```
+&emsp;&emsp;可以看到，handleWeatherResponse()方法中先是通过JSONObject和JSONArray将天气数据中的主体内容解析出来，然后由于我们之前已经按照上面的数据格式定义过相应的GSON实体类，因此只需要通过调用fromJson()方法就能直接将JSON数据转换成Weather对象了。接下来的工作是我们如何在活动中去请求天气数据，以及将数据展示到界面上。修改WeatherActivity中的代码，如下所示：  
+```java
+package com.coolweather.android;
+
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.ScrollView;
+import android.widget.TextView;
+import android.widget.Toast;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import com.coolweather.android.gson.Forecast;
+import com.coolweather.android.gson.Weather;
+import com.coolweather.android.util.HttpUtil;
+import com.coolweather.android.util.Utility;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+import org.jetbrains.annotations.NotNull;
+import org.w3c.dom.Text;
+
+import java.io.IOException;
+
+public class WeatherActivity extends AppCompatActivity {
+
+    private static final String API_KEY = "3906d8568ef8470d943c9765f5d891a8";
+    private ScrollView weatherLayout;
+    private TextView titleCity;
+    private TextView titleUpdateTime;
+    private TextView degreeText;
+    private TextView weatherInfoText;
+    private LinearLayout forecastLayout;
+    private TextView aqiText;
+    private TextView pm25Text;
+    private TextView comfortText;
+    private TextView carWashText;
+    private TextView sportText;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_weather);
+        //初始化各控件
+        weatherLayout = findViewById(R.id.weather_layout);
+        titleCity = findViewById(R.id.title_city);
+        titleUpdateTime = findViewById(R.id.title_update_time);
+        degreeText = findViewById(R.id.degree_text);
+        weatherInfoText = findViewById(R.id.weather_info_text);
+        forecastLayout = findViewById(R.id.forecast_layout);
+        aqiText = findViewById(R.id.aqi_text);
+        pm25Text = findViewById(R.id.pm25_text);
+        comfortText = findViewById(R.id.comfort_text);
+        carWashText = findViewById(R.id.car_wash_text);
+        sportText = findViewById(R.id.sport_text);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String weatherString = prefs.getString("weather", null);
+        if (weatherString != null) {
+            //有缓存时直接解析天气数据
+            Weather weather = Utility.handleWeatherResponse("weather_id");
+            weatherLayout.setVisibility(View.INVISIBLE);
+            showWeatherInfo(weather);
+        } else {
+            //无缓存时去服务器查询天气
+            String weatherId = getIntent().getStringExtra("weather_id");
+            weatherLayout.setVisibility(View.INVISIBLE);
+            requestWeather(weatherId);
+        }
+    }
+
+    /**
+     * 根据天气id请求城市天气信息
+     */
+    public void requestWeather(final String weatherId) {
+        String weatherUrl = "http://guolin/tech/api/weather?cityid=" + weatherId + "&key=" + API_KEY;
+        HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                e.printStackTrace();
+                Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_LONG).show();
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                final String responseText = response.body().string();
+                final Weather weather = Utility.handleWeatherResponse(responseText);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (weather != null && "ok".equals(weather.status)) {
+                            SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
+                            editor.putString("weather", responseText);
+                            editor.apply();
+                            showWeatherInfo(weather);
+                        } else {
+                            Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    /**
+     * 处理并展示Weather实体类中的数据
+     */
+    private void showWeatherInfo(Weather weather) {
+        String cityName = weather.basic.cityName;
+        String updateTime = weather.basic.update.updateTime.split(" ")[1];
+        String degree = weather.now.temperature + " °C";
+        String weatherInfo = weather.now.more.info;
+        titleCity.setText(cityName);
+        titleUpdateTime.setText(updateTime);
+        degreeText.setText(degree);
+        weatherInfoText.setText(weatherInfo);
+        forecastLayout.removeAllViews();
+        for (Forecast forecast : weather.forecastList) {
+            View view = LayoutInflater.from(this).inflate(R.layout.forecast_item, forecastLayout, false);
+            TextView dateText = view.findViewById(R.id.date_text);
+            TextView infoText = view.findViewById(R.id.info_text);
+            TextView maxText = view.findViewById(R.id.max_text);
+            TextView minText = view.findViewById(R.id.min_text);
+
+            dateText.setText(forecast.date);
+            infoText.setText(forecast.more.info);
+            maxText.setText(forecast.temperature.max);
+            minText.setText(forecast.temperature.min);
+            forecastLayout.addView(view);
+        }
+        if (weather.aqi != null) {
+            aqiText.setText(weather.aqi.city.aqi);
+            pm25Text.setText(weather.aqi.city.pm25);
+        }
+        String comfort = "舒适度： " + weather.suggestion.comfort.info;
+        String carWash = "洗车指数： " + weather.suggestion.carWash.info;
+        String sport = "运动建议： " + weather.suggestion.sport.info;
+
+        comfortText.setText(comfort);
+        carWashText.setText(carWash);
+        sportText.setText(sport);
+        weatherLayout.setVisibility(View.VISIBLE);
+
+    }
+}
+```
+
+&emsp;&emsp;这个活动中的代码也比较长，我们还是一步步梳理下。在onCreate()方法中仍然显示去获取一些控件的实例，然后会尝试从本地缓存中读取天气数据。那么第一次肯定是没有缓存的，因此就会从Intent中取出天气id，并调用requestWeather()方法来从服务器请求天气数据。注意，请求数据的时候先将ScrollView进行隐藏，不然空数据的界面看上去会很奇怪。  
+&emsp;&emsp;requestWeather()方法先是使用了参数中传入的天气id和我们之前申请好的API KEY凭借出一个接口地址，接着调用HttpUtil.sendOkHttpRequest()方法来向该地址发出请求，服务器会将相应城市的天气信息以JSON格式返回。然后我们在onResponse()回调中先调用Utility.handleWeatherResponse()方法将返回的JSON数据转换成Weather对象，再将当前线程切换到主线程。然后进行判断，如果服务器返回的status状态是ok，就说明请求天气成功了此时将返回的数据缓存到SharedPreferences当中，并调用showWeatherInfo()方法进行内容显示。  
+&emsp;&emsp;showWeatherInfo()方法中的逻辑就比较简单了，其实就是从Weather对象中获取数据，然后显示到相应的控件上。注意在未来几天天气预报的部分我们使用了一个for循环来处理每天的天气信息，在循环中动态加载forecast_item.xml布局中并布置相应的数据，然后添加到父布局当中，。设置完了所有数据之后，记得将ScrollView重新变成可见。  
+&emsp;&emsp;这样我们就将首次进入WeatherActivity时的逻辑全部处理完了，那么当下一次再进入WeatherActivity时，由于缓存已经存在了，因此会直接解析并显示天气数据，而不会再次发起网络请求了。  
+&emsp;&emsp;处理完了WeatherActivity中的逻辑，接下来我们要做的，就是如何从省市县列表界面跳转到天气界面了，修改ChooseAreaFragment中的代码，如下所示：  
+
+```
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (currentLevel == LEVEL_PROVINCE) {
+                    selectedProvince = provinceList.get(position);
+                    LogUtil.d(TAG, "LEVEL_PROVINCE");
+                    queryCities();
+                } else if (currentLevel == LEVEL_CITY) {
+                    selectedCity = cityList.get(position);
+                    queryCounties();
+                } else if (currentLevel == LEVEL_COUNTY){
+                    String weatherId = countyList.get(position).getWeatherId();
+                    WeatherActivity.actionStart(getActivity(), weatherId);
+                    getActivity().finish();
+                }
+            }
+```
+&emsp;&emsp;非常简单，这里在onItemClick()方法中加入了if判断，如果当前级别是LEVEL_COUNTRY，就启动WeatherActivity，并把当前选中县的id传递过去。这里在WeatherActivity中新增了一个静态actionStart()方法，使用到2.6.3小节中的知识。另外，我们还需要在MainActivity中加入一个缓存数据的判断才行。修改MainActivity中的代码。如下所示：  
+
+```java
+package com.coolweather.android;
+
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.preference.PreferenceManager;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+
+public class MainActivity extends AppCompatActivity {
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if (prefs.getString("weather",null) != null) {
+            Intent intent = new Intent(this,WeatherActivity.class);
+            startActivity(intent);
+            finish();
+        }
+    }
+}
+```
+&emsp;&emsp;可以看到，这里在onCreate()方法的一开始先从SharedPreferences文件中读取缓存数据，如果不为null就说明之前已经请求过天气数据了，那么就没必要让用于再次选择城市，而是直接跳转到WeatherActivity即可。现在运行一下程序，然后选择江苏->苏州->昆山，结果如下所示：
+![img_4.png](img_4.png)
+&emsp;&emsp;下滑还可以得到更多信息：
+
+![img_5.png](img_5.png)
