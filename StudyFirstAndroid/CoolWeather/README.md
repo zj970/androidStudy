@@ -1725,7 +1725,7 @@ public class WeatherActivity extends AppCompatActivity {
         String weatherString = prefs.getString("weather", null);
         if (weatherString != null) {
             //有缓存时直接解析天气数据
-            Weather weather = Utility.handleWeatherResponse("weather_id");
+            Weather weather = Utility.handleWeatherResponse(weatherString);
             weatherLayout.setVisibility(View.INVISIBLE);
             showWeatherInfo(weather);
         } else {
@@ -1867,3 +1867,260 @@ public class MainActivity extends AppCompatActivity {
 &emsp;&emsp;下滑还可以得到更多信息：
 
 ![img_5.png](img_5.png)
+
+### 14.5.4 获取必应每日一图
+
+&emsp;&emsp;虽说现在我们已经把天气界面编写得非常不错了，不过和市场上的一些天气软件的界面相比，仍然还是有一定差距的。出色的天气软件不会像我们现在这样使用一个固定的背景色，而是会根据不同的城市或者天气情况展示不同的背景图片。  
+&emsp;&emsp;当然实现这个功能并不复杂，最重要的是需要有服务器的接口支持。不过我实在是没有精力去准备这样一套完整的服务器几口，那么为了不让我们的天气界面过于单调，这里我准备了一个巧妙的办法。  
+&emsp;&emsp;必应想必你肯定不会陌生，这是一个由微软开发的搜索引擎网站。这个网站除了提供强大的搜索功能之外，还有一个非常有特色的地方，就是它每天都会在首页展示一张精美的背景图片。由于这些图片都是由必应精挑细选出来的，并且每天都会变化，如果我们使用它们来作为天气界面的背景图，不仅可以让界面变得更加美观，而且解决了界面一成不变、过于单调的问题。为此作者专门专门准备了一个获取必应背景图的接口：http://guolin.tech/api/bing_pic。访问这个接口，服务器会返回今日的必应背景图连接： https://cn.bing.com/sa/simg/hpb/LaDigue_EN-CA1115245085_1920x1080.jpg
+&emsp;&emsp;然后我们再使用Glide去加载这张图片就可以了。这里直接找的其他地址：https://api.isoyu.com/bing_images.php，首先修改activity_weather.xml中的代码，如下所示：  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/design_default_color_primary"
+        tools:context=".WeatherActivity">
+    <ImageView
+            android:id="@+id/bing_pic_img"
+            android:scaleType="centerCrop"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    <ScrollView
+            android:id="@+id/weather_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            android:overScrollMode="never">
+        <LinearLayout
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+            <include layout="@layout/title"/>
+            <include layout="@layout/now"/>
+            <include layout="@layout/forecast"/>
+            <include layout="@layout/aqi"/>
+            <include layout="@layout/suggestion"/>
+        </LinearLayout>
+    </ScrollView>
+</FrameLayout>
+```
+&emsp;&emsp;这里我们在FrameLayout中添加了一个ImageView，并且将它的高和款都设置成match_parent。由于FrameLayout默认情况下会将控件都放置在左上角，因此ScrollView会完全覆盖住ImageView，从而ImageView也就成为背景图片了。接着修改WeatherActivity中的代码，如下所示：  
+
+```java
+package com.coolweather.android;
+
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Looper;
+import android.preference.PreferenceManager;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.*;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import com.bumptech.glide.Glide;
+import com.coolweather.android.gson.Forecast;
+import com.coolweather.android.gson.Weather;
+import com.coolweather.android.util.HttpUtil;
+import com.coolweather.android.util.LogUtil;
+import com.coolweather.android.util.Utility;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+import org.jetbrains.annotations.NotNull;
+import org.w3c.dom.Text;
+
+import java.io.IOException;
+
+public class WeatherActivity extends AppCompatActivity {
+
+    private static final String API_KEY = "3906d8568ef8470d943c9765f5d891a8";
+    final String requestBingPic = "https://api.isoyu.com/bing_images.php";
+    private ScrollView weatherLayout;
+    private TextView titleCity;
+    private TextView titleUpdateTime;
+    private TextView degreeText;
+    private TextView weatherInfoText;
+    private LinearLayout forecastLayout;
+    private TextView aqiText;
+    private TextView pm25Text;
+    private TextView comfortText;
+    private TextView carWashText;
+    private TextView sportText;
+    private ImageView bingPicImg;
+    /**
+     * 需要数据才能启动 WeatherActivity
+     * @param context 上下文
+     * @param weatherId 天气id
+     */
+    public static void actionStart(Context context, String weatherId){
+        Intent intent = new Intent(context, WeatherActivity.class);
+        intent.putExtra("weather_id", weatherId);
+        context.startActivity(intent);
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_weather);
+        //初始化各控件
+        weatherLayout = findViewById(R.id.weather_layout);
+        titleCity = findViewById(R.id.title_city);
+        titleUpdateTime = findViewById(R.id.title_update_time);
+        degreeText = findViewById(R.id.degree_text);
+        weatherInfoText = findViewById(R.id.weather_info_text);
+        forecastLayout = findViewById(R.id.forecast_layout);
+        aqiText = findViewById(R.id.aqi_text);
+        pm25Text = findViewById(R.id.pm25_text);
+        comfortText = findViewById(R.id.comfort_text);
+        carWashText = findViewById(R.id.car_wash_text);
+        sportText = findViewById(R.id.sport_text);
+        bingPicImg = findViewById(R.id.bing_pic_img);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String weatherString = prefs.getString("weather", null);
+/*        String bingPic = prefs.getString("bing_pic",null);
+        if (bingPic != null){
+            Glide.with(this).load(bingPic).into(bingPicImg);
+        } else {
+            loadBingPic();
+        }*/
+        Glide.with(this).load(requestBingPic).into(bingPicImg);
+        if (weatherString != null) {
+            //有缓存时直接解析天气数据
+            Weather weather = Utility.handleWeatherResponse(weatherString);
+            weatherLayout.setVisibility(View.INVISIBLE);
+            showWeatherInfo(weather);
+        } else {
+            //无缓存时去服务器查询天气
+            String weatherId = getIntent().getStringExtra("weather_id");
+            weatherLayout.setVisibility(View.INVISIBLE);
+            requestWeather(weatherId);
+        }
+    }
+
+    /**
+     * 根据天气id请求城市天气信息
+     */
+    public void requestWeather(final String weatherId) {
+        String weatherUrl = "http://guolin.tech/api/weather?cityid=" + weatherId + "&key=" + API_KEY;
+        HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                e.printStackTrace();
+                Looper.prepare();
+                Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_LONG).show();
+                Looper.loop();
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                final String responseText = response.body().string();
+                final Weather weather = Utility.handleWeatherResponse(responseText);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (weather != null && "ok".equals(weather.status)) {
+                            SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
+                            editor.putString("weather", responseText);
+                            editor.apply();
+                            showWeatherInfo(weather);
+                        } else {
+                            Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                });
+            }
+        });
+        //loadBingPic();
+    }
+    /**
+     * 加载必应每日一图
+     */
+/*    private void loadBingPic(){
+        HttpUtil.sendOkHttpRequest(requestBingPic, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                final String bingPic = response.body().string();
+                LogUtil.d("LOG", bingPic);
+                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
+                editor.putString("bing_pic", bingPic);
+                editor.apply();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Glide.with(WeatherActivity.this).load(bingPic).into(bingPicImg);
+                    }
+                });
+            }
+        });
+    }*/
+
+    /**
+     * 处理并展示Weather实体类中的数据
+     */
+    private void showWeatherInfo(Weather weather) {
+        String cityName = weather.basic.cityName;
+        String updateTime = weather.basic.update.updateTime.split(" ")[1];
+        String degree = weather.now.temperature + " °C";
+        String weatherInfo = weather.now.more.info;
+        titleCity.setText(cityName);
+        titleUpdateTime.setText(updateTime);
+        degreeText.setText(degree);
+        weatherInfoText.setText(weatherInfo);
+        forecastLayout.removeAllViews();
+        for (Forecast forecast : weather.forecastList) {
+            View view = LayoutInflater.from(this).inflate(R.layout.forecast_item, forecastLayout, false);
+            TextView dateText = view.findViewById(R.id.date_text);
+            TextView infoText = view.findViewById(R.id.info_text);
+            TextView maxText = view.findViewById(R.id.max_text);
+            TextView minText = view.findViewById(R.id.min_text);
+
+            dateText.setText(forecast.date);
+            infoText.setText(forecast.more.info);
+            maxText.setText(forecast.temperature.max);
+            minText.setText(forecast.temperature.min);
+            forecastLayout.addView(view);
+        }
+        if (weather.aqi != null) {
+            aqiText.setText(weather.aqi.city.aqi);
+            pm25Text.setText(weather.aqi.city.pm25);
+        }
+        String comfort = "舒适度： " + weather.suggestion.comfort.info;
+        String carWash = "洗车指数： " + weather.suggestion.carWash.info;
+        String sport = "运动建议： " + weather.suggestion.sport.info;
+
+        comfortText.setText(comfort);
+        carWashText.setText(carWash);
+        sportText.setText(sport);
+        weatherLayout.setVisibility(View.VISIBLE);
+
+    }
+}
+```
+&emsp;&emsp;这里并没有使用作者的接口，原因是作者的接口返回的不是地址。效果如下：
+
+![img_6.png](img_6.png)
+
+&emsp;&emsp;接下来将图片与状态栏融合到一起，修改WeatherActivity中onCreate()增加代码：  
+```
+        if (Build.VERSION.SDK_INT >= 21){
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+        }
+```
+&emsp;&emsp;由于这个功能是Android 5.0 及以上的系统才支持的，因此我们现在代码中做了一个系统版本号的判断，只有当版本号大于或等于21，也就是5.0及以上才会执行后面的代码。接着我们调用了getWindow().getDecorView()方法拿到当期那活动的DecorView，再调用它的setSystemUiVisibility()方法来改变系统UI的显示，这里传入View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE就表示活动的布局会显示在状态栏上面，最后调用一下setStatusBarColor()方法将状态栏设置成透明色。不过，如果运行一下程序，会发现天气界面的头部剧几乎和系统状态栏紧紧贴在一起，如下所示：  
+![img_7.png](img_7.png)
+
+&emsp;&emsp;这是由于系统状态已经成为我们布局的一部分，因此没有单独为它留出空间。当然这个问题也是非常好解决，借助android:fitsSystemWindow属性就可以可。修改activity_weather.xml中的代码,在ScrollView的LinearLayout中增加了android:fitsSystemWindow属性，设置成true就表示会为系统状态栏留出空间。现在重新运行一下成，效果如下：  
+![img_8.png](img_8.png)
