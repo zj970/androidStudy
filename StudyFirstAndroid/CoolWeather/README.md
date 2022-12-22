@@ -2124,3 +2124,404 @@ public class WeatherActivity extends AppCompatActivity {
 
 &emsp;&emsp;这是由于系统状态已经成为我们布局的一部分，因此没有单独为它留出空间。当然这个问题也是非常好解决，借助android:fitsSystemWindow属性就可以可。修改activity_weather.xml中的代码,在ScrollView的LinearLayout中增加了android:fitsSystemWindow属性，设置成true就表示会为系统状态栏留出空间。现在重新运行一下成，效果如下：  
 ![img_8.png](img_8.png)
+
+## 14.5 手动更新天气和切换城市  
+&emsp;&emsp;经过第三段阶段的开发，现在酷欧天气的主体功能已经有了，不过你会发现目前存在着一个比较严重的bug，就是当你选中某一个城市之后，就无法再去查看其他城市的天气了，即使退出程序，下次进来的时候还会直接挑战到WeatherActivity。因此，在第四阶段中我们要加入切换城市的功能，并且为了能够实时获取到最新的天气，我们还会加入手动更新天气的功能。  
+
+### 15.5.1 手动更新天气  
+&emsp;&emsp;先来实现一下手动更新天这里我准备采用下拉刷新的方式，正好我们之前也学过下拉刷新的用法，实现起来会比较简单。首先修改activity_weather.xml中的代码，如下所示：  
+```xml
+    <SwipeRefreshLayout
+        android:id="@+id/swipe_refresh"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    <ScrollView
+            android:id="@+id/weather_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            android:overScrollMode="never">
+        <LinearLayout
+                android:orientation="vertical"
+                android:fitsSystemWindows="true"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+            <include layout="@layout/title"/>
+            <include layout="@layout/now"/>
+            <include layout="@layout/forecast"/>
+            <include layout="@layout/aqi"/>
+            <include layout="@layout/suggestion"/>
+        </LinearLayout>
+    </ScrollView>
+    </SwipeRefreshLayout>
+```
+&emsp;&emsp;可以看到，这里在ScrollView的外面又嵌套了一层SwipeRefreshLayout，这样ScrollView就自动拥有下拉刷新功能了。然后修改WeatherActivity中的代码，加入更新天气的处理逻辑，如下所示：  
+```java
+package com.coolweather.android;
+
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.graphics.Color;
+import android.os.Build;
+import android.os.Looper;
+import android.preference.PreferenceManager;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.*;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+import com.bumptech.glide.Glide;
+import com.coolweather.android.gson.Forecast;
+import com.coolweather.android.gson.Weather;
+import com.coolweather.android.util.HttpUtil;
+import com.coolweather.android.util.LogUtil;
+import com.coolweather.android.util.Utility;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+import org.jetbrains.annotations.NotNull;
+import org.w3c.dom.Text;
+
+import java.io.IOException;
+
+public class WeatherActivity extends AppCompatActivity {
+    private static final String API_KEY = "3906d8568ef8470d943c9765f5d891a8";
+    final String requestBingPic = "https://api.isoyu.com/bing_images.php";
+    public SwipeRefreshLayout swipeRefresh;
+    private ScrollView weatherLayout;
+    private TextView titleCity;
+    private TextView titleUpdateTime;
+    private TextView degreeText;
+    private TextView weatherInfoText;
+    private LinearLayout forecastLayout;
+    private TextView aqiText;
+    private TextView pm25Text;
+    private TextView comfortText;
+    private TextView carWashText;
+    private TextView sportText;
+    private ImageView bingPicImg;
+    /**
+     * 需要数据才能启动 WeatherActivity
+     * @param context 上下文
+     * @param weatherId 天气id
+     */
+    public static void actionStart(Context context, String weatherId){
+        Intent intent = new Intent(context, WeatherActivity.class);
+        intent.putExtra("weather_id", weatherId);
+        context.startActivity(intent);
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (Build.VERSION.SDK_INT >= 21){
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+            getWindow().setStatusBarColor(Color.TRANSPARENT);
+        }
+
+        setContentView(R.layout.activity_weather);
+        //初始化各控件
+        weatherLayout = findViewById(R.id.weather_layout);
+        titleCity = findViewById(R.id.title_city);
+        titleUpdateTime = findViewById(R.id.title_update_time);
+        degreeText = findViewById(R.id.degree_text);
+        weatherInfoText = findViewById(R.id.weather_info_text);
+        forecastLayout = findViewById(R.id.forecast_layout);
+        aqiText = findViewById(R.id.aqi_text);
+        pm25Text = findViewById(R.id.pm25_text);
+        comfortText = findViewById(R.id.comfort_text);
+        carWashText = findViewById(R.id.car_wash_text);
+        sportText = findViewById(R.id.sport_text);
+        bingPicImg = findViewById(R.id.bing_pic_img);
+        swipeRefresh = findViewById(R.id.swipe_refresh);
+        swipeRefresh.setColorSchemeResources(R.color.design_default_color_primary);
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String weatherString = prefs.getString("weather", null);
+        final String weatherId;
+/*        String bingPic = prefs.getString("bing_pic",null);
+        if (bingPic != null){
+            Glide.with(this).load(bingPic).into(bingPicImg);
+        } else {
+            loadBingPic();
+        }*/
+        Glide.with(this).load(requestBingPic).into(bingPicImg);
+        if (weatherString != null) {
+            //有缓存时直接解析天气数据
+            Weather weather = Utility.handleWeatherResponse(weatherString);
+            weatherLayout.setVisibility(View.INVISIBLE);
+            weatherId = weather.basic.weatherId;
+            showWeatherInfo(weather);
+        } else {
+            //无缓存时去服务器查询天气
+            weatherId = getIntent().getStringExtra("weather_id");
+            weatherLayout.setVisibility(View.INVISIBLE);
+            requestWeather(weatherId);
+        }
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                requestWeather(weatherId);
+            }
+        });
+    }
+
+    /**
+     * 根据天气id请求城市天气信息
+     */
+    public void requestWeather(final String weatherId) {
+        String weatherUrl = "http://guolin.tech/api/weather?cityid=" + weatherId + "&key=" + API_KEY;
+        HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                e.printStackTrace();
+                Looper.prepare();
+                Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_LONG).show();
+                swipeRefresh.setRefreshing(false);
+                Looper.loop();
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                final String responseText = response.body().string();
+                final Weather weather = Utility.handleWeatherResponse(responseText);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (weather != null && "ok".equals(weather.status)) {
+                            SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
+                            editor.putString("weather", responseText);
+                            editor.apply();
+                            showWeatherInfo(weather);
+                        } else {
+                            Toast.makeText(WeatherActivity.this, "获取天气信息失败", Toast.LENGTH_LONG).show();
+                        }
+                        swipeRefresh.setRefreshing(false);
+                    }
+                });
+            }
+        });
+        //loadBingPic();
+        Glide.with(this).load(requestBingPic).into(bingPicImg);
+    }
+    /**
+     * 加载必应每日一图
+     */
+/*    private void loadBingPic(){
+        HttpUtil.sendOkHttpRequest(requestBingPic, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                final String bingPic = response.body().string();
+                LogUtil.d("LOG", bingPic);
+                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(WeatherActivity.this).edit();
+                editor.putString("bing_pic", bingPic);
+                editor.apply();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Glide.with(WeatherActivity.this).load(bingPic).into(bingPicImg);
+                    }
+                });
+            }
+        });
+    }*/
+
+    /**
+     * 处理并展示Weather实体类中的数据
+     */
+    private void showWeatherInfo(Weather weather) {
+        String cityName = weather.basic.cityName;
+        String updateTime = weather.basic.update.updateTime.split(" ")[1];
+        String degree = weather.now.temperature + " °C";
+        String weatherInfo = weather.now.more.info;
+        titleCity.setText(cityName);
+        titleUpdateTime.setText(updateTime);
+        degreeText.setText(degree);
+        weatherInfoText.setText(weatherInfo);
+        forecastLayout.removeAllViews();
+        for (Forecast forecast : weather.forecastList) {
+            View view = LayoutInflater.from(this).inflate(R.layout.forecast_item, forecastLayout, false);
+            TextView dateText = view.findViewById(R.id.date_text);
+            TextView infoText = view.findViewById(R.id.info_text);
+            TextView maxText = view.findViewById(R.id.max_text);
+            TextView minText = view.findViewById(R.id.min_text);
+
+            dateText.setText(forecast.date);
+            infoText.setText(forecast.more.info);
+            maxText.setText(forecast.temperature.max);
+            minText.setText(forecast.temperature.min);
+            forecastLayout.addView(view);
+        }
+        if (weather.aqi != null) {
+            aqiText.setText(weather.aqi.city.aqi);
+            pm25Text.setText(weather.aqi.city.pm25);
+        }
+        String comfort = "舒适度： " + weather.suggestion.comfort.info;
+        String carWash = "洗车指数： " + weather.suggestion.carWash.info;
+        String sport = "运动建议： " + weather.suggestion.sport.info;
+
+        comfortText.setText(comfort);
+        carWashText.setText(carWash);
+        sportText.setText(sport);
+        weatherLayout.setVisibility(View.VISIBLE);
+
+    }
+}
+```
+&emsp;&emsp;修改的代码并不算多，首先在onCreate()方法中获取到了SwipeRefreshLayout的实例，然后调用setColorSchemeResources()方法来设置下拉刷新进度条的颜色，这里我们就使用主题中的colorPrimary作为进度条的颜色。接着定义了一个weatherId变量，用于记录城市的天气id，然后调用setOnRefreshListener()方法来设置一个下拉刷新的监听器，当触发了下拉刷新操作的时候，就会回调这个监听器的onRefresh()方法，我们在这里去调用requestWeather()方法请求天气信息就可以了。  
+&emsp;&emsp;另外不要忘记，当请求结束后，还需要调用SwipeRefreshLayout的setRefreshing()方法并传入false，用于表示刷新事件结束，并隐藏刷新进度条，现在重新运行一下程序并在屏幕的主界面向下拖动，效果如图所示：  
+![img_9.png](img_9.png)
+&emsp;&emsp;更新完天气信息之后，下拉进度条会自动消失。
+
+### 14.5.2 切换城市
+
+&emsp;&emsp;完成了手动更新天气的功能，接下来我们继续实现切换城市功能。既然是要切换成城市，那么就肯定需要遍历全国省市县的数据，而这个功能我们早在14.4节就已经完成了，并且当时考虑为了方便后面的复用，特意选择了在碎片当中实现。因此，我们其实只需要在天气界面的布局中引入这个碎片，就可以快速集成切换城市功能了。  
+&emsp;&emsp;虽说实现原理很简单，但是显然我们也不可能让引入的碎片把天气界面遮挡住 ，这又该怎么办呢？还记得12.3修改过学过的滑动菜单功能吗？将碎片放入到滑动菜单中真是再合适不过了，正常情况下它不占据主界面的任何控件，想要切换城市的时候只需要通过滑动的方式将菜单显示出来就可以了。下面我们就按照这种思路来实现，。首先按照Material Design的建议，我们需要在头布局中加入一个切换城市的按钮，不然的话用户可能根本不知道屏幕的左侧边缘是可以拖动的。修改title.xml中的代码，如下所示：  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="match_parent"
+                android:layout_height="?android:attr/actionBarSize">
+    <Button
+            android:id="@+id/nav_button"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_marginLeft="10dp"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/ic_home"/>
+    <TextView
+            android:id="@+id/title_city"
+            android:layout_centerInParent="true"
+            android:textColor="#fff"
+            android:textSize="20sp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+    <TextView
+            android:id="@+id/title_update_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="10dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:textSize="16sp"
+            android:textColor="#fff"/>
+</RelativeLayout>
+```
+&emsp;&emsp;这里添加了一个Button作为切换城市的按钮，并且让它居左显示。另外，我提前准备好了一张图片来作为按钮的背景图。接着修改activity_weather.xml布局来加入滑动菜单功能，如下所示：  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/design_default_color_primary"
+        tools:context=".WeatherActivity">
+    <ImageView
+            android:id="@+id/bing_pic_img"
+            android:scaleType="centerCrop"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+    <androidx.drawerlayout.widget.DrawerLayout
+            android:id="@+id/drawer_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+                android:id="@+id/swipe_refresh"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+            <ScrollView
+                    android:id="@+id/weather_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scrollbars="none"
+                    android:overScrollMode="never">
+                <LinearLayout
+                        android:orientation="vertical"
+                        android:fitsSystemWindows="true"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+                    <include layout="@layout/title"/>
+                    <include layout="@layout/now"/>
+                    <include layout="@layout/forecast"/>
+                    <include layout="@layout/aqi"/>
+                    <include layout="@layout/suggestion"/>
+                </LinearLayout>
+            </ScrollView>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+        <fragment
+                android:id="@+id/choose_area_fragment"
+                android:name="com.coolweather.android.ChooseAreaFragment"
+                andandroid:id="@+id/nav_button"
+                android:layout_gravity="start"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
+    </androidx.drawerlayout.widget.DrawerLayout>
+</FrameLayout>
+```
+&emsp;&emsp;可以看到，我们在SwipeRefreshLayout的外面又嵌套了一层DrawerLayout。DrawerLayout中的第一个子控件用于作为主屏幕中显示的内容，第二个子控件用于作为滑动菜单中显示的内容，因此这里我们在第二个子控件的位置添加了用于遍历省市县数据的碎片。接下来需要在WeatherActivity中加入滑动菜单的逻辑处理，修改WeatherActivity中的代码，如下所示：  
+![img_10.png](img_10.png)
+&emsp;&emsp;很简单，首先在onCreate()方法中获取到新增的DrawerLayout和Button的实例，然后在Button的点击事件中调用DrawerLayout的openDrawer()方法来的打开滑动菜单就可以了。  
+&emsp;&emsp;不过现在还没有结束，因为这仅仅是打开了滑动菜单而已，我们还需要，我们还需要处理切换城市的逻辑才行。这个工作就必须要在ChooseAreaFragment中进行了，因为之前选中了某个城市后是挑战到WeatherActivity的，而现在由于我们本来就是在WeatherActivity当中，因此并不需要跳转，只是去请求选择城市的天气信息就可以了。那么很显然这里我们需要根据ChooseAreaFragment的不同状态来进行不同的逻辑处理，修改ChooseAreaFragment中的代码，如下所示：  
+```
+    public void onActivityCreated(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (currentLevel == LEVEL_PROVINCE) {
+                    selectedProvince = provinceList.get(position);
+                    LogUtil.d(TAG, "LEVEL_PROVINCE");
+                    queryCities();
+                } else if (currentLevel == LEVEL_CITY) {
+                    selectedCity = cityList.get(position);
+                    queryCounties();
+                } else if (currentLevel == LEVEL_COUNTY){
+                    String weatherId = countyList.get(position).getWeatherId();
+                    if (getActivity() instanceof MainActivity){
+                        WeatherActivity.actionStart(getActivity(), weatherId);
+                        getActivity().finish();
+                    }else if (getActivity() instanceof WeatherActivity){
+                        WeatherActivity activity = (WeatherActivity) getActivity();
+                        activity.drawerLayout.closeDrawers();
+                        activity.swipeRefresh.setRefreshing(true);
+                        activity.requestWeather(weatherId);
+                    }
+
+                }
+            }
+        });
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (currentLevel == LEVEL_COUNTY) {
+                    queryCities();
+                } else if (currentLevel == LEVEL_CITY) {
+                    queryProvinces();
+                }
+            }
+        });
+        queryProvinces();
+    }
+```
+&emsp;&emsp;这里我使用了一个Java中的小技巧，instanceof 关键字可以用来判断一个对象是否属于某个类的实例。我们在碎片中调用getActivity()方法，然后配合instanceof关键字，就能轻松判断出该碎片是在MainActivity当中，还是WeatherActivity当中。如果是在MainActivity当中，那么处理逻辑不变。如果是在WeatherActivity当中，那么就关闭滑动菜单，显示下拉刷新进度条，然后请求新城市的天气信息。  
+&emsp;&emsp;这样我们就把切换城市的功能全部完成了，现在可以重新运行一下程序，效果如下所示：
+
+![img_11.png](img_11.png)
+
+&emsp;&emsp;可以看到，标题栏上多出了一个用于切换城市的按钮。点击该按钮好，或者在屏幕的左侧边缘进行拖动，就能让滑动菜单界面显示出来，如下所示：  
+![img_12.png](img_12.png)
+&emsp;&emsp;然后我们就可以在这里切换其他城市了。选中提供城市之后滑动菜单会自动关闭，并且主界面上的天气信息也会更新成你选择的那个城市。

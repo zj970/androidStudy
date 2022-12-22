@@ -26,8 +26,6 @@ X
 Mapp/src/androidTest/java/com/coolweather/android/ExampleInstrumentedTest.java,4/d/4d15a95f4a0679c0dbd396dd7368758254941b19
 =
 lombok.config,8/2/823fe80d2650ec87c2614800da17ca3a55af96a9
-@
-app/build.gradle,f/4/f4a01d6a4fcb971362ec00a83903fd3902f52164
 q
 Aapp/src/main/java/com/coolweather/android/base/MyApplication.java,a/1/a1935034fec909fa0fecf71e635c18497f7d39b0
 l
