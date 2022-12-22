@@ -13,6 +13,12 @@
             android:supportsRtl="true"
             android:theme="@style/Theme.CoolWeather"
             android:usesCleartextTraffic="true">
+        <service
+                android:name=".service.AutoUpdateService"
+                android:enabled="true"
+                android:exported="true">
+        </service>
+
         <activity android:name=".WeatherActivity">
         </activity>
         <activity android:name=".MainActivity">

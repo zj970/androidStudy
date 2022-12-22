@@ -18,6 +18,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.bumptech.glide.Glide;
 import com.coolweather.android.gson.Forecast;
 import com.coolweather.android.gson.Weather;
+import com.coolweather.android.service.AutoUpdateService;
 import com.coolweather.android.util.HttpUtil;
 import com.coolweather.android.util.LogUtil;
 import com.coolweather.android.util.Utility;
@@ -30,7 +31,7 @@ import org.w3c.dom.Text;
 import java.io.IOException;
 
 public class WeatherActivity extends AppCompatActivity {
-    private static final String API_KEY = "3906d8568ef8470d943c9765f5d891a8";
+    public static final String API_KEY = "3906d8568ef8470d943c9765f5d891a8";
     final String requestBingPic = "https://api.isoyu.com/bing_images.php";
     public DrawerLayout drawerLayout;
     private Button navButton;
@@ -190,6 +191,7 @@ public class WeatherActivity extends AppCompatActivity {
      * 处理并展示Weather实体类中的数据
      */
     private void showWeatherInfo(Weather weather) {
+
         String cityName = weather.basic.cityName;
         String updateTime = weather.basic.update.updateTime.split(" ")[1];
         String degree = weather.now.temperature + " °C";
@@ -224,6 +226,7 @@ public class WeatherActivity extends AppCompatActivity {
         carWashText.setText(carWash);
         sportText.setText(sport);
         weatherLayout.setVisibility(View.VISIBLE);
-
+        Intent intent = new Intent(WeatherActivity.this, AutoUpdateService.class);
+        startService(intent);
     }
 }

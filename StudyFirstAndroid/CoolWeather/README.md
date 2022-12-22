@@ -2524,4 +2524,113 @@ public class WeatherActivity extends AppCompatActivity {
 
 &emsp;&emsp;可以看到，标题栏上多出了一个用于切换城市的按钮。点击该按钮好，或者在屏幕的左侧边缘进行拖动，就能让滑动菜单界面显示出来，如下所示：  
 ![img_12.png](img_12.png)
-&emsp;&emsp;然后我们就可以在这里切换其他城市了。选中提供城市之后滑动菜单会自动关闭，并且主界面上的天气信息也会更新成你选择的那个城市。
+&emsp;&emsp;然后我们就可以在这里切换其他城市了。选中提供城市之后滑动菜单会自动关闭，并且主界面上的天气信息也会更新成你选择的那个城市。  
+
+## 14.6 后台自动更新天气
+
+&emsp;&emsp;为了要让酷欧天气更加智能，在第五阶段我们准备加入后台自动更行天气的功能，这样就可以尽可能地保证用户每次打开软件时看到的都是最新的天气信息。  
+&emsp;&emsp;要想实现上述功能，就需要创建一个长期在后台运行的定时任务，这个功能肯定是难不住的。我们在13.5节中就已经学习过了。首先在service包下新建一个服务，右击com.coolweather.android.service->New->Service->Service，新建一个AutoUpdateService，并将Exported和Enabled这个属性都勾中。然后修改AutoUpdateService中的代码，如下所示：  
+```java
+package com.coolweather.android.service;
+
+import android.app.AlarmManager;
+import android.app.PendingIntent;
+import android.app.Service;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.IBinder;
+import android.os.SystemClock;
+import android.preference.PreferenceManager;
+import com.coolweather.android.WeatherActivity;
+import com.coolweather.android.gson.Weather;
+import com.coolweather.android.util.HttpUtil;
+import com.coolweather.android.util.Utility;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
+import org.jetbrains.annotations.NotNull;
+
+import java.io.IOException;
+
+public class AutoUpdateService extends Service {
+    public AutoUpdateService() {
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        // TODO: Return the communication channel to the service.
+        return null;
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        updateWeather();
+        updateBingPic();
+        AlarmManager manager = (AlarmManager) getSystemService(ALARM_SERVICE);
+        int anHour = 8*60*60*1000;//8小时的毫秒数
+        long triggerAtTime = SystemClock.elapsedRealtime() + anHour;
+        Intent i = new Intent(this,AutoUpdateService.class);
+        PendingIntent pi = PendingIntent.getActivity(this,0,i,0);
+        manager.cancel(pi);
+        manager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP,triggerAtTime,pi);
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    /**
+     * 更新天气信息
+     */
+    private void updateWeather(){
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        String weatherString = prefs.getString("weather",null);
+        if(weatherString!=null){
+            //有缓存时直接解析天气数据
+            Weather weather = Utility.handleWeatherResponse(weatherString);
+            String weatherId = weather.basic.weatherId;
+            String weatherUrl = "http://guolin.tech/api/weather?cityid=" + weatherId + "&key=" + WeatherActivity.API_KEY;
+            HttpUtil.sendOkHttpRequest(weatherUrl, new Callback() {
+                @Override
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                    e.printStackTrace();
+                }
+
+                @Override
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    String responseText = response.body().string();
+                    Weather weather = Utility.handleWeatherResponse(responseText);
+                    if(weather != null && "ok".equals(weather.status)){
+                        SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(AutoUpdateService.this).edit();
+                        editor.putString("weather", responseText);
+                        editor.apply();
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * 更新必应每日一图
+     */
+    private void updateBingPic(){
+        String requestBingPic = "http://guolin.texh/api/bing_pic";
+        HttpUtil.sendOkHttpRequest(requestBingPic, new Callback() {
+            @Override
+            public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                String bingPic = response.body().string();
+                SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(AutoUpdateService.this).edit();
+                editor.putString("bing_pic", bingPic);
+                editor.apply();
+            }
+        });
+    }
+}
+```
+&emsp;&emsp;可以看到，在onStartCommand()方法中先是调用了updateWeather()方法来更新天气，然后调用了updateBingPic()方法来更新天气，然后调用了updateBingPic()方法来更新背景图片。这里我们将更新后的数据直接存储到了SharePreferences文件中就可以了，因此打开WeatherActivity的时候都会优先从SharePreferences缓存中读取数据。  
+&emsp;&emsp;之后就是我们学习过的创建定时任务的技巧，为了保证软件不会消耗过多的流量，这里将时间间隔设置为8小时，8小时后AutoUpdateReceiver的onStartCommand()方法就会重新执行，这样也就实现后台定时更新的功能了。  
+&emsp;&emsp;不过，我们还需要在代码某处去激活AutoUpdateService这个服务才行。修改WeatherActivity中的代码，如下所示：  
+![img_13.png](img_13.png)
+&emsp;&emsp;
