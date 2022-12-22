@@ -2633,4 +2633,46 @@ public class AutoUpdateService extends Service {
 &emsp;&emsp;之后就是我们学习过的创建定时任务的技巧，为了保证软件不会消耗过多的流量，这里将时间间隔设置为8小时，8小时后AutoUpdateReceiver的onStartCommand()方法就会重新执行，这样也就实现后台定时更新的功能了。  
 &emsp;&emsp;不过，我们还需要在代码某处去激活AutoUpdateService这个服务才行。修改WeatherActivity中的代码，如下所示：  
 ![img_13.png](img_13.png)
-&emsp;&emsp;
+&emsp;&emsp;可以看到，这里在showWeather()方法的最后加入启动AutoUpdateService这个服务的代码，这样只要一旦选中某个城市并成功更新天气之后，AutoUpdateService就会一直在后台运行，并保证每8小时更行一次天气。  
+
+## 14.8 修改图标和名称
+
+&emsp;&emsp;目前的酷欧天气看起来还不太像是一个正式的软件，为什么呢？因为都还没有一个像样的图标。理论上来讲，我们应该给这个图标提供几种不同分辨率的版本，然后分别放入相应分辨率的mipmap目录下，这里直接使用同一张图。放入所有以mipmap开头的目录下，然后修改AndroidManifest.xml中的代码，如下所示：  
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="com.coolweather.android">
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <application
+            android:name=".base.MyApplication"
+            android:allowBackup="true"
+                android:icon="@mipmap/sunny_weather_logo"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/Theme.CoolWeather"
+            android:usesCleartextTraffic="true">
+        <service
+                android:name=".service.AutoUpdateService"
+                android:enabled="true"
+                android:exported="true">
+        </service>
+
+        <activity android:name=".WeatherActivity">
+        </activity>
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+```
+&emsp;&emsp;这里将<application>标签中的android:icon属性指定成@mipmap/sunny_weather_logo就可以修改程序图标了。然后修改程序的名称，只需要在res/values/string.xml文件，其中app_name就是对应的程序名称，将他修改成酷欧天气即可。现在重新运行一下程序，观察酷欧天气的桌面图标，如下所示： 
+![img_14.png](img_14.png)

@@ -40,9 +40,23 @@ j
 :app/src/main/java/com/coolweather/android/db/Province.java,6/5/65682a5553ed04c7f724d5c2f8ba8475d77ef25d
 l
 <app/src/main/java/com/coolweather/android/gson/Forecast.java,0/4/045b9e893a6261f32e341246ba8f4ec567513912
-P
- app/src/main/AndroidManifest.xml,8/c/8c55c3ccc257e5907959013f99656e4c8ec3903e
 g
 7app/src/main/java/com/coolweather/android/gson/AQI.java,7/b/7b045efafc293df3acc8b799dcef3231ca5fc028
 n
 >app/src/main/java/com/coolweather/android/gson/Suggestion.java,5/7/57ef6ee9a2553b9e34923e0c43354cf008d975d0
+k
+;app/src/main/java/com/coolweather/android/MainActivity.java,6/d/6db9939136654dca3b0473037fa708c5c9482fc4
+g
+7app/src/main/java/com/coolweather/android/gson/Now.java,c/5/c524f55248cf126a748508d0bbf1022ed947b851
+k
+;app/src/main/java/com/coolweather/android/gson/Weather.java,4/c/4cab041d843cfdd61d7796c7fa0769df8f5361c2
+k
+;app/src/main/java/com/coolweather/android/util/Utility.java,a/8/a8496c017c0d66653213296e0b59e7a292bd8df5
+@
+app/build.gradle,f/4/f4a01d6a4fcb971362ec00a83903fd3902f52164
+q
+Aapp/src/main/java/com/coolweather/android/ChooseAreaFragment.java,4/5/458bc3b6b966c9a37d331acac2495adb0b83ae56
+x
+Happ/src/main/java/com/coolweather/android/service/AutoUpdateService.java,d/d/ddfc8f033376aa2c13d6a86303a4e7999f4f320c
+n
+>app/src/main/java/com/coolweather/android/WeatherActivity.java,8/c/8c25895bdd11d3dee2f8d2277ff0db1fdc3e211c
