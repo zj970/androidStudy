@@ -2635,7 +2635,7 @@ public class AutoUpdateService extends Service {
 ![img_13.png](img_13.png)
 &emsp;&emsp;可以看到，这里在showWeather()方法的最后加入启动AutoUpdateService这个服务的代码，这样只要一旦选中某个城市并成功更新天气之后，AutoUpdateService就会一直在后台运行，并保证每8小时更行一次天气。  
 
-## 14.8 修改图标和名称
+## 14.7 修改图标和名称
 
 &emsp;&emsp;目前的酷欧天气看起来还不太像是一个正式的软件，为什么呢？因为都还没有一个像样的图标。理论上来讲，我们应该给这个图标提供几种不同分辨率的版本，然后分别放入相应分辨率的mipmap目录下，这里直接使用同一张图。放入所有以mipmap开头的目录下，然后修改AndroidManifest.xml中的代码，如下所示：  
 
@@ -2676,3 +2676,10 @@ public class AutoUpdateService extends Service {
 ```
 &emsp;&emsp;这里将<application>标签中的android:icon属性指定成@mipmap/sunny_weather_logo就可以修改程序图标了。然后修改程序的名称，只需要在res/values/string.xml文件，其中app_name就是对应的程序名称，将他修改成酷欧天气即可。现在重新运行一下程序，观察酷欧天气的桌面图标，如下所示： 
 ![img_14.png](img_14.png)
+
+## 14.9 你还可以做的事情
+&emsp;&emsp;经过五个阶段的开发，酷欧天气已经是一个完善、成熟的软件了吗？现在的酷欧天气只能说是是具备了一些最基本的功能，和那些商用的天气软件比起来还有很大的差距，因此仍然还有非常巨大的发挥空间来对它进行完善，比如说以下功能：  
+- 增加设置选项，让用户选择是否允许后台更新天气，以及设定更新的频率。  
+- 优化软件界面，提供多套与天气对应的图片，让程序可以根据不同的天气自动切换背景图
+- 允许选择多个城市，可以同时观察多个城市的天气信息，不用来回切换。
+- 提供更加完整的天气信息。
