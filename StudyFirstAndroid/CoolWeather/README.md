@@ -2677,9 +2677,228 @@ public class AutoUpdateService extends Service {
 &emsp;&emsp;这里将<application>标签中的android:icon属性指定成@mipmap/sunny_weather_logo就可以修改程序图标了。然后修改程序的名称，只需要在res/values/string.xml文件，其中app_name就是对应的程序名称，将他修改成酷欧天气即可。现在重新运行一下程序，观察酷欧天气的桌面图标，如下所示： 
 ![img_14.png](img_14.png)
 
-## 14.9 你还可以做的事情
+## 14.8 你还可以做的事情
 &emsp;&emsp;经过五个阶段的开发，酷欧天气已经是一个完善、成熟的软件了吗？现在的酷欧天气只能说是是具备了一些最基本的功能，和那些商用的天气软件比起来还有很大的差距，因此仍然还有非常巨大的发挥空间来对它进行完善，比如说以下功能：  
 - 增加设置选项，让用户选择是否允许后台更新天气，以及设定更新的频率。  
 - 优化软件界面，提供多套与天气对应的图片，让程序可以根据不同的天气自动切换背景图
 - 允许选择多个城市，可以同时观察多个城市的天气信息，不用来回切换。
 - 提供更加完整的天气信息。
+
+# 第15章 最后一步——将应用发布到360应用商店
+&emsp;&emsp;应用已经开发出来了，下一步我们需要思考推广方面的工作。那么如何才能让更多的用户知道并使用我们的应用程序呢？在手机领域，最常见的做法就是将程序发布到某个应用商店中，这样用户就可以通过商店找到我们的应用程序，然后轻松地进行下载和安装。  
+&emsp;&emsp;说到应用商店，在Android领域真的可以称得上是百家争鸣，除了谷歌官方退出的Google Play之外.在中国还有像360、豌豆荚、百度、应用宝等知名的应用商店。当然，这些商店所提供的功能都是比较类似的，发布的=应用的方法也大同小异，因此这里我们就只学习如何将应用发布到360应用商店，其他应用商店的发布方法相信你完全可以自己摸索出来。  
+
+## 15.1 生产正式签名的APK文件  
+&emsp;&emsp;之前我们一直都是通过Android Studio 来将程序安装到手机上的，而它背后实际的工作流程是：Android Studio会将程序代码打包成一个APK文件，然后将这个文件传输到手机上，最后再执行安装操作。Android 系统会将所有APK文件识别为应用程序的安装包，类似于Windows系统上的EXE文件。  
+&emsp;&emsp;但不是所有的APK文件都能成功安装到手机上，Android系统要求只有签名后的APK文件才可以安装，因此我们还需要对生成的APK文件进行签名才行。那么你可能会有疑问了，直接通过Android Studio来运行程序的时候好像并没有进行过签名操作啊。为什么还能将程序安装到手机上呢？这是因为Android Studio使用了一个默认的Keystore文件帮我们自动进行了签名。点击Android Studio 右侧工具栏的Grade->项目名->:app->Tasks->android，双击signingReport。结果如下所示：  
+![img_15.png](img_15.png)
+&emsp;&emsp;也就是说，我们所有通过Android Studio来运行的程序都是使用了这个debug.keystore文件进行签名的。不过这仅仅适用于开发阶段而已，现在酷欧天气已经快要发布了，要使用一个正式的keystore文件来进行签名才行。下面我们就来学习一下，如何生成一个带有正式签名的APK文件。  
+
+### 15.1.1 使用Android Studio生成
+
+&emsp;&emsp;先学习一下如何使用Android Studio来生成正式签名的AOK文件。点击Android Studio导航栏上的Build->Generate Signed APK，然后会弹出如下图所示的创建签名APK对话框：  
+![img_16.png](img_16.png)
+&emsp;&emsp;由于目前我们还没有一个正式的keystore文件，所以应该点击Create new 按钮，然后会弹出一个新的对话框来让我们填写创建keystore文件所必要的信息。根据自己的实际情况进行填写就行，如下所示：  
+![img_17.png](img_17.png)
+&emsp;&emsp;这里需要注意，在Validity那一栏填写的是keystore的有效时长，单位是年，一般建议事件可以填得长一些，然后点击ok，这时我们刚才填写的信息会自动填充到创建签名APK对话框当中，如果你希望以后不用再输入keystore的密码了，可以将Remember password选项勾上。然后点击Next，这时选择APK文件的输出地址，如下图所示：  
+![img_18.png](img_18.png)
+
+![img_19.png](img_19.png)
+&emsp;&emsp;这里默认是将APK文件生成项目的根目录下，然后点击Finish，APK文件就会生成好了，并且会弹出提示框，也可以在release下生成对应的APK文件。
+
+![img_20.png](img_20.png)
+
+### 15.1.2 使用Gradle生成
+
+&emsp;&emsp;上一小节中我们使用了Android Studio提供的可视化工具来生成了带有正式签名的APK文件，除此之外，Android Studio其实还提供了一种方式——使用Gradle生成，下面我们就来学习一下。  
+&emsp;&emsp;Gradle是一个非常先进的项目构建工具，在Android Studio中开发的所有项目都是使用它来构建的。在之前的项目中，我们也体验过了Gradle带来的很多便利之处，比兔说当需要添加依赖库的时候不需要自己再去手动下载了，而是直接在dependencies百宝中太那几一句引用声明就可以了。  
+&emsp;&emsp;不过这里想要将Gradle完全精通的话，其复杂度并不亚于学习一门新的语言(Gradle是使用Groovy语言编写的)。而Android中主要只是使用Gradle来构建项目而已，因此这里我们只要掌握一些它的基本用法就好了。也可以在网上查询它的更多用法。下面我们开始学习如何使用Gradle来生成带有正式签名的APK文件。编辑app/build.gradle文件，在android闭包中添加了如下内容：  
+```groovy
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.0"
+
+    defaultConfig {
+        applicationId "com.coolweather.android"
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+        javaCompileOptions { annotationProcessorOptions { includeCompileClasspath = true } }
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+    }
+
+    signingConfigs{
+        def KEY_ALIAS = "weather"
+        def KEY_PSWD = "123456"
+        def STORE_FILE = "/xx/xx/sign/cool_weather.jks"
+        def STORE_FILE_PSWD = "123456"
+
+        debug{
+            storeFile file(STORE_FILE)
+            storePassword STORE_FILE_PSWD
+            keyAlias KEY_ALIAS
+            keyPassword KEY_PSWD
+        }
+        release{
+            storeFile file(STORE_FILE)
+            storePassword STORE_FILE_PSWD
+            keyAlias KEY_ALIAS
+            keyPassword KEY_PSWD
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+
+}
+
+dependencies {
+
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'com.google.android.material:material:1.1.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    //https://github.com/guolindev/LitePal
+    implementation 'org.litepal.guolindev:core:3.2.3'
+    // define a BOM and its version
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.10.0"))
+    // define any required OkHttp artifacts without version
+    implementation("com.squareup.okhttp3:okhttp")
+    implementation("com.squareup.okhttp3:logging-interceptor")
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    implementation 'com.google.code.gson:gson:2.10'
+    // https://mvnrepository.com/artifact/com.github.bumptech.glide/glide
+    implementation 'com.github.bumptech.glide:glide:4.14.2'
+    // https://mvnrepository.com/artifact/org.projectlombok/lombok
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+    //https://mvnrepository.com/artifact/androidx.swiperefreshlayout/swiperefreshlayout
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01'
+}
+
+```
+&emsp;&emsp;这里在android闭包中添加了一个signingConfigs闭包，storeFile用于指定keystore文件的位置，storePassword用于指定密码，keyAlias用于指定别名，keyPassword用于指定别名密码。然后在构建任务中添加签名配置。还可以在项目下gradle.properties文件下配置全局键值对数据。  
+&emsp;&emsp;然后将原来的明文配置改成相应的键值对。然后我们只需要将gradle.properties保护好就行了，比如说将它从Git版本控制中排除。这样gradle.properties文件就只会保留在本地，从而也就不用担心keystore文件的信息会泄露了。   
+
+### 15.1.3 生成多渠道APK文件  
+&emsp;&emsp;现在你已经掌握了两种生成带有正式签名的APK文件的方式，从简易程度上来讲，两种方式差不多，基本上都还是比较简单的，选择使用哪一种全凭你自己的喜好。  
+&emsp;&emsp;现在APK文件已经生成好了，可能在大多水情况下，我们都只需要一个PAK文件就足够了，不过本小姐中我们再来讨论一种比较特殊的情况——生成多渠道APK文件。  
+&emsp;&emsp;在本章的开头就已经提到过，目前Android领域的应用商店非常多，不像苹果只有一个APP Store。当然我们完全可以使用同一个APK文件来上架不同的应用商店，但是如果你有一些特殊需求的话，比如说针对不同的应用商店渠道来定制不同的界面，这就比较头疼了。  
+&emsp;&emsp;传统情况下，开发这种差异性需求非常痛苦，通常需要维护多份代码版本，然后逐个打成相应渠道的APK文件。一旦有任何功能变更就苦不堪言，因为每份代码版本里面都需要逐个修改一遍。  
+&emsp;&emsp;幸运的是，现在Android Studio 提供了一种非常方便的方法来应对这种差异性需求，极大程度地解决了之前版本维护困难的问题，下面我们就来学习一下。  
+&emsp;&emsp;比如说这里我们准备生成360和百度两个渠道的APK文件，那么修改app/build.gradle文件，如下所示：  
+```groovy
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.0"
+
+    defaultConfig {
+        applicationId "com.coolweather.android"
+        minSdkVersion 21
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+        javaCompileOptions { annotationProcessorOptions { includeCompileClasspath = true } }
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        flavorDimensions "versionCode"
+    }
+
+    signingConfigs{
+        debug{
+            storeFile file(KEY_PATH)
+            storePassword KEY_PASS
+            keyAlias ALTAS_NAME
+            keyPassword ALIAS_PASS
+        }
+        release{
+            storeFile file(KEY_PATH)
+            storePassword KEY_PASS
+            keyAlias ALTAS_NAME
+            keyPassword ALIAS_PASS
+        }
+    }
+    productFlavors{
+        qihoo{
+            applicationId "com.coolweather.android.qihoo"
+        }
+        baidu{
+            applicationId "com.coolweather.android.baidu"
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+
+}
+
+dependencies {
+
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'com.google.android.material:material:1.1.0'
+    implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    //https://github.com/guolindev/LitePal
+    implementation 'org.litepal.guolindev:core:3.2.3'
+    // define a BOM and its version
+    implementation(platform("com.squareup.okhttp3:okhttp-bom:4.10.0"))
+    // define any required OkHttp artifacts without version
+    implementation("com.squareup.okhttp3:okhttp")
+    implementation("com.squareup.okhttp3:logging-interceptor")
+    // https://mvnrepository.com/artifact/com.google.code.gson/gson
+    implementation 'com.google.code.gson:gson:2.10'
+    // https://mvnrepository.com/artifact/com.github.bumptech.glide/glide
+    implementation 'com.github.bumptech.glide:glide:4.14.2'
+    // https://mvnrepository.com/artifact/org.projectlombok/lombok
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
+    compileOnly 'org.projectlombok:lombok:1.18.24'
+    //https://mvnrepository.com/artifact/androidx.swiperefreshlayout/swiperefreshlayout
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01'
+}
+
+```
+&emsp;&emsp;可以看到，这里添加了一个productFlavors闭包，然后在该闭包中添加所有的渠道配置就可以了。注意Gradle中的配置规定不能以数字开头，因此这里将360的渠道名配置成了qihoo。渠道名的闭包中可以覆写defaultConfig中的任何一个属性，比如说这里将applicationId属性进行了覆写，那么最终生成的各渠道APK文件的包名也就各不相同。  
+&emsp;&emsp;接下来我们开始对不同渠道编写差异性需求。在app/src目录下(main的平级目录)新建一个baidu目录，然后在baidu 目录下再新建java和res这两个目录， 这样我们就可以在这里编写百度渠道他特有的功能了，java目录用于存放代码，res目录用于存放资源，如果需要覆写AndroidManifest文件中的内容，还可以在baidu目录再新建一个AndroidManifest.xml文件。这里并没有其他需求，在baidu/res/values/string.xml中修改应用别名。这样百度的APK中定义的应用名就胡覆盖原来的应用名。同样的道理，我们可以再新建一个qihoo目录，然后在qihoo目录下也建立相同的目录结构。
+![img_21.png](img_21.png)
+&emsp;&emsp;这样我们就以一个简单的示例实现渠道差异性需求了，下面开始生成多渠道的APK文件。现在观察右侧工具栏的Gradle Tasks，会发现里面多出了几个新的Task。其中，如果你只想生成百度渠道的APK文件，那么就执行assembleBaidu，如果你只想生成360渠道的APK文件，那么就执行assembleQihoo；如果你想一次性生成所有渠道的APK文件，那么就还是执行assembleRelease。除了使用Gradle的方法生成之外，使用Android Studio提供的可视化工具也是能生成多渠道APK文件的。
+![img_22.png](img_22.png)
+emsp;&emsp;也可按住CTRL键就可以多选生成，然后可以通过adb install命令将生成好的APK文件安装到模拟器上，如下所示：  
+> adb install <APK路径>
+
+![img_23.png](img_23.png)
+emsp;&emsp;可以看到，目前模拟器上面有3个版本的酷欧天气，这是由于之前我们在productFlavors中覆写了各个渠道的applicationId属性，保证每个APk文件的包名都不相同，因而它们才能安装到同一个设备上面。另外，从应用名上来看，渠道差异性开发工作也顺利完成了。  
