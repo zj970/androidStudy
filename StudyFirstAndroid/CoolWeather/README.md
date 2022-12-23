@@ -2897,8 +2897,265 @@ dependencies {
 ![img_21.png](img_21.png)
 &emsp;&emsp;这样我们就以一个简单的示例实现渠道差异性需求了，下面开始生成多渠道的APK文件。现在观察右侧工具栏的Gradle Tasks，会发现里面多出了几个新的Task。其中，如果你只想生成百度渠道的APK文件，那么就执行assembleBaidu，如果你只想生成360渠道的APK文件，那么就执行assembleQihoo；如果你想一次性生成所有渠道的APK文件，那么就还是执行assembleRelease。除了使用Gradle的方法生成之外，使用Android Studio提供的可视化工具也是能生成多渠道APK文件的。
 ![img_22.png](img_22.png)
-emsp;&emsp;也可按住CTRL键就可以多选生成，然后可以通过adb install命令将生成好的APK文件安装到模拟器上，如下所示：  
+&emsp;&emsp;也可按住CTRL键就可以多选生成，然后可以通过adb install命令将生成好的APK文件安装到模拟器上，如下所示：  
 > adb install <APK路径>
 
 ![img_23.png](img_23.png)
-emsp;&emsp;可以看到，目前模拟器上面有3个版本的酷欧天气，这是由于之前我们在productFlavors中覆写了各个渠道的applicationId属性，保证每个APk文件的包名都不相同，因而它们才能安装到同一个设备上面。另外，从应用名上来看，渠道差异性开发工作也顺利完成了。  
+&emsp;&emsp;可以看到，目前模拟器上面有3个版本的酷欧天气，这是由于之前我们在productFlavors中覆写了各个渠道的applicationId属性，保证每个APk文件的包名都不相同，因而它们才能安装到同一个设备上面。另外，从应用名上来看，渠道差异性开发工作也顺利完成了。  
+
+## 15.2 申请360开发者账号  
+&emsp;&emsp;目前，酷欧天气的APK安装包已经准备好了，但如果想要把它发布到369应用商店，还需要去申请一个360开发者账号才行，申请地址是：http://dev.360.cn。  
+&emsp;&emsp;打开该网页，在页面顶部有登录和注册按钮。可以选择个人开发者或者企业开发者。填写一些基本信息和联系方式，然后注册即可。  
+## 15.3 发布应用程序  
+&emsp;&emsp;接下来我们开始发布酷欧天气这个应用，还是在浏览器访问地址： http://dev.360.cn。如下所示：  
+![img_24.png](img_24.png)
+&emsp;&emsp;我们需要选在是发布软件类应用还是电子书类应用，这里点击软件。接下来会弹出一个新的界面让我们上传APK以及填写应用信息，然后上传带有正式签名的APK文件，然后就会自动开始上传，上传完成之后会显示如图所示界面：  
+![img_25.png](img_25.png)
+&emsp;&emsp;这个界面提醒我们，目前应用的安全系数较低，建议对APK进行加固。实际上这个是360应用商店的特殊需求，并不是所有应用商店都要求进行加固但是我们还是得按照它的要求来修改，不然审核可能会不通过。这里点击立即加固按钮，360会帮我们将原APK文件进行加固，并生成一个新的APK文件。不过这个加固后的APk文件是没有经过签名的，也就是我们还需要将它下载下拉，然后手动进行签名。因为Android Studio 中并没有提供对一个未签名的APK直接进行签名的功能，因为我们只能通过最原始的方式，使用jarsigner命令进行签名。在命令行界面按照以上格式输入签名命令：  
+> jarsigner -verbose -sigalg SHA1withRSA -digestalg SHA1 -keystore [keystore文件路径] -storepass [keystore文件密码] [待签名APK路径] [keystore文件别名]
+ 
+&emsp;&emsp;将[]中的描述替换成keystore文件的具体信息就能签名成功了。然后将签名后的APK文件重新上传就可以了。APK上传成功之后，接下来需要选择应用的分类，如图所示：  
+![img_26.png](img_26.png)
+&emsp;&emsp;这里我们将应用分类选择成实用工具->天气。下面还有一个上传版权证明的选项，这是一个选填项。接着向下滚动网页，设置支持的语言以及资费类型，如下所示：  
+![img_27.png](img_27.png)
+&emsp;&emsp;继续滚动网页，下面需要填写应用简介以及当前版本介绍，然后还有一项隐私权限说明，还需要上传一张高分辨率的应用图标，图标要求是512X512像素的PNG格式图片，继续往下滚动，还有一个审核辅助说明的选填项，最后就是一些额外的定制选项，最终点击审核发布就可以了，等待一段时间后就可以在360应用商店中搜到自己的程序了。
+
+---
+## 15.4 嵌入广告进行盈利  
+&emsp;&emsp;谷歌充分考虑到了可以在Android应用程序中嵌入广告来让开发者获得收入，因此早早地就收购了AdMob公司。AdMob可能就不是那么适合了。因为AdMob平台上的广告大多都是英文，中文广告数有限，并且将AdMob的账户中的钱提取到银行账户中也比较麻烦，因此这里我们就不准备使用AdMob了，而是将眼光放在一些国内的移动广告平上面。在国内的这一领域，做得比较好的移动广告平台也不少，其中我个人认为腾讯广告联盟（原广点通）特别专业，因此我们就选择它来为酷欧天气提供广告服务。
+
+### 15.4.1 注册腾讯广告联盟账号  
+&emsp;&emsp;下面开始动手，首先第一步我们需要注册一个腾讯广告联盟的账号，注册地址为：http://e.qq.com/dev/index.html。打开该网页，选择使用QQ号登录，然后就会自动跳转到腾讯广告联盟的注册界面，按照实际情况下来填写，由于腾讯广告联盟及提现服务，因此我们还需要填写银行卡信息，最后将身份证正反面照片，点击提交按钮，就能提交审核了。  
+
+### 15.4.2 新建媒体和广告位  
+&emsp;&emsp;审核通过之后，我们就可以进入到腾讯广告联盟的后台，开始给酷欧天气添加广告了。首先需要进入媒体管理界面，点击新建媒体按钮，这时会显示一个页面俩让你填写引用的相关信息，我们根据提示一一填好即可。
+![img_28.png](img_28.png)
+&emsp;&emsp;注意这里需要填写一个详情页，也就是酷欧天气在360应用商店上的详情页地址。打开http://zhushou.360.cn，然后在搜索框上输入"酷欧天气"，就能找到该地址了。填写完成后点击下一步，需要下载SDK，然后填入APK的360下载地址，然后又进入到审核等待中。这时因为腾讯为了防止某些开发者在垃圾软件上面投放广告，因此要求开发者必须提交应用程序的APK文件进行审核，只有审核通过的应用才允许进行广告投放。审核通过之后，在媒体管理界面查看新建媒体的状态，如下所示：  
+![img_29.png](img_29.png)
+&emsp;&emsp;可以看到，联盟开通状态显示已开通，业务状态显示正常，说明新建的媒体已经通过审核了，注意这里还自动生成了一个应用ID，这个后面会用到。然后新建广告位：  
+![img_30.png](img_30.png)
+&emsp;&emsp;首先要输入广告位的名称，然后选择广告位的类型。腾讯广告联盟支持Banner、应用墙、插屏和开屏这4种广告类型，具体每种广告类型的去呗你可以通过查阅文档进行了解，这里我们选择开屏广告。接下来还可以对一些敏感行业的广告进行屏蔽，选择完成之后点击创建按钮完成广告位创建。现在进入到广告位管理界面，就能查看到我们刚刚创建的广告位了
+![img_31.png](img_31.png)
+&emsp;&emsp;其中广告位ID和应用ID是我们接入广告SDk需要的数据。
+
+### 15.4.3 接入广告SDK
+
+&emsp;&emsp;首先将刚才下载的广告SDK压缩包解压，里面的内容非常简单，如下所示：  
+![img_32.png](img_32.png)
+&emsp;&emsp;其中resources文件夹中放的是一些资源图片，我们使用不到。GDTDEV guide.4.9.html是广告SDK的对接文档，GDTUnionDemo.zip是广告SDk的对接示例，GDTUnionSDK4.9.533.min.jar则是广告SDK最重要的一个Jar包了。将此jar包放到项目中，然后修改AndroidManifest.xml：  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools" package="com.coolweather.android">
+
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.CONTROL_LOCATION_UPDATES" tools:ignore="ProtectedPermissions"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <application
+            android:name=".base.MyApplication"
+            android:allowBackup="true"
+            android:icon="@mipmap/sunny_weather_logo"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/sunny_weather_logo"
+            android:supportsRtl="true"
+            android:theme="@style/Theme.CoolWeather"
+            android:usesCleartextTraffic="true">
+        <service
+                android:name=".service.AutoUpdateService"
+                android:enabled="true"
+                android:exported="true">
+        </service>
+
+        <activity android:name=".WeatherActivity">
+        </activity>
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
+```
+&emsp;&emsp;注意，其中READ_PHONE_STATE、ACCESS_COARSE_LOCATION和WRITE_EXTERNAL_STORAGE这3个权限是危险权限，因此我们还需要进行运行时权限处理。接下来在<application>标签添加如下所示：  
+![img_33.png](img_33.png)
+&emsp;&emsp;然后我们还需要创建一个用于显示开屏广告的活动，创建一个SplashActivity，布局文件名指定成activity_splash.xml，修改其中的代码：  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+</RelativeLayout>
+```
+&emsp;&emsp;这里只有一个空的RelativeLayout，我们并不需要在RelativeLayout当中放入什么内容吗，但必须给他定义一个id。接着修改SplashActivity中的代码：  
+```java
+package com.coolweather.android;
+
+import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.text.Layout;
+import android.view.View;
+import android.widget.RelativeLayout;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Splash extends AppCompatActivity {
+    private RelativeLayout container;
+    /**
+     * 用于判断是否可以跳过广告，进入MainActivyt
+     */
+    private boolean canJump;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_splash);
+        container = findViewById(R.id.container);
+
+        //运行时权限处理
+        List<String> permissionList = new ArrayList<String>();
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.READ_PHONE_STATE);
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.ACCESS_COARSE_LOCATION);
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        if (!permissionList.isEmpty()){
+            String[]  permissions = permissionList.toArray(new String[permissionList.size()]);
+            ActivityCompat.requestPermissions(this, permissions,1);
+        } else {
+            requestAds();
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        canJump = false;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (canJump){
+            forward();
+        }
+        canJump = true;
+    }
+
+    /**
+     * 请求开屏广告
+     */
+    private void requestAds(){
+        String appId = "xxxxxx";
+        String adId = "xxxxxx";
+        new SplashAD(this, container, appId, adId, new SplashADListener() {
+            @Override
+            public void onADDismissed() {
+                //广告显示完毕
+                forward();
+            }
+
+            @Override
+            public void onNoAD() {
+                //广告加载失败
+                forward();
+            }
+
+            @Override
+            public void OnADPresent() {
+                //广告加载成功
+            }
+
+            @Override
+            public void onADClicked() {
+                //广告点击
+            }
+        });
+
+    }
+
+    private void forward(){
+        if (canJump){
+            //跳转到MainActivity
+            Intent intent = new Intent(this,MainActivity.class);
+            startActivity(intent);
+            finish();
+        }else {
+            canJump = true;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull @NotNull String[] permissions, @NonNull @NotNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case 1:
+                if (grantResults.length > 0) {
+                    for (int result : grantResults) {
+                        if (result == PackageManager.PERMISSION_GRANTED) {
+                            Toast.makeText(this, "必须同意所有权限才能使用本程序", Toast.LENGTH_SHORT).show();
+                            finish();
+                            return;
+                        }
+                    }
+                    requestAds();
+                } else {
+                    Toast.makeText(this, "未知错误", Toast.LENGTH_LONG).show();
+                    finish();
+                }
+                break;
+            default:
+
+        }
+    }
+
+    /**
+     * 模拟SDk jar包
+     */
+    class SplashAD {
+        public SplashAD(Context context, View container, String appId, String adId, SplashADListener splashADListener){
+
+        }
+    }
+    /**
+     * 模拟广告SDK
+     */
+    interface SplashADListener {
+        public void onADDismissed();
+        public void onNoAD();
+        public void OnADPresent();
+        public void onADClicked();
+    }
+}
+```
+&emsp;&emsp;可以看到，在onCreate)_方法中，我们先是获取到了RelativeLayout的实例，紧接着就开始进行运行时权限处理。由于这里也是需要在运行时一次性申请多个权限，因此采用了和11.3.2小节同样的写法。  
+&emsp;&emsp;当用户同意了所有的权限申请之后，就会调用requestAds()方法来请求广告数据，在requestAds()方法中我们显示定义了appId和adId这两个变量，它们的值就是在腾讯广告联盟后台生成的应用ID和广告位ID，然后创建SplashAD的实例来获取广告数据。SplashAD的构造函数接收5个参数，第1个参数是当前活动数据的回调。其中onADDismissed()方法会在加载成功时回调，onNoAD()方法会在广告加载失败时回调，onADDismissed()方法会在加载成功时回调，onADClicked()方法会在广告被点击时回调。当广告显示完毕或者广告加载失败时，我们调用forward()方法跳转到ManiActivity，并将当前活动关闭即可。  
+&emsp;&emsp;另外注意这里还使用了一个canJump变量用于对活动挑战进行控制。这是因为如果用户点击了广告，会启动一个新的活动来展示广告的详细内容，这个时候即使回调了onADDismissed()方法，显然也不应该启动MainActivity，因此我们在onPause()方法中将canJump设置成false。然后在forward()方法中发现canJump是false，因此不会进行跳转，但是会将canJump设置成true。最后，方用户看完了广告回到SplashActivity时，onResume()方法将会执行，这个时候发现canJump是true，因此就会调用forward()方法来启动MainActivity。  
+&emsp;&emsp;最后将默认启动活动更改为SplashActivity，这样就将广告SDK全部对接完成了。需要注意的是，广告在模拟器上是不会显示的，我们要用真正的手机测试才行。
+
+### 15.4.4 重新发布应用程序
+&emsp;&emsp;由于即将发布的是新版的酷欧天气，因此在生成安装包之前还需要修改一下应用程度的版本号信息，编辑app/build.gradle，如下所示：  
+![img_34.png](img_34.png)
+&emsp;&emsp;可以看到，这里将versionCode改成了2，versionName改成了1.1。需要注意的是，每个版本的versionCode和versionName都不能和其他版本相同，且新版应用的版本号必须大于老版应用的版本号。然后打开360开发者后台管理中心页面，然后点击酷欧天气的更新管理按钮，点击编辑与更新按钮，就鞥你上传新的APK文件了。然后加固，重新上传。由于新版的酷欧天气中增加了一些敏感隐私权限，因此我们还需要在这一项上面做出说明，之后提交审核。然后就可以在腾讯广告联盟后台管理页面可以查看到每天的收益情况了。你的应用越成功，所获得广告收益也会越多。
