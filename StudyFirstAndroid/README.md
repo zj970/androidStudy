@@ -1,8 +1,8 @@
-- 第1章 开启启程——你的第一行Android代码
-- 第2章 先从看得到的入手——探究活动
-- 第3章 软件也要拼脸蛋——UI开发的点点滴滴
-- 第4章 手机平板要兼顾——探究碎片
-- 第5章 全局大喇叭——详解广播机制
+- 第1章 [开启启程——你的第一行Android代码](https://github.com/zj970/androidStudy/tree/master/StudyFirstAndroid/HelloWorld)
+- 第2章 [先从看得到的入手——探究活动](https://github.com/zj970/androidStudy/tree/master/StudyFirstAndroid/ActivityStudy)
+- 第3章 [软件也要拼脸蛋——UI开发的点点滴滴](https://github.com/zj970/androidStudy/tree/master/StudyFirstAndroid/UIStudy)
+- 第4章 [手机平板要兼顾——探究碎片](https://github.com/zj970/androidStudy/tree/master/StudyFirstAndroid/FragmentsStudy)
+- 第5章 [全局大喇叭——详解广播机制](https://github.com/zj970/androidStudy/tree/master/StudyFirstAndroid/BroadcastStudy)
 - 第6章 [数据存储全方案——详解持久化技术](https://github.com/zj970/androidStudy/tree/master/StudyFirstAndroid/PersistenceTechnology)
 - 第7章 [跨程序共享数据——探究内容提供器](https://github.com/zj970/androidStudy/tree/master/StudyFirstAndroid/ConTentProviders)
 - 第8章 [丰富你的程序——运用手机多媒体](https://github.com/zj970/androidStudy/tree/master/StudyFirstAndroid/Multimedia)
