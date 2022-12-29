@@ -168,4 +168,263 @@ public boolean onOptionsItemSelected(MenuItem item){
 
 ### 2.2.6 销毁一个活动  
 &emsp;&emsp;通过上节的学习，你已经掌握了手动创建活动的方法，并学会了如何在活动中创建Toast和创建菜单。或许你现在心中会有个疑惑，如何销毁一个活动呢？  
-&emsp;&emsp;其实答案非常简单，只要按一下Back键就可以销毁当前的活动了。不过如果你不想通过按键的方式，而是希望在程序中通过代码来销毁活动，当然也可以，Activity提供了一个finish()方法，我们在活动中调用一下这个方法就可以销毁当前活动了。
+&emsp;&emsp;其实答案非常简单，只要按一下Back键就可以销毁当前的活动了。不过如果你不想通过按键的方式，而是希望在程序中通过代码来销毁活动，当然也可以，Activity提供了一个finish()方法，我们在活动中调用一下这个方法就可以销毁当前活动了。  
+
+## 2.3 使用Intent在活动之间穿梭   
+&emsp;&emsp;只有一个活动的应用也太简单了吧？没错，你的追求应该更高点。不管你想创建多少个活动，方法都和上一节中介绍的是一样的。唯一的问题在于，你在启动器中点击应用的图标只会进入到该应用的主活动，那么怎样才能由主活动跳转到其他活动呢？  
+### 2.3.1 使用显示Intent
+&emsp;&emsp;你应该已经对创建活动的流程比较熟悉了，那我们现在快速地在ActivityTest项目中再创建一个SecondActivity活动，get布局文件起名为second_layout。点击Finish完成创建，Android Studio会为我们自动生成SecondActivity.java和second_layout.xml这连个文件。不过自动生成的布局代码目前对你来说可能有些复杂，这里我们仍然还是使用最熟悉的LinearLayout，编辑second_layout.xml：  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".SecondActivity">
+
+    <Button
+            android:id="@+id/button_3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Button 3"
+    />
+
+    <Button
+            android:id="@+id/button_6"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="50dp"
+            android:text="button 6"/>
+
+
+</LinearLayout>
+```
+&emsp;&emsp;然后SecondActivity中的代码已经自动生成了一部分，我们保持默认不变就好，另外不要忘记，任何一个活动都需要在AndroidManifest.xml中注册的，不过幸运的是，Android Studio 已经帮我们自动完成了。  
+&emsp;&emsp;由于SecondActivity不是主活动，因此不需要配置<intent-filter>标签中的内容，注册活动的代码也简单了许多。现在第二个活动已经创建完成，剩下的问题就是如何去启动这第二个活动了，这里我们需要引入一个新概念: Intent。  
+&emsp;&emsp;Intent是Android程序中各组件之间进行交互的一种重要方式，它不仅可以指明当前组件想要执行的动作，还可以在不同组件之间传递数据。Intent一般可被用于启动活动、启动服务以及发送广播等场景，Intent大致可以分为两种:显示Intent和隐式Intent，我们先来看一下显示Intent如何使用。  
+&emsp;&emsp;Intent有多个构造函数的重载，其中一个是Intent(Context packageContext, Class<?> cls)。这个构造函数接收两个参数，第一个参数Context要求提供一个启动活动的上下文，第二个参数Class则是指定想要启动的目标活动，通过这个构造函数就可以构建出Intent的“意图”。然后我们应该怎么使用这个Intent呢？Activity类中提供了一个startActivity()方法，这个方法是专门用于启动活动的，它接收一个Intent参数，这里我们将构建好的Intent传入startActivity()方法就可以启动目标活动了。修改FirstActivity中按钮的点击事件，代码如下所示：  
+```
+button1.setOnClickListener(new View.OnClickListener(){
+    @Override
+    public void onClick(View view){
+        Intent intent = new Intent(FirstActivity.this, SecondActivity.class);
+        startActivity(intent);
+    }
+});
+```
+&emsp;&emsp;我们首先构建出了一个Intent，传入FirstActivity.this作为上下文，传入SecondActivity.class作为目标活动，这样我们的“意图”就非常明显了，即在FirstActivity这个活动的基础上打开SecondActivity这个活动。然后通过startActivity()方法来执行这个Intent。使用这种方式来启动活动，Intent的“意图”非常明显，因此我们称之为显示Intent。  
+
+### 2.3.2 使用隐式Intent  
+&emsp;&emsp;相比于显示Intent，隐式Intent则含蓄了许多，它并不明确指出我们想要启动哪一个活动，而是指定了一系列更为抽象的action和category等信息，然后交予系统去分析这个Intent，并帮我们找出合适的活动去启动。  
+&emsp;&emsp;什么叫作合适的活动呢？简单来说就是可以响应我们这个隐式Intent的活动，那么目前SecondActivity可以响应什么样的隐式Intent呢？通过<activity>标签下配置<intent-filter>的内容。可以指定当前活动能够响应的action和category，打开AndroidManifest.xml，添加如下代码：  
+```xml
+<activity android:name=".SecondActivity">
+    <intent-filter>
+        <action android:name="com.zj970.activitytest.ACTION_START"/>
+        <category android:name="android.intent.category.DEFAULT"/>
+    </intent-filter> 
+</activity>
+```
+&emsp;&emsp;在<action>标签中我们指明了当前活动可以响应com.zj970.activitytest.ACTION_START这个action，而<category>标签则包含了一些附加信息，更加精确地指明了当前的活动能够响应的Intent中还可能带有的category。只有<action>和<category>中的内容同时能够匹配上Intent中指定的action和category时，这个活动才能响应该Intent。修改FirstActivity中按钮的点击事件，代码如下所示：  
+```
+button1.setOnClickListener(new View.OnClickListener() { 
+    @Override
+    public void onClick(View view) {
+        Intent intent = new Intent("com.zj970.activitytest.ACTION_START");
+        startActivity(intent);
+    }
+});
+```
+&emsp;&emsp;可以看到，我们使用了Intent的另一个构造函数，直接将action的字符串传了进去，表明我们想要启动能够响应com.zj970.activitytest.ACTION_START这个action的活动。那前面不是说要<action>和<category>同时匹配才能响应的吗？怎么没看到哪里有指定category呢？这是因为android.intent.category.DEFAULT是一种，默认的category，在调用startActivity()方法的时候会自动将这个category添加到Intent中。  
+&emsp;&emsp;重新运行程序，在FirstActivity的界面上点击一下按钮，你同样成功启动SecondActivity了。不同的是，这次你使用了隐式Intent的方式来启动的，说明我们在<activity>标签下配置的action和category的内容已经生效了！  
+&emsp;&emsp;每个Intent中只能指定一个action，但却能指定多个category。目前我们的Intent中只有一个默认的category，那么现在再来增加一个，修改FirstActivity中按钮的点击事件，代码如下所示：  
+```
+button1.setOnClickListener(new View.OnClickListener() { 
+    @Override
+    public void onClick(View v) {
+        Intent intent = new Intent("com.zj970.activitytest.ACTION_START");
+        intent.addCategory("com.zj970.activitytest.MY_CATEGORY");
+        startActivity(intent);
+    }
+});
+```
+&emsp;&emsp; 现在重新运行程序，在FirstActivity的界面点击一下按钮，你会发现，程序崩溃了！这是你第一次遇到程序崩溃，可能会有些束手无策。别紧张，其实大多数的崩溃问题都是很好解决的，只要你善于分析。在Logcat界面查看错误日志，你会看到如下错误信息：  
+![img_1.png](img_1.png)  
+&emsp;&emsp;错误信息中提醒我们，没有呢任何一个活动可以响应我们的Intent，为什么呢？这是因为我们刚刚在Intent中新增了一个category，而SecondActivity的<intent-filter>标签中并没有声明可以响应这个category，所以就出现了没有任何活动可以响应该Intent的情况。现在我们在<intent-filter>中再添加一个category的声明就行了。  
+```xml
+        <activity android:name=".SecondActivity">
+            <intent-filter>
+                <action android:name="aom.zj970.activitytest.ACTION_START"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.MY_CATEGORY"/>
+            </intent-filter>
+        </activity>
+```
+
+### 2.3.3 更多隐式Intent的用法  
+&emsp;&emsp;在上一节中，你掌握了通过隐式Intent来启动活动的方法，但实际上隐式Intent还有更多的内容需要你去了解，本节我们就来展开介绍一下。  
+&emsp;&emsp;使用隐式Intent。我们不仅可以启动自己程序的活动，还可以启动程序的活动，这使得Android多个应用程序之间的功能共享成为了可能。比如说你的应用程序需要展示一个网页，这时你没有必要自己去实现一个浏览器，而是只需要调用系统的浏览器来打开这个网页就就行了。修改FirstActivity中按钮点击事件的代码，如下所示：  
+```
+    button1.setOnClickListener(new View.OnClickListener(){
+        @Override
+        public void onClick(View v){
+            Intent intent = new Intent(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse("http://www.baidu.com"));
+            startActivity(intent);
+        }
+    });
+```
+&emsp;&emsp;这里我们首先指定了Intent的action是Intent.ACTION_VIEW，这是一个Android内置的动作，其常量值为android.intent.action.VIEW。然后通过Uri.parse()方法，将一个网址字符串解析成一个Uri对象，再调用Intent的setData()方法将这个Uri对象传递进去。  
+&emsp;&emsp;在上述代码中，setData()部分它接收一个Uri对象，主要用于指定当前Intent正在操作的数据，而这些数据通常都是以字符串的形式传入到Uri.parse()方法中解析产生的。  
+&emsp;&emsp;与此对应，我们还可以在<intent-filter>标签中再配置一个<data>标签，用于更精确地指定当前活动能够响应什么类型的数据。<data>标签中主要可以配置以下内容。  
+
+- android:scheme 用于指定数据的协议部分，如上例中的http部分。
+- android:host。用于指定数据的主机名部分，如上例中的www.baidu.com部分
+- android:port。用于指定数据的端口部分，一般紧随在主机名之后。 
+- android:path。用于指定主机名和端口之后的部分，如一段网址中跟在域名之后的内容。  
+- android:mimeType。用于指定可以处理的数据类型，允许使用通配符的方式进行指定。  
+
+&emsp;&emsp;只有<data>标签中指定的内容和Intent中携带的Data完全一致时，当前活动才能够响应该Intent。不过一般在<data>标签中都不会指定过多的内容，如上面浏览器示例中，其实只需要指定android:scheme为http，就可以响应所有的http协议的Intent了。  
+&emsp;&emsp;在这里我们新建一个ThirdActivity活动，并将其布局文件内容修改为：  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".ThirdActivity">
+
+    <Button android:id="@+id/button_4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Button 4"/>
+
+    
+</LinearLayout>
+```
+&emsp;&emsp;ThirdActivity修改注册信息：  
+```xml
+<activity android:name=".ThreadActivity">
+    <intent-filter>
+        <action android:name="android.intent.action.View"/>
+        <category android:name="android.intent.category.DEFAULT" />
+        <data android:scheme="http"/>
+    </intent-filter>    
+</activity>
+
+```
+&emsp;&emsp;我们在ThirdActivity的<intent-filter>中配置了当前活动能够响应的action是Intent.ACTION_VIEW的常量值，而category则毫无疑问指定了默认的category值，另外在<data>标签中我们通过android:scheme指定了数据的协议必须是http协议，这样ThirdActivity应该就和浏览器一样，能够响应一个打开网页的Intent了。让我们运行一下程序，店家一下按钮，结果如图所示：  
+![img_2.png](img_2.png)
+&emsp;&emsp;可以看到，系统自动弹出了一个列表，显示了目前能够响应这个Intent的所有程序。选择Browser还会像之前打开浏览器，并显示百度的主页，而如果选择了ActivityTest，则会启动ThirdActivity。JUST ONCE表示只是这次使用选择的程序打开，ALWAYS则表示以后一直都使用这次选择的程序打开。需要注意的是，虽然我们声明了ThirdActivity是可以响应打开网页的Intent的，但实际上这个活动并没有加载并显示网页的功能，所以在真正的项目中尽量不要出现这种有可能误导用户的行为，不然会让用户对我们的应用产生负面的印象。  
+&emsp;&emsp;除了http协议外，我们还可以指定很多其他协议，比如geo表示地理位置、tel表示拨打电话。下面的代码展示了如何在我们的程序中调用系统拨号界面。  
+```
+button1.setOnClickListener(new View.OnClickListener(){
+    @Override
+    public void onClick(View v){
+        Intent intent = new Intent(Intent.ACTION_DIAL);
+        intent.setData(Uri.parse("tel:10086"));
+        startActivity(intent);
+    }
+});
+```
+&emsp;&emsp;首先指定了Intent的action是Intent.ACTION_DIAL，这又是一个Android系统的内置动作。然后在data部分指定了协议是tel，号码是10086。  
+
+### 2.3.4 向下一个活动传递数据  
+&emsp;&emsp;经过前面几节的学习，你已经对Intent有了一定的了解。不过到目前为止，我们都只是简单地使用Intent来启动一个活动，其实Intent还可以在启动活动的时候传递数据，下面我们来看一下。  
+&emsp;&emsp;在启动活动时传递数据的思路很简单，Intent中提供了一系列putExtra()方法的重载，可以把我们想要传递的数据暂存在Intent中，启动了另一个活动后，只需要把这些数据再从Intent中取出就可以了。比如说FirstActivity中有一个字符串，现在想把这个字符串传递SecondActivity中，你就可以这样编写：  
+```
+button1.setOnClickListener(new View.OnClickListener() { 
+    @Override
+    public void onClick(View view) {
+        String data =  "Hello SecondActivity";
+        Intent intent = new Intent(FirstActivity.this,SecondActivity.class);
+        intent.putExtra("extra_data",data);
+        startActivity(intent);
+    }
+});
+```
+&emsp;&emsp;这里我们还是使用显式Intent的方式来启动SecondActivity，并通过putExtra()方法传递了一个字符串。注意这里putExtra()方法接收两个参数，第一个参数是键，用于后面从Intent中取值，第二参数才是真正要传递的数据。然后在SecondActivity中将传递的数据取出，并打印出来，代码如下所示：  
+
+```
+public class SecondActivity extends Activity{
+    @Override
+    protected void onCreate(Bundle savedInstanceState){
+        super.onCreate(savedInstanceState);
+        Intent intent = getIntent();
+        String data = intent.getSrtringExtra("extra_data");
+        Log.d("SecondActivity", data);
+    }
+}
+```
+
+&emsp;&emsp;首先可以通过getIntent()方法获取到用于启动SecondActivity的intent，然后调用getStringExtra()方法，传入相应的键值，就可以得到传递的数据了。这里由于我们传递的是字符串，所以使用getStringExtra()方法来获取传递数据。如果传递的是整型数据，则使用getIntExtra()方法；如果传递的是布尔型数据，则使用getBooleanExtra()方法，以此类推。现在重新运行程序，如下所示：  
+![img_3.png](img_3.png)
+
+### 2.3.5 返回数据给上一活动  
+&emsp;&emsp;既然可以传递数据给下一个活动，那么能不能够返回数据给上一个活动呢？答案是肯定的。不过不同的是，返回上一个活动只需要按一下Back键就可以了，并没有一个用于启动活动Intent来传递数据。通过查询文档你会发现，Activity还有一个startActivityForResult()方法也是用于启动活动的，但这个方法期望在活动销毁的时候能够返回一个结果给上一个活动。毫无疑问，这就是我们所需要的。startActivityForResult()方法接收两个参数，第一个参数还是Intent，第二个参数是请求码，用于在之后的回调中判断数据的来源。我们还是来实战一下，修改FirstActivity中按钮的点击事件：  
+```
+button1.setOnClickListener(new View.OnClickListener(){
+    @Override
+    public void onClick(View v) {
+        Intent intent = new Intent(FirstActivity.this, SecondActivity.class);
+        startActivityForResult(intent,1);
+    }
+});
+```
+&emsp;&emsp;这里我们使用startActivityForResult()方法来启动SecondActivity，请求码只要是一个唯一值就可以了，这里传入了1。接下来我们在SecondActivity中给注册点击事件，并在点击事件里添加返回数据的逻辑，代码如下所示：  
+```
+public class SecondActivity extends AppCompatActivity{
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.second_activity);
+        Button button2 = findViewById(R.id.button2);
+        button2.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                Intent intent = new Intent();
+                intent.putExtra("data_return","Hello FirstActivity");
+                setResult(RESULT_OK,intent);
+                finish();
+            }
+        });
+    }
+}
+```
+&emsp;&emsp;可以看到，我们还是构建了一个Intent，只不过这个Intent仅仅是用于传递数据而已，它没有指定任何的“意图”。紧接着要把传递的数据存放在Intent中，然后调用了setResult()方法，这个方法非常重要，是专门用于向上一个活动返回数据的。setResult()方法接收两个参数，第一个参数用于向上一个活动返回处理结果，一般只使用RESULT_OK或RESULT_CANCELED这两个值，第二个参数则把带有数据的Intent擦魂帝回去，然后调用了finish()方法来销毁当前活动。  
+&emsp;&emsp;由于我们是使用startActivityForResult()方法来启动SecondActivity的，在SecondActivity被销毁之后会回调上一个活动的onActivityResult()方法，因此我们需要在FirstActivity中重写这个方法来得到返回的数据，如下所示：  
+```
+@Override
+protected void onActivityResult(int requestCode, int resultCode, Intent data){
+    switch(requestCode){
+        case 1:
+            if(resultCode == RESULT_OK){
+                String returnedData = data.getStringExtra("data_return");
+                Log.d("FirstActivity",returnedData);
+            }
+            break;
+        default:
+        }    
+}
+
+```
+
+&emsp;&emsp;onActivityResult()方法带有三个参数，第一个参数requestCode，即我们在启动活动时传入的请求码。第二个参数resultCode。即我们在返回数据时传入的处理结果。第三个参数data，即携带带着返回数据的Intent。由于在一个活动中有可能调用startActivityForResult()方法去启动很多不同的活动，每一个活动返回的数据都会回调到onActivityResult()这个方法中，因此我们首先要做的就是通过检查requestCode的值来判断数据来源。确定数据是从SecondActivity返回的之后，我们再通过resultCode的值来判断处理结果是否成功。最后从data中取值并打印出来，这样就完成了向上一个活动返回数据的工作。  
+&emsp;&emsp;重新运行程序，在FirstActivity的界面点击按钮会打开SecondActivity，然后在SecondActivity界面点击Button2按钮会回到FirstActivity，这时查看logcat的打印信息：  
+![img_4.png](img_4.png)
+&emsp;&emsp;可以看到，SecondActivity已经成功返回数据给FirstActivity了。这个时候你可能会问，如果用户在SecondActivity中并不是通过点击按钮，而是通过按下Back键回到FirstActivity，这样数据不就没法返回了吗？没错，不过这种情况还是很好处理，我们可以通过SecondActivity中重写onBackPressed()方法来解决这个问题，代码如下所示：  
+```
+@Override
+public void onBackPressed() {
+    Intent intent = new Intent();
+    intent.putExtra("data_return","Hello FirstActivity");
+    setResult(RESULT_OK, intent);
+    finish();
+}
+```
+&emsp;&emsp;这样的话，当用户按下Back键，就会去执行onBackPressed()方法中的代码，我们在这里添加返回数据的逻辑就行了。
