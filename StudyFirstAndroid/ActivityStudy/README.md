@@ -719,4 +719,119 @@ protected void onCreate(Bundle savedInstanceState){
 ```
 
 &emsp;&emsp;取出值之后再做相应的恢复操作就可以了，比如说将文本内容重新赋值到文本输入框上，这里我们只是简单地打印一下。  
-&emsp;&emsp;不知道你有没有察觉，使用Bundle来保存和取出数据是不是有些似曾相识呢？没错！我们在使用Intent传递数据也是用的类似的方法。这里跟你提醒一点，Intent还可以结合Bundle一起用于传递数据，首先可以把需要传递的数据都保存在Bundle对象中，然后再将Bundle对象存放在Intent对象存放在Intent里。当了目标活动之后先从Intent中取出Bundle，再从Bundle中一一取出数据。
+&emsp;&emsp;不知道你有没有察觉，使用Bundle来保存和取出数据是不是有些似曾相识呢？没错！我们在使用Intent传递数据也是用的类似的方法。这里跟你提醒一点，Intent还可以结合Bundle一起用于传递数据，首先可以把需要传递的数据都保存在Bundle对象中，然后再将Bundle对象存放在Intent对象存放在Intent里。当了目标活动之后先从Intent中取出Bundle，再从Bundle中一一取出数据。  
+
+## 2.5 活动的启动模式  
+&emsp;&emsp;活动的启动模式对你来说应该是个全新的概念，在实际项目中我们应该根据特定的需求为每个活动指定恰当的启动模式。启动模式一共有4种，分别是standard、singleTop、singleTask和singleInstance，可以在AndroidManifest.xml中通过给<activity>标签指定android:launchMode属性来选择启动模式。下面我们来逐个进行学习。  
+### 2.5.1 standard  
+&emsp;&emsp;standard是活动默认的启动模式，在不进行显示指定的情况下，所有活动都会自动使用这种启动模式。因此，到目前为止我们写过的所有活动都是使用standard模式(即默认情况下)，每当启动一个新的活动，它就会在返回栈中入栈，并处于栈顶的位置。对于使用standard模式的活动，系统不会在乎这个活动是否已经在返回栈中存在，每次启动都会创建该活动的一个新的实例。  
+&emsp;&emsp;我们现在通过实践来体会一下standard模式，这次还是准备在ActivityTest项目的基础上修改，修改FirstActivity中onCreate()方法： 
+```
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    Log.d("FirstActivity", this.toString()); 
+    setContentView(R.layout.first_layout);
+    Button button1 = findViewById(R.id.button_1);
+    button1.setOnClickListener(new View.OnClickListener(){
+        @Override
+        public void onClick(View v){
+            Intent intent - new Intent(FirstActivity.this, FirstActivity.class);
+            startActivity(intent);
+        }
+    });
+}
+```
+&emsp;&emsp;代码看起来有些奇怪吧，在FirstActivity的基础上启动FirstActivity。从逻辑上来讲这确实没什么意义，不过我们的重点在于研究standard模式，因此不必在意这段代码有什么实际用途。另外我们还在onCreate()方法中添加网络一行打印信息，用于打印当前活动的实例。现在重新运行程序，然后在FirstActivity界面连续点击两次按钮，可以看到Logcat中打印信息如图所示：  
+![img_7.png](img_7.png)
+&emsp;&emsp;从打印信息中我们就可以看出，每点击一次按钮就会创建出一个新的FirstActivity实例。此时返回栈中也会存在3个FirstActivity的实例，因此你还需要连按3次Back键才能退出程序。standard模式的原理示意图，如下所示：  
+![img_8.png](img_8.png)
+
+
+### 2.5.2 singleTop 
+
+&emsp;&emsp;可能在有些情况下，你会觉得standard模式不太合理。活动明明已经在栈顶了，为什么再次启动的时候还要创建一个新的活动实例呢？别着急，这只是系统默认的一种启动模式而已，你完全可以根据的需求进行修改，比如说使用singleTop模式。当活动的启动模式指定为singleTop，在启动活动时如果发现返回栈的栈顶已经是该活动，则认为可以直接使用它，不会再创建新的活动实例。  
+&emsp;&emsp;我们还是通过实践来体会一下，修改AndroidManifest.xml中FirstActivity的启动模式，如下所示：  
+```xml
+<activity 
+    android:name=".FirstActivity"
+    android:lunchMode="singleTop"
+    android:label="This is FirstActivity">
+    <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+    </intent-filter>
+</activity>
+```
+&emsp;&emsp;然后重新运行程序，查看logcat会看到已经创建了一个FirstActivity的实例，但是之后不管你点击多少次按钮都不会再有新的打印信息出现，因为目前FirstActivity已经处于返回栈的栈顶，每当想要再启动一个FirstActivity时都会直接使用栈顶的活动，因此FirstActivity也只会有一个实例，仅按一次Back键就可以退出程序。  
+&emsp;&emsp;不过当FirstActivity并未处于栈顶位置时，这时再启动FirstActivity，还是会创建新的实例。下面我们来实验一下，修改FirstActivity中onCreate()方法的代码，如下所示：  
+```
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    Log.d("FirstActivity", this.toString()); 
+    setContentView(R.layout.first_layout);
+    Button button1 = findViewById(R.id.button_1);
+    button1.setOnClickListener(new View.OnClickListener(){
+        @Override
+        public void onClick(View v){
+            Intent intent - new Intent(FirstActivity.this, SecondActivity.class);
+            startActivity(intent);
+        }
+    });
+}
+```
+&emsp;&emsp;这次我们点击按钮后启动的是SecondActivity。然后修改SecondActivity中的onCreate()方法，如下所示：  
+```
+@Override
+protected void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    Log.d("SecondActivity", this.toString()); 
+    setContentView(R.layout.first_layout);
+    Button button2 = findViewById(R.id.button_2);
+    button2.setOnClickListener(new View.OnClickListener(){
+        @Override
+        public void onClick(View v){
+            Intent intent - new Intent(SecondActivity.this, FirstActivity.class);
+            startActivity(intent);
+        }
+    });
+}
+```
+&emsp;&emsp;我们在SecondActivity中的按钮点击事件里又加入了启动FirstActivity的代码。现在重新运行程序，在FirstActivity界面点击按钮进入到SecondActivity，然后在SecondActivity界面点击按钮，又会重新进入到FirstActivity。查看logcat中的打印信息
+
+![img_9.png](img_9.png)
+
+&emsp;&emsp;可以看到系统创建了两个不同的FirstActivity实例，这是由于在SecondActivity中再次启动FirstActivity时，栈顶活动已经变成了SecondActivity，因此会创建一个新的FirstActivity实例。现在按下Back键会返回到SecondActivity，再次按下Back键会返回到SecondActivity，再次按下Back键又会回到FirstActivity，再按一次Back键才会退出程序。singleTop模式的原理示意图：  
+![img_10.png](img_10.png)
+
+### 2.5.3 singleTask 
+&emsp;&emsp;使用singleTop模式可以很好地解决重复创建栈顶活动的问题，但是正如你在上节中所看到的，如果该活动并没有处于栈顶的位置，还是可能会创建多个活动实例的。那么有没有什么办法可以让某个活动在整个应用程序的上下文只存在一个实例呢？这就要借助singleTask模式来实现了。当活动的启动模式指定为singleTask，每次启动该活动时系统首先会在返回栈中检查是否存在该活动的实例，如果发现已经存在则直接使用该实例，并把在这个活动之上的所有活动统统出栈，如果发现没有就会创建一个新的活动实例。我们还是通过代码来更加直观地理解一下。修改AndroidManifest.xml中FirstActivity的启动模式：  
+```xml
+<activity
+    android:name=".FirstActivity"
+    android:launchMode="singleTask"
+    android:label="This is FirstActivity">
+    <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+    </intent-filter>
+</activity>
+
+```
+&emsp;&emsp;然后在FirstActivity中添加onRestart()方法并打印日志，最后在SecondActivity中添加onDestroy()方法并打印日志。现在重新运行程序，在FirstActivity界面点击按钮进入到了SecondActivity，然后在SecondActivity界面点击按钮，又会重新进入FirstActivity。查看logcat中的打印信息：  
+![img_11.png](img_11.png)
+&emsp;&emsp;其实从打印信息就可以明显看出了，在SecondActivity中启动FirstActivity时，会发现返回栈中已经存在一个FirstActivity的实例，并且是在SecondActivity会从返回栈中出栈，而FirstActivity重新成为了栈顶活动，因此FirstActivity的onRestart()方法和SecondActivity的onDestroy()方法会得到执行。现在返回栈中应该只剩下一个FirstActivity的实例了，按一下Back键就可以退出程序。singleTask模式的原理示意图：  
+![img_12.png](img_12.png)
+
+### 2.5.4 singleInstance  
+&emsp;&emsp;singleInstance模式应该算是4种启动模式中最特殊也最复杂的一个了，你也需要多花点功夫来理解这个模式。不同于以上3种启动模式，指定为singleInstance模式的活动会启用一个新的返回栈来管理这个活动（其实如果singleTask模式指定了不同的taskAffinity，也会启动一个新的返回栈）。那么这样做有什么意义呢？想象以下场景，假设我们的程序中有一个活动是允许其他程度调用的，如果我们想要实现其他程序和我们的程序可以共享这个活动的实例，应该如何实现呢？使用前面3中启动模式肯定是做不到的，因为每个应用程序都会有自己的返回栈，同一个活动在不同的返回栈入栈时必然是创建了新的实例。而使用singleInstance模式就可以解决这个问题，在这种模式下会有一个单独的返回栈来管理这个活动，不管是哪个应用程序来访问这个活动，都公用的同一个返回栈，也解决了共享活动的实例的问题。  
+![img_13.png](img_13.png)
+&emsp;&emsp;类似的，在SecondActivity中添加如上内容。查看logcat的打印信息：  
+![img_14.png](img_14.png)
+&emsp;&emsp;可以看到，SecondActivity的Task id 不同于FirstActivity和ThirdActivity，这说明SecondActivity确实是存放在一个单独的返回栈里的，而且这个栈中只有SecondActivity这一个活动。  
+&emsp;&emsp;然后我们按下Back键进行返回，你会发现ThirdActivity竟然直接返回到了FirstActivity，再按下Back键又会返回到SecondActivity，再按下Back键才会退出程序，这是为什么呢？其实原理很简单，由于FirstActivity和ThirdActivity是存放在同一个返回栈里的，当在ThirdActivity的界面按下Back键，ThirdActivity会从返回栈中出栈，那么FirstActivity就成为了栈顶活动显示在界面上，因此也就出现了从ThirdActivity直接返回到FirstActivity的情况。然后在FirstActivity界面再次按下Back键，这时当前的返回栈已经空了，于是就显示了另外一个返回栈的栈顶活动，即SecondActivity。最后再次按下Back键，这时所有返回栈都已经空了，也就自然退出了程序。singleInatance模式的原理示意图，如图所示：  
+![img_15.png](img_15.png)
+
+## 2.6 活动的最佳实践
+&emsp;&emsp;你已经掌握了关于活动非常多的知识，不过恐怕完全灵活运用还有一段距离。虽然知识点只有这么多，但运用的技巧却是多种多样。所以，在这里我准备教你几种关于活动的最佳实践技巧，这些技巧在你以后的开发工作中将会非常受用。
