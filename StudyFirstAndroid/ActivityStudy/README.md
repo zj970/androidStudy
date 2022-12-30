@@ -427,4 +427,296 @@ public void onBackPressed() {
     finish();
 }
 ```
-&emsp;&emsp;这样的话，当用户按下Back键，就会去执行onBackPressed()方法中的代码，我们在这里添加返回数据的逻辑就行了。
+&emsp;&emsp;这样的话，当用户按下Back键，就会去执行onBackPressed()方法中的代码，我们在这里添加返回数据的逻辑就行了。  
+
+## 2.4 活动的生命周期  
+&emsp;&emsp;掌握活动的生命周期对任何Android开发者来说都非常重要，当你深入理解活动的生命周期之后，就可以写出更加连贯流畅的程序，并在如何合理管理应用资源方面发挥得游刃有余。你的应用程序将会拥有更好的用户体验。  
+### 2.4.1 返回栈  
+&emsp;&emsp;经过前面几节的学习，我相信你已经发现这一点，Android中的活动是可以层叠的。我们每启动一个新的活动，就会覆盖在原活动之上，然后点击Back键会销毁最上面的活动，下面的一个活动就会重新显示出来。  
+&emsp;&emsp;其实Android是使用任务(Task)来管理活动的，一个任务就是一组存放在栈里的活动的集合，这个栈也被称作返回栈(Back Stack)。栈是一种后进先出的数据结构，在默认情况下，每当我们启动了一个新的活动，它会在返回栈入栈，并处于栈顶的位置。而每当我们按下Back键或调用finish()方法去销毁一个活动时，处于栈顶的活动会出栈，这时前一个入栈的活动就会重新处于栈顶的位置。系统总是会显示处于栈顶的活动给用户。下图展示了返回栈是如何管理活动入栈出栈操作的：  
+![img_5.png](img_5.png)
+
+### 2.4.2 活动状态  
+&emsp;&emsp;每个活动在其生命周期中最多可能会有4种状态。  
+
+1. 运行状态
+
+&emsp;&emsp;当一个活动位于返回栈的栈顶时，这时活动就处于运行状态。系统最不愿意回收的就是处于运行状态的活动，因为这会带来非常差的用于体验。
+
+2. 暂停状态
+
+&emsp;&emsp;当一个活动不再处于栈顶位置，但仍然可见时，这时活动就进入了暂停状态。你可能会觉得既然活动已经不在栈顶了，还怎么会可见呢？这是因为并不是每一个活动都会占满整个屏幕的，比如对话框形式的活动只会占用屏幕中间的部分区域，你很快就会在后面看到这种活动。处于暂停状态的活动仍然是完全存活着的，系统也不愿意去回收这种活动（因为它还是可见的，回收可见的东西都会在用户体验方面有不好的影响），只有在内存极低的情况下，系统才会去考虑回收这种活动。
+
+3. 停止状态
+
+&emsp;&emsp;当一个活动不再处于栈顶位置，并且完全不可见的时候，就进入了停止状态。系统仍然会为这种活动保存相应的状态和成员变量，但是这并不是完全可靠的，当其他地方需要内存时，处于停止状态的活动有可能会被系统回收。
+
+4. 销毁状态
+
+&emsp;&emsp;当一个活动从返回栈中移除后就变成了销毁状态。系统会最倾向于回收处于这种状态的活动，从而保证手机的内存充足。  
+
+### 2.4.3 活动的生存期  
+&emsp;&emsp;Activity类中定义了7个回调方法，覆盖了活动生命周期的每一个环节，下面就来一一介绍这7个方法。  
+- onCreate() 这个方法你已经看到过很多次了，每个活动中我们都重写了这个方法，它会在活动第一次被创建的时候调用。你应该在这个方法中完成活动的初始化操作，比如说加载布局、绑定事件等。  
+- onStart() 这个方法在活动由不可见变为可见的时候调用。  
+- onResume() 这个方法在活动准备好和用户进行交互的时候调用。此时的活动一定位于返回栈的栈顶，并且处于运行状态。  
+- onPause() 这个方法在系统准备去启动或者恢复另一个活动的时候调用。我们通常会在这个方法中将一些消耗CPU的资源释放掉，以及保存一些关键数据，但这个方法的执行速度一定要快，不严会影响到新的栈顶活动的使用。  
+- onStop() 这个方法在活动完全可见的时候调用。它和onPause()方法的主要区别在于，如果启动的新活动是一个对话框的活动，那么onPause()方法会得到执行，而onStop()方法并不会执行。  
+- onDestroy() 这个方法在活动被销毁之前调用，之后活动的状态将变为销毁状态。  
+- onRestart() 这个方法在活动由停止状态变为运行状态之前调用，也就是活动被重新启动了。
+
+&emsp;&emsp;以上7个方法中除了onRestart()方法，其他都是两两相对的，从而又可以将活动分为3种生存期。  
+
+- 完整生存期。活动在onCreate()方法和onDestroy()方法之间所经历的，就是完整生存期。一般情况下，一个活动会在onCreate()方法中完成各种初始化操作，而在onDestroy()方法中完成释放内存的操作。  
+- 可见生存期。活动在onStart()方法和onStop()方法之间所经历的，就是可见生存期。在可见生存期内，活动对于用户总是可见的，即便有可能无法和用户进行交互。我们可以通过这两个方法，合理地管理哪些对用户可见的资源。比如说在onStart()方法中对资源进行加载，而在onStop()方法中对资源进行释放，从而保证处于停止状态的活动不会占用过多内存。  
+- 前台生存期。活动在onResume()方法和onPause()方法之间所经历的就是前台生存期。在前台生存期内，活动总是处于运行状态的，此时的活动是可以和用户进行交互的，我们平时看到和接触最多的也就是这个状态下的活动。
+
+&emsp;&emsp;为了帮助你能够更好地理解，Android官方提供了一张活动生命周期的示意图，如下所示：  
+![img_6.png](img_6.png)
+
+### 2.4.4 体验活动的生命周期  
+&emsp;&emsp;讲了这么多理论知识，也是时候该实战一下了，下面我们将通过一个实例，让你可以更加直观体验活动的生命周期。  
+&emsp;&emsp;我们在新建一个ActivityLifeCycleTest项目，这次我们允许Android Studio帮我们自动创建活动和布局，并且勾选Launcher Activity来将创建的活动设置为主活动，这样可以省去不少工作，创建的活动名和布局名都使用默认值。然后我们需要分别再创建两个子活动——NormalActivity和DialogActivity，其布局文件如下： 
+- normal_layout.xml
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".NormalActivity">
+    <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="This is a normal activity"
+            android:textSize="28sp"/>
+
+</LinearLayout>
+```
+- dialog_layout.xml
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".DialogActivity">
+    <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="This is a dialog activity"
+            android:textSize="28sp"/>
+
+</LinearLayout>
+```
+&emsp;&emsp;两个布局文件的代码几乎没有区别，只是显示的文字不同而已。其实从名字上就可以看出，这两个活动一个是普通活动，一个是对话框式的活动。可是我们并没有修改活动的任何代码，两个活动的代码应该几乎是一模一样，在哪里有体现出将活动设成对话框式呢？别着急，下面我们马上开始设置。修改AndroidManifest.xml的<activity>标签的配置，如下所示：  
+```
+<activity android:name=".NormalActivity"></activity>
+
+<activity android:name=".DialogActivity"
+          android:theme="@android:style/Theme.Dialog">
+</activity>
+```
+&emsp;&emsp;这里是两个活动的注册代码，但是DialogActivity的代码有些不同，我们给它使用了一个android:theme属性，这是用于给当前活动指定主题的，Android系统内置有很多主题可以选择，当然我们也可以定制自己的主题，而这里@android:style/Theme.Dialog则毫无疑问是让DialogActivity使用对话框式的主题。接下来修改activity_main.xml：  
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MainActivity">
+    <Button
+            android:id="@+id/start_normal_activity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start NormalActivity"/>
+    <Button
+            android:id="@+id/start_dialog_activity"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Start DialogActivity"/>
+
+</LinearLayout>
+```
+&emsp;&emsp;可以看到，我们在LinearLayout中加入了两个按钮，一个用于启动NormalActivity，一个用于启动DialogActivity，最后修改MainActivity中的代码：  
+```java
+package com.zj970.activitylifecycletest;
+
+import android.content.Intent;
+import android.os.Handler;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import androidx.appcompat.app.AppCompatActivity;
+import android.os.Bundle;
+
+/**
+ * 每个活动在其生命周期最多可能有4种状态
+ * 1. 运行状态
+ * 2. 暂停状态
+ * 3. 停止状态
+ * 4. 销毁状态
+ */
+public class MainActivity extends AppCompatActivity {
+
+    private static final String TAG = "MainActivity";
+   // private static int startNum = 1;//启动次数
+    /**
+     * 每个活动我们都重写了这个方法，它会在活动第一次被创建的时候调用。
+     * 你应该在这个方法中完成活动的初始化操作，比如说加载布局、绑定事件等.
+     * 这个验证失败
+     * @param savedInstanceState 如果在活动被系统回收之前通过onSaveInstanceStata()方法保存数据，这个参数就有之前保存的全部数据
+     */
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        Button startNormalActivity = findViewById(R.id.start_normal_activity);
+        Button startDialogActivity = findViewById(R.id.start_dialog_activity);
+        Log.d(TAG,"开始执行onCreate()方法");
+        if (savedInstanceState != null){
+            String tempdata = savedInstanceState.getString("data_key");
+            Log.d(TAG,tempdata);
+        }
+        startNormalActivity.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent_normal = new Intent(MainActivity.this,NormalActivity.class);
+                startActivity(intent_normal);
+            }
+        });
+        startDialogActivity.setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View v) {
+                Intent intent_dialog = new Intent(MainActivity.this,DialogActivity.class);
+                startActivity(intent_dialog);
+            }
+        });
+    }
+
+    /**
+     * 这个方法在活动由不可见变为可见的时候调用
+     */
+    @Override
+    protected void onStart() {
+        super.onStart();
+        Log.d(TAG,"开始执行onStart()方法");
+    }
+
+    /**
+     * 这个方法在活动准备号和用户进行交互的时候调用
+     * 此时的活动一定处于栈顶，并且处于运行的状态
+     */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG,"开始执行onResume()方法");
+    }
+
+    /**
+     * 这个方法在系统准备去启动或者去恢复另一个活动的时候调用
+     * 我们通常在这个方法中将一些消耗cpu的资源释放掉，以及保存一些关键数据
+     * 但这个方法的执行速度一定要快，不然会影响到栈顶活动的调用
+     */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.i(TAG,"开始执行onPause()方法");
+    }
+
+    /**
+     * 这个方法在活动完全不可见的时候调用
+     * 它和onPause方法的主要区别在于，如果启动的是一个对话框式的活动，那么onPause会执行，而onStop不会执行
+     */
+    @Override
+    protected void onStop() {
+        super.onStop();
+        new Handler().post(new Runnable() {
+            public void run() {
+                // TODO Auto-generated method stub
+                Runtime.getRuntime().exit(1);
+            }
+        });
+        Log.d(TAG,"开始执行onStop()方法");
+    }
+
+    /**
+     * 这个方法在活动被销毁之前调用，之后的活动的状态将变为销毁状态
+     */
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        Log.i(TAG,"开始执行onDestroy()方法");
+    }
+
+    /**
+     * 这个方法在活动由停止状态变为运行状态之前调用，也就是活动被重新启动了
+     */
+    @Override
+    protected void onRestart() {
+        super.onRestart();
+        Log.i(TAG,"开始执行onRestart()方法");
+    }
+
+
+    /**
+     * 当活动被回收时如何保存数据，使用onSaveInstanceState(0回调方法
+     * 这个方法可以保证在活动被回收之前一定会被调用
+     * 我们可以通过这个方法来解决活动被回收之前一定会被调用，
+     * 因此我们可以通过这个方法来解决活动被回收时临时数据得不到保存的问题
+     * onSaveInstanceState(Bundle outState)用于在系统由于内存紧张而回收程序的内存等情况时保存一些关键数据
+     *
+     * onSaveInstanceState()方法会携带一个Bundle类型的参数，
+     * Bundle提供了一系列的方法用于保存数据。
+     * @param outState
+     */
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        Log.d(TAG,"开始执行onSaveInstanceState");
+        String tempData = "Something you just typed ==== ";
+        outState.putString("data_key",tempData);
+    }
+}
+```
+
+&emsp;&emsp;在onCreate()方法中，我们分别为两个按钮注册了点击事件，点击第一个按钮会启动NormalActivity，点击第二个按钮会启动DialogActivity。然后在Activity的7个回调方法中分别打印了一句话，这样就可以通过观察日志的方式来更直观地理解活动的生命周期。  
+&emsp;&emsp;可以看到，当MainActivity第一次被创建时会依次执行onCreate()、onStart()和onResume()方法。然后点击第一个按钮，启动NormalActivity，由于NormalActivity已经把MainActivity完全遮挡住，因此onPause()和onStop()方法都会得到执行。然后按下Back键返回MainActivity，由于之前MainActivity已经进入了停止状态，所以onRestart()方法会得到执行，之后又会依次执行onStart()和onResume()方法。注意此时onCreate()方法不会执行，因为MainActivity并没有重新创建，然后再点击第二个按钮，启动DialogActivity，可以看到，只有onPause()方法得到了执行，onStop()方法并没有执行，这是因为DialogActivity并没有完全遮挡住MainActivity，此时MainActivity只是进入了暂停状态，并没有进入停止状态。相应地，按下Back键返回MainActivity也应该只有onResume()方法会得到执行。最后在MainActivity按下Back键退出程序，依次会执行onPause()、onStop()和onDestroy()方法，最终销毁MainActivity。  
+
+### 2.4.5 活动被回收了怎么办  
+&emsp;&emsp;前面我们已经说过，当一个活动进入了停止状态，是有可能被系统回收的。那么想象以下场景：应用中有个活动A，用户在活动A的基础上启动了活动B，活动A就进入了停止状态，这个时候由于系统内存不足，将活动A回收掉了，然后用户按下Back键返回活动A，会出现什么情况呢？其实还是会正常显示活动A的，只不过这时并不会执行onRestart()方法，而是会执行活动A的onCreate()方法，因此活动A在这种情况下会重新创建一次。  
+&emsp;&emsp;这样看上去好像一切正常，可是别忽略了一个重要问题，活动A中是可能存在临时数据和状态的。打个比方，MainActivity中有一个文本输入框，现在你输入了一段文字，然后启动NormalActivity，这时MainActivity由于系统内存不足被回收掉。过了一会你又点击了Back键回到MainActivity，你会发现刚刚输入的文字全部都没了，因为MainActivity被重新创建了。  
+&emsp;&emsp;如果我们的应用出现了这种情况，是会严重影响用户体验的，所以必须要想想办法解决这个问题。查阅文档可以看出，Activity中还提供了一个onSaveInstanceState()回调方法，这个方法可以保证在活动被回收之前一定会被调用，因此我们可以通过这个方法来解决活动被回收时临时数据得不到保存的问题。  
+&emsp;&emsp;onSaveInstanceState()方法会携带一个Bundle类型的参数，Bundle提供了一系列的方法用于保存数据，比如可以使用putString()方法保存字符串，使用putInt()方法保存整型数据，以此类推。每个保存方法需要传入两个参数，第一个参数是键，用于后面从Bundle中取值，第二个参数是真正要保存的内容。在MainActivity中添加如下代码就可以将临时数据进行保存：  
+```
+@Override
+protected void onSaveInstanceState(Bundle outState) {
+    super.onSaveInstanceState(outState);
+    String tempData =  "Something you just typed";
+    outState.putString("data_key", tempData);
+}
+```
+&emsp;&emsp;sh数据是已经保存下来了，那么我们应该在哪里进行恢复呢？细心的你也许早就发现，我们一直使用的onCreate()方法其实也有一个Bundle类型的参数。这个参数在一般情况下都是null，但是如果在活动被系统回收之前有通过onSaveInstanceState()方法来保存数据的话，这个参数就会带有之前所保存的全部数据，我们只需要再通过相应的取值方法将数据取出即可。修改MainActivity的onCreate()方法，如下所示：  
+```
+@Override
+protected void onCreate(Bundle savedInstanceState){
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
+    if(savedInstanceState != null){
+        String tempData = savedInstanceState.getString("data_key");
+    }
+}
+```
+
+&emsp;&emsp;取出值之后再做相应的恢复操作就可以了，比如说将文本内容重新赋值到文本输入框上，这里我们只是简单地打印一下。  
+&emsp;&emsp;不知道你有没有察觉，使用Bundle来保存和取出数据是不是有些似曾相识呢？没错！我们在使用Intent传递数据也是用的类似的方法。这里跟你提醒一点，Intent还可以结合Bundle一起用于传递数据，首先可以把需要传递的数据都保存在Bundle对象中，然后再将Bundle对象存放在Intent对象存放在Intent里。当了目标活动之后先从Intent中取出Bundle，再从Bundle中一一取出数据。
