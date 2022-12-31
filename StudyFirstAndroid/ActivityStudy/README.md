@@ -834,4 +834,134 @@ protected void onCreate(Bundle savedInstanceState) {
 ![img_15.png](img_15.png)
 
 ## 2.6 活动的最佳实践
-&emsp;&emsp;你已经掌握了关于活动非常多的知识，不过恐怕完全灵活运用还有一段距离。虽然知识点只有这么多，但运用的技巧却是多种多样。所以，在这里我准备教你几种关于活动的最佳实践技巧，这些技巧在你以后的开发工作中将会非常受用。
+&emsp;&emsp;你已经掌握了关于活动非常多的知识，不过恐怕完全灵活运用还有一段距离。虽然知识点只有这么多，但运用的技巧却是多种多样。所以，在这里我准备教你几种关于活动的最佳实践技巧，这些技巧在你以后的开发工作中将会非常受用。  
+### 2.6.1 知晓当前是在哪一个活动  
+&emsp;&emsp;这个技巧将教会你如何根据程序当前的界面就能判断出这是哪一个活动。这里除了书上所说BaseActivity，让其所有的Activity继承自此，并在onCreate中加入 Log.d("BaseActivity",getClass.getSimpleName());还有一种方法： 
+```
+# 在shell里面查看
+adb shell dumpsys window | grep -ins "mFocus"
+```
+### 2.6.2 随时随地退出程序  
+&emsp;&emsp;如果目前你手机的界面还停留在ThirdActivity，你会发现当前想退出程序是非常不方便的，需要连按3次Back键才行。按Home键只是把程序挂起，并没有退出程序。其实这个问题就足以引起你的思考，如果我们的程序需要一个注销或者退出的功能该怎么办呢？必须要有一个随时随地都能退出程序的方案才行。  
+&emsp;&emsp;其实解决思路也很简单，只需要用一个专门的集合类对所有的活动进行管理就可以了。下面我们就来实现一下。新建一个ActivityCollector类作为活动管理器，代码如下：  
+```java
+package com.zj970.activitytest;
+
+import android.app.Activity;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * 活动管理器
+ */
+public class ActivityCollector {
+    /**
+     * 在活动管理器中，我们通过一个List来暂存活动，
+     * 然后提供了一个addActivity()方法用于向List中添加一个活动
+     * 提供一个removeActivity()方法用于从List中移除活动
+     * 最后提供了一个finish()方法用于将List中存储的火哦的那个全部销毁掉
+     */
+    public static List<Activity> activities = new ArrayList<>();
+
+    /**
+     * 在BaseActivity的onCreate()方法中调用了ActivityCollector的addActivity()方法，
+     * 表明将当前正在创建的活动添加到活动管理器里。
+     * @param activity
+     */
+    public static void addActivity(Activity activity){
+        activities.add(activity);
+    }
+
+    /**
+     * 然后在BaseActivity中重写onDestroy()方法
+     * 并调用了ActivityCollector的removeActivity方法
+     * 表明将一个马上要销毁的活动从活动管理器移除
+     * @param activity
+     */
+    public static void removeActivity(Activity activity){
+        activities.remove(activity);
+    }
+
+    /**
+     * 从此以后，不管你想在什么地方退出程序，只需要调用ActivityCollector.finishALl
+     *
+     */
+    public static void finishAll(){
+        for (Activity activity : activities){
+            activity.finish();
+            /**
+             * 还可以在销毁所有活动的代码后面再加上杀掉当前进程的代码
+             * 以保证程序完全退出，杀掉进程的代码如下
+             */
+            android.os.Process.killProcess(android.os.Process.myPid());
+            /**
+             * 其中，killProcess()方法用于杀掉一个进程，它接收一个进程id参数，我们可以通过myPid()方法来获得当前程序的进程id。
+             * 需要注意的是,killProcess()方法只能用于杀掉当前程序的进程
+             * 不能使用此方法去杀掉其他程序
+             */
+        }
+    }
+}
+
+```
+&emsp;&emsp;在活动管理器中，我们通过一个List来暂存活动，然后提供了一个addActivity()方法用于向List中添加一个活动，提供了一个removeActivity()方法用于从List中移除活动，最后提供了一个finishAll()方法用于将List中存储的活动全部摧毁掉。接下来修改BaseActivity中的代码：  
+```java
+package com.zj970.activitytest;
+
+import android.os.Bundle;
+import android.util.Log;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
+
+public class BaseActivity extends AppCompatActivity {
+    private static final String TAG = "BaseActivity";
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Log.d(TAG,getClass().getSimpleName());//知晓当前是在哪一个活动
+        ActivityCollector.addActivity(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ActivityCollector.removeActivity(this);
+    }
+
+}
+```
+&emsp;&emsp;在BaseActivity的onCreate()方法中调用了ActivityCollector的addActivity()方法，表明将当前正在创建的活动添加到活动管理器里。然后在BaseActivity中重写onDestroy()方法，并调用了ActivityCollector的removeActivity()方法，表明将一个马上要销毁的话从活动管理器里移除。  
+&emsp;&emsp;从此以后，不管你想在什么地方退出程序，只需要调用ActivityCollector.finishAll()方法就可以了。  
+&emsp;&emsp;当然你还可以在销毁所有活动的代码后面再加上杀掉当前进程的代码，以保证程序完全退出，杀掉进程的代码如下所示：  
+```
+android.os.Process.killProcess(android.os.Process.myPid());
+```
+&emsp;&emsp;其中，killProcess()方法用于杀掉一个进程，它接收一个进程id参数，我们可以通过myPid()方法来获得当前进程id。需要注意的是，killProcess()方法只能用于杀掉当前程序的进程，我们不能使用这个方法去杀掉其他程序。  
+
+### 2.6.3 启动活动的最佳写法  
+&emsp;&emsp;启动活动的方法相信你已经非常熟悉了，首先通过Intent构建出当前的“意图”，然后调用startActivity()或startActivityForResult()方法将活动启动起来，如果有数据需要从一个活动传递到另一个活动，亦可以借助Intent来完成。  
+&emsp;&emsp;假设SecondActivity中需要用到两个非常重要的字符串参数，在启动SecondActivity的时候必须要传递过来，那么我们很容易会写出如下代码：  
+```
+Intent intent = new Intent(FirstActivity.this, SecondActivity.class);
+intent.putExtra("param1", "data1");
+intent.putExtra("param2", "data2");
+startActivity(intent);
+```
+&emsp;&emsp;这样写是完全正确，不管是从语法还是规范上，只是在真正的项目开发中经常会有对接的问题出现。比如SecondActivity并不是由你开发的，但现在你负责的部分需要有启动SecondActivity这个功能，而你却不清楚启动这个活动需要传递哪些数据。这时无非就有两种办法，一个是你自己去阅读SecondActivity中的代码，二是询问负责编写SecondActivity的同事。你会不会觉得很麻烦呢？其实只需要换一种写法，就可以轻松解决上面的窘境。修改SecondActivity中的代码：  
+```
+public class SecondActivity extends BaseActivity{
+    public static void actionStart(Context context, String data1, String data2){
+        Intent intent = new Intent(context, SecondActivity.class);
+        intent.putExtra("param1", data1);
+        intent.putExtra("param2", data2);
+        context.startActivity(intent);
+    }
+}
+```
+&emsp;&emsp;我们在SecondActivity中添加了一个actionStart()方法，在这个方法中完成了Intent的构建，林割爱所有SecondActivity中需要的数据都是通过actionStart()方法的参数传递过来的，然后将它们存储到Intent中，最后调用startActivity()方法启动SecondActivity。  
+&emsp;&emsp;这样写的好处在哪里呢？最重要的一点就是一目了然，SecondActivity所需要的数据在方法参数中全部体现出来了，这样即使不用阅读SecondActivity中的代码，不去询问负责编写SecondActivity的同事，你也可以非常清晰地知道启动SecondActivity需要传递哪些数据。另外这样写还简化了启动活动的代码，现在只需要一行代码就可以启动SecondActivity。  
+
+## 2.7 小结与点评  
+&emsp;&emsp;本章从活动的基本用法，到启动活动和传递数据的方式，再到活动的生命周期，以及活动的启动模式。
