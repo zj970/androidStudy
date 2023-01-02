@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="areas">
+        <item>中国大陆</item>
+        <item>香港</item>
+        <item>澳门</item>
+        <item>中国台湾</item>
+    </string-array>
+</resources>

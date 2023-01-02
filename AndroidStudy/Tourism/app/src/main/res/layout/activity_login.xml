@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              xmlns:tools="http://schemas.android.com/tools"
+              android:orientation="vertical"
+              android:background="@color/purple_200"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <TextView
+            android:textColor="#FFFFFF"
+            android:textSize="28sp"
+            android:layout_marginTop="30dp"
+            android:text="@string/login_title_1"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+    <TextView
+            android:textColor="#FFFFFF"
+            android:textSize="17sp"
+            android:layout_marginTop="5dp"
+            android:text="@string/login_title_2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+    <TextView
+            android:id="@+id/phone"
+            android:textColor="#FFFFFF"
+            android:textSize="36sp"
+            android:layout_marginTop="300dp"
+            android:layout_gravity="center_horizontal"
+            android:text="+86 185*****4688"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+    <Button
+            android:id="@+id/login"
+            android:background="#FFC107"
+            android:text="本机号码一键登录"
+            android:layout_marginTop="10dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"/>
+
+    <Button
+            android:id="@+id/register"
+            android:text="注册新用户"
+            android:layout_marginTop="5dp"
+            android:background="@null"
+            android:outlineProvider="none"
+            android:layout_gravity="center_horizontal"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"/>
+
+    <TextView
+            android:text="其他登录方式"
+            android:layout_marginTop="10dp"
+            android:layout_marginLeft="30dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+    <LinearLayout
+            android:layout_marginLeft="30dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+        <ImageView
+                android:id="@+id/ios"
+                android:src="@drawable/qq"
+                android:layout_width="36dp"
+                android:layout_height="36dp"/>
+        <ImageView
+                android:id="@+id/wechat"
+                android:src="@drawable/qq"
+                android:layout_marginLeft="10dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"/>
+        <ImageView
+                android:id="@+id/qq"
+                android:src="@drawable/qq"
+                android:layout_marginLeft="10dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"/>
+    </LinearLayout>
+    <CheckBox
+            android:id="@+id/login_agreement"
+            android:text="我已同意《食旅用户协议》"
+            android:layout_marginTop="5dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginLeft="10dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"/>
+
+</LinearLayout>
