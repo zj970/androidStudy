@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
                 android:id="@+id/layout_title_bar"
-                android:background="#7A4040"
                 android:layout_width="match_parent"
                 android:layout_height="52dp">
 
@@ -17,26 +16,25 @@
             android:textSize="20dp" />
 
     <Button
-            android:id="@+id/items"
-            android:layout_width="60dp"
-            android:layout_height="match_parent"
-            android:background="@drawable/item_icon"
-            android:drawablePadding="6dp"
-            android:ellipsize="end"
-            android:gravity="center"
-            android:onClick="onClick"
-            android:paddingLeft="5dp"
-            android:visibility="invisible" />
-
-    <Button
             android:id="@+id/personal"
-            android:layout_width="60dp"
-            android:layout_height="match_parent"
-            android:layout_alignParentRight="true"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             android:background="@drawable/personal"
             android:drawablePadding="6dp"
             android:ellipsize="end"
             android:gravity="center"
-            android:visibility="invisible" />
+            android:layout_centerVertical="true"
+            android:paddingLeft="5dp"/>
+
+    <Button
+            android:id="@+id/items"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/item_icon"
+            android:drawablePadding="6dp"
+            android:ellipsize="end"
+            android:gravity="center"/>
 
 </RelativeLayout>

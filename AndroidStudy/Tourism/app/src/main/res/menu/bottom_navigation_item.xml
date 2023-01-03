@@ -2,15 +2,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-            android:id="@+id/fragment_1"
+            android:id="@+id/custom_travel_fragment"
             android:icon="@mipmap/ic_launcher"
             android:title="定制旅游"/>
     <item
-            android:id="@+id/fragment_2"
+            android:id="@+id/map_fragment"
             android:icon="@mipmap/ic_launcher"
             android:title="地图体验"/>
     <item
-            android:id="@+id/fragment_3"
+            android:id="@+id/travels_fragment"
             android:icon="@mipmap/ic_launcher"
             android:title="游记分享"/>
 
