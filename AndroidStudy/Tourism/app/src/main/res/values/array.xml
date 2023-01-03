@@ -6,4 +6,14 @@
         <item>澳门</item>
         <item>中国台湾</item>
     </string-array>
+    <string-array name="toll">
+        <item>1人</item>
+        <item>2人</item>
+        <item>3人及以上</item>
+    </string-array>
+    <string-array name="budget">
+        <item>经济</item>
+        <item>普通</item>
+        <item>奢侈</item>
+    </string-array>
 </resources>
