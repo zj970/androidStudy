@@ -11,6 +11,7 @@ import android.widget.Spinner;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import com.zj970.tourism.MainActivity;
 import com.zj970.tourism.R;
 import com.zj970.tourism.base.BaseApplication;
 
@@ -39,7 +40,7 @@ public class CustomizedTravelFragment extends Fragment implements View.OnClickLi
     private Button endDate;
     private Calendar calendar;
     private int year, monthOfYear, dayOfMonth;
-
+    private Button custom_travel_ok;
     private View rootView;
 
     @Nullable
@@ -57,6 +58,7 @@ public class CustomizedTravelFragment extends Fragment implements View.OnClickLi
             budget = rootView.findViewById(R.id.budget);
             startDate = rootView.findViewById(R.id.start_date);
             endDate = rootView.findViewById(R.id.end_date);
+            custom_travel_ok = rootView.findViewById(R.id.custom_travel_ok);
             //通过Calendar对象来获取年、月、日信息
             calendar = Calendar.getInstance();
             year = calendar.get(Calendar.YEAR);
@@ -86,6 +88,9 @@ public class CustomizedTravelFragment extends Fragment implements View.OnClickLi
                         }
                     }, year, monthOfYear, dayOfMonth).show();
                     break;
+            case R.id.custom_travel_ok:
+                MainActivity.toThisMap();
+                break;
 
         }
     }
@@ -95,5 +100,6 @@ public class CustomizedTravelFragment extends Fragment implements View.OnClickLi
         super.onStart();
         startDate.setOnClickListener(this::onClick);
         endDate.setOnClickListener(this::onClick);
+        custom_travel_ok.setOnClickListener(this::onClick);
     }
 }

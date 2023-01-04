@@ -29,7 +29,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     private MapFragment mapFragment;
     private TravelsFragment travelsFragment;
     private List<Fragment> mData = new ArrayList<>();
-    private ViewPager2 mViewPager2;
+    private static ViewPager2 mViewPager2;
     private BottomNavigationView bottomNavigationView;
     private DrawerLayout drawerLayout;
     private View topBar;
@@ -90,7 +90,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         topBar = findViewById(R.id.top_bar);
         personal = topBar.findViewById(R.id.personal);
         items = topBar.findViewById(R.id.items);
-
         personal.setOnClickListener(this::onClick);
     }
 
@@ -116,5 +115,9 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
                 drawerLayout.openDrawer(GravityCompat.START);
                 break;
         }
+    }
+
+    public static void toThisMap() {
+        mViewPager2.setCurrentItem(1, true);
     }
 }

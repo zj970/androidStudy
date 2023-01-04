@@ -1,24 +1,31 @@
 package com.zj970.tourism;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
 import android.widget.*;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import com.zj970.tourism.base.BaseActivity;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * <p>
- * 登录业余
+ * 登录业面
  * </p>
  *
  * @author: zj970
  * @date: 2023/1/1
  */
-public class LoginActivity extends BaseActivity implements View.OnClickListener {
-
+public class LoginActivity extends BaseActivity implements View.OnClickListener{
     TextView phone;
     Button login;
     Button registered;
@@ -26,7 +33,6 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
     ImageView weChat;
     ImageView qq;
     CheckBox agreement;
-
     boolean authentication = false;
 
     @Override
@@ -41,9 +47,27 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
         weChat = findViewById(R.id.wechat);
         qq = findViewById(R.id.qq);
         agreement = findViewById(R.id.login_agreement);
-
         registered.setOnClickListener(this::onClick);
         login.setOnClickListener(this::onClick);
+        List<String> permissionList = new ArrayList<>();
+        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
+        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.READ_PHONE_STATE);
+        }
+        if (ContextCompat.checkSelfPermission(LoginActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED){
+            permissionList.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        }
+        if (!permissionList.isEmpty()){
+            String[] permissions = permissionList.toArray(new String[permissionList.size()]);
+            ActivityCompat.requestPermissions(LoginActivity.this,permissions,1);
+        } else {
+            requestLocation();
+        }
+    }
+    private void requestLocation(){
+        //mLocationClient.start();
     }
 
     @Override
@@ -105,4 +129,26 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener 
         context.startActivity(intent);
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode){
+            case 1:
+                if (grantResults.length > 0){
+                    for (int result : grantResults){
+                        if (result != PackageManager.PERMISSION_GRANTED){
+                            Toast.makeText(this, "必须同意所有权限才能使用本程序", Toast.LENGTH_SHORT).show();
+                            finish();
+                            return;
+                        }
+                    }
+                    requestLocation();
+                }else {
+                    Toast.makeText(this, "发生未知错误", Toast.LENGTH_SHORT).show();
+                    finish();
+                }
+                break;
+            default:
+                break;
+        }
+    }
 }
