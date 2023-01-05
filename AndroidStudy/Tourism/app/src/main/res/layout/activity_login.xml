@@ -43,7 +43,7 @@
 
     <Button
             android:id="@+id/register"
-            android:text="注册新用户"
+            android:text="@string/register_new_user"
             android:layout_marginTop="5dp"
             android:background="@null"
             android:outlineProvider="none"
@@ -52,7 +52,7 @@
             android:layout_height="wrap_content"/>
 
     <TextView
-            android:text="其他登录方式"
+            android:text="@string/other_ways_sign"
             android:layout_marginTop="10dp"
             android:layout_marginLeft="30dp"
             android:layout_width="wrap_content"
@@ -83,7 +83,7 @@
     </LinearLayout>
     <CheckBox
             android:id="@+id/login_agreement"
-            android:text="我已同意《食旅用户协议》"
+            android:text="@string/agreement"
             android:layout_marginTop="5dp"
             android:layout_marginRight="10dp"
             android:layout_marginLeft="10dp"

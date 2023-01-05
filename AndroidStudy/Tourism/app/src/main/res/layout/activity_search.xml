@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                                                   xmlns:app="http://schemas.android.com/apk/res-auto"
+                                                   xmlns:tools="http://schemas.android.com/tools"
+                                                   android:layout_width="match_parent"
+                                                   android:layout_height="match_parent"
+                                                   tools:context=".SearchActivity">
+
+    <ImageView
+            android:id="@+id/return_icon"
+            android:layout_width="43dp"
+            android:layout_height="43dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="?attr/homeAsUpIndicator"
+            android:contentDescription="@null"/>
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/explore_title"
+            android:textColor="@color/black"
+            android:textSize="34sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="28dp"
+            android:layout_marginTop="88dp"
+            android:text="@string/explore_text"
+            android:textColor="@color/black"
+            android:textSize="48sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+    <EditText
+            android:id="@+id/search_destination"
+            android:layout_width="347dp"
+            android:layout_height="47dp"
+            android:layout_marginStart="28dp"
+            android:layout_marginTop="176dp"
+            android:ems="10"
+            android:hint="@string/destination"
+            android:importantForAutofill="no"
+            android:inputType="textPersonName"
+            android:textColor="#000000"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="TextContrastCheck,TouchTargetSizeCheck" />
+
+    <EditText
+            android:id="@+id/search_start_point"
+            android:layout_width="347dp"
+            android:layout_height="43dp"
+            android:layout_marginStart="28dp"
+            android:layout_marginTop="256dp"
+            android:ems="10"
+            android:hint="@string/start_point"
+            android:importantForAutofill="no"
+            android:inputType="textPersonName"
+            android:textColor="#757575"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="TouchTargetSizeCheck" />
+
+    <EditText
+            android:id="@+id/edit_date_start"
+            android:layout_width="337dp"
+            android:layout_height="50dp"
+            android:layout_marginStart="28dp"
+            android:layout_marginTop="320dp"
+            android:ems="10"
+            android:importantForAutofill="no"
+            android:inputType="date"
+            android:text="@string/date_start_text"
+            android:textColor="#000000"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="TextContrastCheck" />
+
+    <ImageView
+            android:id="@+id/date_image_start"
+            android:layout_width="54dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="44dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.469"
+            app:srcCompat="@android:drawable/ic_menu_my_calendar"
+            android:contentDescription="@null"/>
+    <EditText
+            android:id="@+id/edit_date_end"
+            android:layout_width="334dp"
+            android:layout_height="51dp"
+            android:layout_marginStart="28dp"
+            android:layout_marginTop="388dp"
+            android:ems="10"
+            android:importantForAutofill="no"
+            android:inputType="date"
+            android:text="@string/date_end_text"
+            android:textColor="#000000"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:ignore="TextContrastCheck" />
+    <ImageView
+            android:id="@+id/date_image_2"
+            android:layout_width="49dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="388dp"
+            android:layout_marginEnd="44dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:srcCompat="@android:drawable/ic_menu_my_calendar"
+            tools:ignore="ImageContrastCheck"
+            android:contentDescription="@null"/>
+
+    <Spinner
+            android:id="@+id/spinner_age"
+            android:layout_width="349dp"
+            android:layout_height="56dp"
+            android:layout_marginStart="28dp"
+            android:layout_marginBottom="220dp"
+            android:entries="@array/age_group"
+            android:spinnerMode="dropdown"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
+
+    <CheckBox
+            android:id="@+id/reservation_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="28dp"
+            android:layout_marginBottom="176dp"
+            android:checked="true"
+            android:text="@string/reservation_text"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    <CheckBox
+            android:id="@+id/by_car_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="176dp"
+            android:text="@string/by_car_text"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.498"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    <CheckBox
+            android:id="@+id/smoke_area_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="36dp"
+            android:layout_marginBottom="176dp"
+            android:text="@string/smoke_area_text"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    <Button
+            android:id="@+id/search_ok"
+            android:layout_width="354dp"
+            android:layout_height="73dp"
+            android:layout_marginBottom="84dp"
+            android:backgroundTint="@android:color/holo_orange_light"
+            android:text="@string/btn_search_ok_text"
+            android:textColor="@color/black"
+            android:textSize="24sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.495"
+            app:layout_constraintStart_toStartOf="parent" />
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

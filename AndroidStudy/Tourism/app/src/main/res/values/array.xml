@@ -16,4 +16,10 @@
         <item>普通</item>
         <item>奢侈</item>
     </string-array>
+
+    <string-array name="age_group">
+        <item>仅成年人</item>
+        <item>成年人及小孩</item>
+        <item>仅未成年人</item>
+    </string-array>
 </resources>

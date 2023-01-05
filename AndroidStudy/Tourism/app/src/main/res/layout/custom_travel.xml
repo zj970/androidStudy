@@ -28,7 +28,7 @@
                         android:layout_marginRight="10dp"
                         android:textColor="#000000"
                         android:layout_gravity="center_vertical"
-                        android:text="出行人数"
+                        android:text="@string/travel_num"
                         android:layout_width="match_parent"
                         android:layout_height="30dp"/>
             </LinearLayout>
@@ -39,6 +39,7 @@
                     android:layout_marginRight="10dp"
                     android:layout_marginTop="15dp"
                     android:entries="@array/toll"
+                    android:spinnerMode="dropdown"
                     android:background="@drawable/spinner_border"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"/>
@@ -71,6 +72,7 @@
                     android:layout_marginRight="10dp"
                     android:layout_marginTop="15dp"
                     android:entries="@array/budget"
+                    android:spinnerMode="dropdown"
                     android:background="@drawable/spinner_border"
                     android:layout_width="match_parent"
                     android:layout_height="50dp"/>
@@ -92,7 +94,7 @@
                         android:layout_marginRight="10dp"
                         android:textColor="#000000"
                         android:layout_gravity="center_vertical"
-                        android:text="预计出行日期"
+                        android:text="@string/estimated_travel_date"
                         android:layout_width="match_parent"
                         android:layout_height="30dp"/>
             </LinearLayout>
@@ -116,7 +118,7 @@
                             android:layout_weight="8"
                             android:layout_width="0dp"
                             android:textColor="#000000"
-                            android:text="请选择日期"
+                            android:text="@string/check_date"
                             android:background="@null"
                             android:layout_height="wrap_content"/>
                     <ImageView
@@ -125,7 +127,7 @@
                             android:layout_height="24dp"/>
                 </LinearLayout>
                 <TextView
-                        android:text="到"
+                        android:text="@string/to_text"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="1"
                         android:layout_marginRight="5dp"
@@ -133,7 +135,7 @@
                         android:textColor="#000000"
                         android:textSize="20dp"
                         android:layout_width="0dp"
-                        android:layout_height="20dp"/>
+                        android:layout_height="wrap_content"/>
                 <LinearLayout
                         android:background="@drawable/date_border"
                         android:layout_width="0dp"
@@ -146,7 +148,7 @@
                             android:layout_weight="8"
                             android:background="@null"
                             android:layout_width="0dp"
-                            android:text="请选择日期"
+                            android:text="@string/check_date"
                             android:layout_height="wrap_content"/>
                     <ImageView
                             android:layout_gravity="center_vertical"
@@ -173,7 +175,7 @@
                         android:layout_marginRight="10dp"
                         android:textColor="#000000"
                         android:layout_gravity="center_vertical"
-                        android:text="游玩节奏"
+                        android:text="@string/play_rhythm"
                         android:layout_width="match_parent"
                         android:layout_height="30dp"/>
             </LinearLayout>
@@ -190,7 +192,7 @@
                         android:layout_marginTop="20dp"
                         android:layout_marginLeft="40dp"
                         android:layout_marginRight="100dp"
-                        android:text="懒人轻松玩法：浏览时间不超过4小时/天"
+                        android:text="@string/play_rhFormat_relaxed"
                         android:button="@null"
                         android:layout_width="match_parent"
                         android:layout_height="50dp"/>
@@ -202,7 +204,7 @@
                         android:layout_marginTop="5dp"
                         android:layout_marginLeft="40dp"
                         android:layout_marginRight="100dp"
-                        android:text="常规玩法：浏览时间4-6小时/天"
+                        android:text="@string/play_rhFormat_routine"
                         android:button="@null"
                         android:layout_width="match_parent"
                         android:layout_height="50dp"/>
@@ -214,7 +216,7 @@
                         android:layout_marginTop="5dp"
                         android:layout_marginLeft="40dp"
                         android:layout_marginRight="100dp"
-                        android:text="行程紧凑玩法：浏览时间超过6小时/天"
+                        android:text="@string/play_rhFormat_compact"
                         android:button="@null"
                         android:layout_width="match_parent"
                         android:layout_height="50dp"/>
@@ -237,7 +239,7 @@
                         android:layout_marginRight="10dp"
                         android:textColor="#000000"
                         android:layout_gravity="center_vertical"
-                        android:text="口味倾向"
+                        android:text="@string/flavors"
                         android:layout_width="wrap_content"
                         android:layout_height="30dp"/>
                 <TextView
@@ -246,7 +248,7 @@
                         android:layout_marginRight="10dp"
                         android:textColor="#03A9F4"
                         android:layout_gravity="center_vertical"
-                        android:text="可多选"
+                        android:text="@string/multiple_selection"
                         android:layout_width="wrap_content"
                         android:layout_height="30dp"/>
             </LinearLayout>
@@ -260,7 +262,7 @@
                     android:layout_width="match_parent">
                 <CheckBox
                         android:id="@+id/acid"
-                        android:text="酸"
+                        android:text="@string/acid_text"
                         android:layout_marginRight="5dp"
                         android:layout_marginLeft="10dp"
                         android:layout_width="0dp"
@@ -268,7 +270,7 @@
                         android:layout_weight="1"/>
                 <CheckBox
                         android:id="@+id/sweet"
-                        android:text="甜"
+                        android:text="@string/sweet_text"
                         android:layout_marginRight="5dp"
                         android:layout_marginLeft="5dp"
                         android:layout_width="0dp"
@@ -276,7 +278,7 @@
                         android:layout_weight="1"/>
                 <CheckBox
                         android:id="@+id/spicy"
-                        android:text="辣"
+                        android:text="@string/spicy_text"
                         android:layout_marginRight="10dp"
                         android:layout_marginLeft="5dp"
                         android:layout_width="0dp"
@@ -293,7 +295,7 @@
                     android:layout_width="match_parent">
                 <CheckBox
                         android:id="@+id/c"
-                        android:text="荤"
+                        android:text="@string/c_text"
                         android:layout_marginRight="5dp"
                         android:layout_marginLeft="10dp"
                         android:layout_width="0dp"
@@ -309,7 +311,7 @@
                         android:layout_weight="1"/>
                 <CheckBox
                         android:id="@+id/c_and_plain"
-                        android:text="荤素参半"
+                        android:text="@string/c_and_plain_text"
                         android:layout_marginRight="10dp"
                         android:layout_marginLeft="5dp"
                         android:layout_width="0dp"
@@ -335,7 +337,7 @@
                         android:layout_marginRight="10dp"
                         android:textColor="#000000"
                         android:layout_gravity="center_vertical"
-                        android:text="餐馆类型"
+                        android:text="@string/type_of_restaurant"
                         android:layout_width="wrap_content"
                         android:layout_height="30dp"/>
                 <TextView
@@ -344,7 +346,7 @@
                         android:layout_marginRight="10dp"
                         android:textColor="#03A9F4"
                         android:layout_gravity="center_vertical"
-                        android:text="可多选"
+                        android:text="@string/multiple_selection"
                         android:layout_width="wrap_content"
                         android:layout_height="30dp"/>
             </LinearLayout>
@@ -358,7 +360,7 @@
                     android:layout_width="match_parent">
                 <CheckBox
                         android:id="@+id/affordable_snacks"
-                        android:text="实惠小吃"
+                        android:text="@string/affordable_snacks_text"
                         android:layout_marginRight="5dp"
                         android:layout_marginLeft="10dp"
                         android:layout_width="0dp"
@@ -366,7 +368,7 @@
                         android:layout_weight="1"/>
                 <CheckBox
                         android:id="@+id/specialty_flavors"
-                        android:text="特色风味"
+                        android:text="@string/specialty_flavors_text"
                         android:layout_marginRight="5dp"
                         android:layout_marginLeft="5dp"
                         android:layout_width="0dp"
@@ -374,7 +376,7 @@
                         android:layout_weight="1"/>
                 <CheckBox
                         android:id="@+id/internet_celebrity_flavor"
-                        android:text="网红风味"
+                        android:text="@string/internet_celebrity_flavor_text"
                         android:layout_marginRight="10dp"
                         android:layout_marginLeft="5dp"
                         android:layout_width="0dp"
@@ -391,7 +393,7 @@
                     android:layout_width="match_parent">
                 <CheckBox
                         android:id="@+id/upscale_restaurants"
-                        android:text="高档餐厅"
+                        android:text="@string/upscale_restaurants_text"
                         android:layout_marginRight="5dp"
                         android:layout_marginLeft="10dp"
                         android:layout_width="0dp"
@@ -399,7 +401,7 @@
                         android:layout_weight="1"/>
                 <CheckBox
                         android:id="@+id/high_score_evaluation"
-                        android:text="高分评价"
+                        android:text="@string/high_score_evaluation_text"
                         android:layout_marginRight="5dp"
                         android:layout_marginLeft="5dp"
                         android:layout_width="0dp"
@@ -407,7 +409,6 @@
                         android:layout_weight="1"/>
                 <CheckBox
                         android:visibility="invisible"
-                        android:text="荤素参半"
                         android:layout_marginRight="10dp"
                         android:layout_marginLeft="5dp"
                         android:layout_width="0dp"
@@ -433,7 +434,7 @@
                         android:layout_marginRight="10dp"
                         android:textColor="#000000"
                         android:layout_gravity="center_vertical"
-                        android:text="必去景点"
+                        android:text="@string/must_attraction"
                         android:layout_width="wrap_content"
                         android:layout_height="30dp"/>
             </LinearLayout>
@@ -451,10 +452,11 @@
                         android:layout_height="40dp"
                         android:layout_weight="8"/>
                 <Button
+                        android:id="@+id/must_ok"
                         android:layout_width="wrap_content"
                         android:layout_marginLeft="5dp"
                         android:layout_marginRight="10dp"
-                        android:text="确定"
+                        android:text="@string/sure_att"
                         android:layout_height="40dp"/>
             </LinearLayout>
 
@@ -484,7 +486,6 @@
                         android:layout_weight="1"/>
                 <CheckBox
                         android:visibility="invisible"
-                        android:text="荤素参半"
                         android:layout_marginRight="10dp"
                         android:layout_marginLeft="5dp"
                         android:layout_width="0dp"
@@ -511,7 +512,7 @@
                         android:layout_marginRight="10dp"
                         android:textColor="#000000"
                         android:layout_gravity="center_vertical"
-                        android:text="出行方式"
+                        android:text="@string/mode_travel_text"
                         android:layout_width="wrap_content"
                         android:layout_height="30dp"/>
             </LinearLayout>
@@ -525,7 +526,7 @@
                     android:layout_width="match_parent">
                 <CheckBox
                         android:id="@+id/public_transport"
-                        android:text="公共交通"
+                        android:text="@string/public_transport_text"
                         android:layout_marginRight="5dp"
                         android:layout_marginLeft="10dp"
                         android:layout_width="0dp"
@@ -533,7 +534,7 @@
                         android:layout_weight="1"/>
                 <CheckBox
                         android:id="@+id/by_car"
-                        android:text="自驾"
+                        android:text="@string/by_car_text_c"
                         android:layout_marginRight="5dp"
                         android:layout_marginLeft="5dp"
                         android:layout_width="0dp"
@@ -541,7 +542,7 @@
                         android:layout_weight="1"/>
                 <CheckBox
                         android:id="@+id/charter"
-                        android:text="包车"
+                        android:text="@string/charter_text"
                         android:layout_marginRight="10dp"
                         android:layout_marginLeft="5dp"
                         android:layout_width="0dp"
@@ -566,7 +567,6 @@
                         android:layout_weight="1"/>
                 <CheckBox
                         android:visibility="invisible"
-                        android:text="高分评价"
                         android:layout_marginRight="5dp"
                         android:layout_marginLeft="5dp"
                         android:layout_width="0dp"
@@ -574,7 +574,6 @@
                         android:layout_weight="1"/>
                 <CheckBox
                         android:visibility="invisible"
-                        android:text="荤素参半"
                         android:layout_marginRight="10dp"
                         android:layout_marginLeft="5dp"
                         android:layout_width="0dp"
@@ -600,7 +599,7 @@
                         android:layout_marginRight="10dp"
                         android:textColor="#000000"
                         android:layout_gravity="center_vertical"
-                        android:text="出行路线"
+                        android:text="@string/travel_routes"
                         android:layout_width="match_parent"
                         android:layout_height="30dp"/>
             </LinearLayout>
@@ -616,11 +615,11 @@
                 <EditText
                         android:id="@+id/start_origin"
                         android:layout_width="0dp"
-                        android:hint="起始地"
+                        android:hint="@string/start_origin_text"
                         android:layout_height="60dp"
                         android:layout_weight="8"/>
                 <TextView
-                        android:text="到"
+                        android:text="@string/to_text"
                         android:layout_gravity="center_vertical"
                         android:layout_weight="1"
                         android:layout_marginRight="5dp"
@@ -632,7 +631,7 @@
                 <EditText
                           android:id="@+id/destination"
                           android:layout_width="0dp"
-                          android:hint="目的地"
+                          android:hint="@string/destination_text"
                           android:layout_height="60dp"
                           android:layout_weight="8"/>
             </LinearLayout>
@@ -641,7 +640,7 @@
                     android:layout_below="@+id/linearLayout_19"
                     android:id="@+id/custom_travel_ok"
                     android:layout_width="match_parent"
-                    android:text="查看专属食旅路线"
+                    android:text="@string/custom_travel_ok_text"
                     android:layout_height="wrap_content"/>
         </RelativeLayout>
     </ScrollView>
