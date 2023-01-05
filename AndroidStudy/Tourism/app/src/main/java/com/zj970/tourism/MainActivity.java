@@ -105,6 +105,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         mViewPager2.setAdapter(new MyFragmentStateAdapter(this, mData));
         mViewPager2.setOffscreenPageLimit(1);
         mViewPager2.registerOnPageChangeCallback(onPageChangeCallback);
+        mViewPager2.setUserInputEnabled(false);
         bottomNavigationView.setOnNavigationItemSelectedListener(onNavigationItemSelected);
     }
 

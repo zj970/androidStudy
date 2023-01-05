@@ -1,5 +1,6 @@
 package com.zj970.tourism;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -120,5 +121,10 @@ public class RegisteredActivity extends BaseActivity implements View.OnClickList
             return false;
         }
         return true;
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
     }
 }
