@@ -1,4 +1,5 @@
 <resources>
+
     <string name="app_name">食旅</string>
     <string name="login_title_1">登录后更精彩</string>
     <string name="login_title_2">与全世界精彩的经历、人和故事相遇</string>
@@ -49,4 +50,25 @@
     <string name="start_origin_text">起始地</string>
     <string name="destination_text">目的地</string>
     <string name="custom_travel_ok_text">查看专属食旅路线</string>
+    <string name="menu_custom_travel">定制旅游</string>
+    <string name="menu_map_experience">地图体验</string>
+    <string name="menu_travel_book_sharing">游记分享</string>
+    <string name="registered_title">注册食旅</string>
+    <string name="registered_user_name">用户名或邮箱</string>
+    <string name="registered_password">密码</string>
+    <string name="registered_name">昵称</string>
+    <string name="registered_btn">注册</string>
+    <string name="china">中国大陆</string>
+    <string name="china_hong_kong">香港</string>
+    <string name="china_macau">澳门</string>
+    <string name="china_taiwan">中国台湾</string>
+    <string name="spinner_person_1">1人</string>
+    <string name="spinner_person_2">2人</string>
+    <string name="spinner_person_3">3人及以上</string>
+    <string name="economically">经济</string>
+    <string name="ordinary">通常</string>
+    <string name="luxury">奢侈</string>
+    <string name="array_age_group_0">仅成年人</string>
+    <string name="array_age_group_1">成年人及小孩</string>
+    <string name="array_age_group_2">仅未成年人</string>
 </resources>

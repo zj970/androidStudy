@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="areas">
-        <item>中国大陆</item>
-        <item>香港</item>
-        <item>澳门</item>
-        <item>中国台湾</item>
+        <item>@string/china</item>
+        <item>@string/china_hong_kong</item>
+        <item>@string/china_macau</item>
+        <item>@string/china_taiwan</item>
     </string-array>
     <string-array name="toll">
-        <item>1人</item>
-        <item>2人</item>
-        <item>3人及以上</item>
+        <item>@string/spinner_person_1</item>
+        <item>@string/spinner_person_2</item>
+        <item>@string/spinner_person_3</item>
     </string-array>
     <string-array name="budget">
-        <item>经济</item>
-        <item>普通</item>
-        <item>奢侈</item>
+        <item>@string/economically</item>
+        <item>@string/ordinary</item>
+        <item>@string/luxury</item>
     </string-array>
 
     <string-array name="age_group">
-        <item>仅成年人</item>
-        <item>成年人及小孩</item>
-        <item>仅未成年人</item>
+        <item>@string/array_age_group_0</item>
+        <item>@string/array_age_group_1</item>
+        <item>@string/array_age_group_2</item>
     </string-array>
 </resources>

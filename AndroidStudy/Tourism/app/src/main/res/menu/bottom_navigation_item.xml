@@ -4,14 +4,13 @@
     <item
             android:id="@+id/custom_travel_fragment"
             android:icon="@mipmap/ic_launcher"
-            android:title="定制旅游"/>
+            android:title="@string/menu_custom_travel"/>
     <item
             android:id="@+id/map_fragment"
             android:icon="@mipmap/ic_launcher"
-            android:title="地图体验"/>
+            android:title="@string/menu_map_experience"/>
     <item
             android:id="@+id/travels_fragment"
             android:icon="@mipmap/ic_launcher"
-            android:title="游记分享"/>
-
+            android:title="@string/menu_travel_book_sharing"/>
 </menu>
