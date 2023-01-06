@@ -82,7 +82,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         initViewPager();
     }
 
-    private void findViewByIdAll(){
+    @Override
+    protected void findByAll() {
         //TODO:初始化所有组件
         mViewPager2 = findViewById(R.id.layout_content);
         bottomNavigationView = findViewById(R.id.main_bottomNavigation);
@@ -90,12 +91,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         topBar = findViewById(R.id.top_bar);
         personal = topBar.findViewById(R.id.personal);
         items = topBar.findViewById(R.id.items);
-        personal.setOnClickListener(this::onClick);
     }
 
     private void initViewPager() {
         //TODO:初始化界面
-        findViewByIdAll();
+        findByAll();
+        personal.setOnClickListener(this::onClick);
         customizedTravelFragment = new CustomizedTravelFragment();
         mapFragment = new MapFragment();
         travelsFragment = new TravelsFragment();

@@ -40,13 +40,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         //初始化
-        phone = findViewById(R.id.phone);
-        login = findViewById(R.id.login);
-        registered = findViewById(R.id.register);
-        ios = findViewById(R.id.ios);
-        weChat = findViewById(R.id.wechat);
-        qq = findViewById(R.id.qq);
-        agreement = findViewById(R.id.login_agreement);
+        findByAll();
         registered.setOnClickListener(this::onClick);
         login.setOnClickListener(this::onClick);
         List<String> permissionList = new ArrayList<>();
@@ -78,6 +72,17 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
     }
     private void requestLocation(){
         //mLocationClient.start();
+    }
+
+    @Override
+    protected void findByAll() {
+        phone = findViewById(R.id.phone);
+        login = findViewById(R.id.login);
+        registered = findViewById(R.id.register);
+        ios = findViewById(R.id.ios);
+        weChat = findViewById(R.id.wechat);
+        qq = findViewById(R.id.qq);
+        agreement = findViewById(R.id.login_agreement);
     }
 
     @Override

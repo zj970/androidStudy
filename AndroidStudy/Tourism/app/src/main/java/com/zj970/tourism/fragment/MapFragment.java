@@ -1,7 +1,5 @@
 package com.zj970.tourism.fragment;
 
-import android.graphics.BitmapFactory;
-import android.location.LocationListener;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,11 +14,7 @@ import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.map.*;
 import com.baidu.mapapi.model.LatLng;
-import com.zj970.tourism.MainActivity;
 import com.zj970.tourism.R;
-import com.zj970.tourism.base.BaseApplication;
-
-import java.util.Calendar;
 
 /**
  * <p>

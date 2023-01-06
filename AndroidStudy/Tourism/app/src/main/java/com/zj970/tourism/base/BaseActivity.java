@@ -20,4 +20,12 @@ public class BaseActivity extends AppCompatActivity {
             getSupportActionBar().hide();
         }
     }
+
+    /**
+     * 初始化所有控件实例
+     */
+    protected void findByAll(){
+
+    }
+
 }

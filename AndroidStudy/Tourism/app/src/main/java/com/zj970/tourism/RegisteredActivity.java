@@ -31,13 +31,8 @@ public class RegisteredActivity extends BaseActivity implements View.OnClickList
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.registered);
-        userName = findViewById(R.id.user_name);
-        password = findViewById(R.id.password);
-        name = findViewById(R.id.name);
-        area = findViewById(R.id.area);
-        register_ok = findViewById(R.id.registered_ok);
-        agreement = findViewById(R.id.agreement);
-
+        //初始化
+        findByAll();
         register_ok.setOnClickListener(this::onClick);
 
         //TODO:用户名输入状态监听
@@ -91,6 +86,16 @@ public class RegisteredActivity extends BaseActivity implements View.OnClickList
 
             }
         });
+    }
+
+    @Override
+    protected void findByAll() {
+        userName = findViewById(R.id.user_name);
+        password = findViewById(R.id.password);
+        name = findViewById(R.id.name);
+        area = findViewById(R.id.area);
+        register_ok = findViewById(R.id.registered_ok);
+        agreement = findViewById(R.id.agreement);
     }
 
     @Override
