@@ -125,8 +125,10 @@ public class TravelsFragment extends Fragment implements View.OnClickListener{
             paint.setAntiAlias(true);
             // 防抖动
             paint.setDither(true);
-            paint.setTextSize(200);
-            paint.setColor(Color.parseColor("#ff0000"));
+            paint.setTextSize(300);
+            Typeface font = Typeface.create(Typeface.SANS_SERIF,Typeface.BOLD);
+            paint.setTypeface(font);
+            paint.setColor(Color.parseColor("#000000"));
             canvas.drawText(text,(bitmap.getWidth() / 5),(bitmap.getHeight() / 2), paint);
             srcImage.setImageBitmap(bitmap);
         }

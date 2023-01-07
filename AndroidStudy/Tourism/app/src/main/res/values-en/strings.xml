@@ -17,6 +17,7 @@
     <string name="by_car_text">Can drive to</string>
     <string name="smoke_area_text">There is a smoking area</string>
     <string name="btn_search_ok_text">start searching</string>
+    <string name="budget_per">per capita budget</string>
     <string name="travel_num">Number of people traveling</string>
     <string name="estimated_travel_date">Estimated travel date</string>
     <string name="check_date">Please select a date</string>
@@ -71,4 +72,17 @@
     <string name="array_age_group_0">adults only</string>
     <string name="array_age_group_1">adults and children</string>
     <string name="array_age_group_2">minors only</string>
+    <string name="explore_itineraries">Explore itinerary</string>
+    <string name="top_picks">Popular Picks</string>
+    <string name="travels_more">More</string>
+    <string name="fail">mistake</string>
+    <string name="fail_tips">Failed to obtain resources, please check the network conditions or refresh the page again</string>
+    <string name="free_travel">free travel</string>
+    <string name="exotic">exotic</string>
+    <string name="notice">Notice</string>
+    <string name="fans">fan</string>
+    <string name="collection">collect</string>
+    <string name="help">help</string>
+    <string name="contact_us">contact us</string>
+    <string name="return_login">sign out</string>
 </resources>

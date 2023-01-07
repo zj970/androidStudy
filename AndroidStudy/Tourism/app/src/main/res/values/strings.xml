@@ -80,4 +80,10 @@
     <string name="fail_tips">获取资源失败，请检查网络情况或者再次刷新页面</string>
     <string name="free_travel">自由行</string>
     <string name="exotic">异域风情</string>
+    <string name="notice">通知</string>
+    <string name="fans">粉丝</string>
+    <string name="collection">收藏</string>
+    <string name="help">帮助</string>
+    <string name="contact_us">联系我们</string>
+    <string name="return_login">退出登录</string>
 </resources>

@@ -50,6 +50,12 @@
                 android:singleLine="true"
                 android:textColor="#000000"
                 android:textSize="20dp"/>
+        <com.google.android.material.navigation.NavigationView
+                android:id="@+id/nav"
+                app:menu="@menu/activity_main_drawer"
+                app:headerLayout="@layout/top_main"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"/>
     </LinearLayout>
 
 </androidx.drawerlayout.widget.DrawerLayout>

@@ -17,6 +17,7 @@
     <string name="by_car_text">可自驾前往</string>
     <string name="smoke_area_text">有吸烟区</string>
     <string name="btn_search_ok_text">开始搜索</string>
+    <string name="budget_per">人均预算</string>
     <string name="travel_num">出行人数</string>
     <string name="estimated_travel_date">预计出行日期</string>
     <string name="check_date">请选择日期</string>
@@ -71,4 +72,17 @@
     <string name="array_age_group_0">仅成年人</string>
     <string name="array_age_group_1">成年人及小孩</string>
     <string name="array_age_group_2">仅未成年人</string>
+    <string name="explore_itineraries">探索行程</string>
+    <string name="top_picks">热门精选</string>
+    <string name="travels_more">更多</string>
+    <string name="fail">错误</string>
+    <string name="fail_tips">获取资源失败，请检查网络情况或者再次刷新页面</string>
+    <string name="free_travel">自由行</string>
+    <string name="exotic">异域风情</string>
+    <string name="notice">通知</string>
+    <string name="fans">粉丝</string>
+    <string name="collection">收藏</string>
+    <string name="help">帮助</string>
+    <string name="contact_us">联系我们</string>
+    <string name="return_login">退出登录</string>
 </resources>
