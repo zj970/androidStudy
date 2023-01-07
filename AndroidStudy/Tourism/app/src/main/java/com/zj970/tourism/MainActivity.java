@@ -1,5 +1,6 @@
 package com.zj970.tourism;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -11,6 +12,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.navigation.NavigationView;
 import com.zj970.tourism.adapter.MyFragmentStateAdapter;
 import com.zj970.tourism.base.BaseActivity;
 import com.zj970.tourism.fragment.CustomizedTravelFragment;
@@ -31,6 +33,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     private List<Fragment> mData = new ArrayList<>();
     private static ViewPager2 mViewPager2;
     private BottomNavigationView bottomNavigationView;
+    private NavigationView navigationView;
     private DrawerLayout drawerLayout;
     private View topBar;
     private Button personal;
@@ -80,6 +83,21 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         initViewPager();
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                switch (item.getItemId()){
+                    case R.id.nav_return:
+                        Intent intent = new Intent(MainActivity.this,LoginActivity.class);
+                        startActivity(intent);
+                        finish();
+                        break;
+                    default:
+                        break;
+                }
+                return false;
+            }
+        });
     }
 
     @Override
@@ -87,6 +105,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         //TODO:初始化所有组件
         mViewPager2 = findViewById(R.id.layout_content);
         bottomNavigationView = findViewById(R.id.main_bottomNavigation);
+        navigationView = findViewById(R.id.nav);
         drawerLayout = findViewById(R.id.drawer_layout);
         topBar = findViewById(R.id.top_bar);
         personal = topBar.findViewById(R.id.personal);

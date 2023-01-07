@@ -15,6 +15,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import com.zj970.tourism.MoreActivity;
 import com.zj970.tourism.R;
 import com.zj970.tourism.SearchActivity;
 
@@ -46,6 +47,7 @@ public class TravelsFragment extends Fragment implements View.OnClickListener{
     TextView free_travel_text_0;
     TextView free_travel_text_1;
 
+    Button btn_more_3;
     ImageView exotic_image_0;
     ImageView exotic_image_1;
     ImageView exotic_image_2;
@@ -81,6 +83,7 @@ public class TravelsFragment extends Fragment implements View.OnClickListener{
         free_travel_text_0 = rootView.findViewById(R.id.free_travel_text_0);
         free_travel_text_1 = rootView.findViewById(R.id.free_travel_text_1);
 
+        btn_more_3 = rootView.findViewById(R.id.btn_more_3);
         exotic_image_0 = rootView.findViewById(R.id.exotic_image_0);
         exotic_image_1 = rootView.findViewById(R.id.exotic_image_1);
         exotic_image_2 = rootView.findViewById(R.id.exotic_image_2);
@@ -95,6 +98,15 @@ public class TravelsFragment extends Fragment implements View.OnClickListener{
                 Intent search = new Intent(this.getContext(), SearchActivity.class);
                 startActivity(search);
                 break;
+            case R.id.btn_more_1:
+                MoreActivity.actionStart(this.getContext(),R.string.search_hint_hot);
+                break;
+            case R.id.btn_more_2:
+                MoreActivity.actionStart(this.getContext(),R.string.search_hint_free);
+                break;
+            case R.id.btn_more_3:
+                MoreActivity.actionStart(this.getContext(),R.string.search_hint_exotic);
+                break;
             default:
                 break;
         }
@@ -105,6 +117,9 @@ public class TravelsFragment extends Fragment implements View.OnClickListener{
         super.onStart();
         searchIcon.setOnClickListener(this::onClick);
         searchEdit.setOnClickListener(this::onClick);
+        btn_more_1.setOnClickListener(this::onClick);
+        btn_more_2.setOnClickListener(this::onClick);
+        btn_more_3.setOnClickListener(this::onClick);
         searchEdit.setInputType(InputType.TYPE_NULL);
         setTextToImg("错误",exotic_image_0);
         setTextToImg("错误",exotic_image_1);

@@ -85,4 +85,7 @@
     <string name="help">help</string>
     <string name="contact_us">contact us</string>
     <string name="return_login">sign out</string>
+    <string name="search_hint_hot">Search for popular places</string>
+    <string name="search_hint_exotic">search destination</string>
+    <string name="search_hint_free">search country</string>
 </resources>

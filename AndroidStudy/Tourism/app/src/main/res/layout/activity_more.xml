@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        tools:context=".MoreActivity">
+    <include
+            android:id="@+id/more_top_bar"
+            layout="@layout/travels_top"/>
+    <EditText
+            android:id="@+id/more_search"
+            android:layout_below="@+id/more_top_bar"
+            android:layout_marginTop="@dimen/navi_dimens_30dp"
+            android:textAlignment="center"
+            android:layout_marginLeft="@dimen/dimens_10dp"
+            android:layout_marginRight="@dimen/dimens_10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    <FrameLayout
+            android:id="@+id/more_fragment"
+            android:layout_below="@+id/more_search"
+            android:layout_marginTop="@dimen/navi_dimens_15dp"
+            android:layout_marginLeft="@dimen/dimens_10dp"
+            android:layout_marginRight="@dimen/dimens_10dp"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+</RelativeLayout>

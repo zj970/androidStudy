@@ -35,6 +35,8 @@
             android:supportsRtl="true"
             android:theme="@style/Theme.Tourism.NoActionBar"
             tools:replace="android:icon,android:theme">
+        <activity android:name=".MoreActivity">
+        </activity>
         <activity android:name=".SearchActivity">
         </activity>
 
