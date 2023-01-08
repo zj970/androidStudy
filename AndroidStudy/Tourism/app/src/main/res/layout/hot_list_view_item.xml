@@ -16,6 +16,7 @@
                 android:id="@+id/hot_item_content"
                 android:maxLines="2"
                 android:ellipsize="end"
+                android:text="@string/fail_tips"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
         <LinearLayout
@@ -45,6 +46,7 @@
         </LinearLayout>
         <TextView
                 android:id="@+id/hot_price"
+                android:text="@string/fail"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
     </LinearLayout>
