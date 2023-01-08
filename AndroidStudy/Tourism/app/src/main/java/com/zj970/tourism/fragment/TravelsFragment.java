@@ -99,13 +99,13 @@ public class TravelsFragment extends Fragment implements View.OnClickListener{
                 startActivity(search);
                 break;
             case R.id.btn_more_1:
-                MoreActivity.actionStart(this.getContext(),R.string.search_hint_hot);
+                MoreActivity.actionStart(this.getContext(),R.string.search_hint_hot,R.layout.fragment_hot);
                 break;
             case R.id.btn_more_2:
-                MoreActivity.actionStart(this.getContext(),R.string.search_hint_free);
+                MoreActivity.actionStart(this.getContext(),R.string.search_hint_free,R.layout.fragment_free);
                 break;
             case R.id.btn_more_3:
-                MoreActivity.actionStart(this.getContext(),R.string.search_hint_exotic);
+                MoreActivity.actionStart(this.getContext(),R.string.search_hint_exotic,R.layout.fragment_exotic);
                 break;
             default:
                 break;

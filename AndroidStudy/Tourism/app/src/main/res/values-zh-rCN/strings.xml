@@ -86,6 +86,6 @@
     <string name="contact_us">联系我们</string>
     <string name="return_login">退出登录</string>
     <string name="search_hint_hot">搜索热门地点</string>
-    <string name="search_hint_exotic">搜索目的地</string>
-    <string name="search_hint_free">搜索国家</string>
+    <string name="search_hint_exotic">搜索国家</string>
+    <string name="search_hint_free">搜索目的地</string>
 </resources>
