@@ -15,6 +15,8 @@
         <TextView
                 android:id="@+id/hot_item_content"
                 android:maxLines="2"
+                android:textSize="18sp"
+                android:textColor="#000000"
                 android:ellipsize="end"
                 android:text="@string/fail_tips"
                 android:layout_width="match_parent"
@@ -25,28 +27,45 @@
                 android:layout_height="wrap_content">
             <TextView
                     android:id="@+id/hot_label_1"
+                    android:background="#EF6C00"
                     android:layout_weight="1"
+                    android:textColor="#FFFFFF"
+                    android:layout_marginRight="5dp"
+                    android:layout_marginLeft="5dp"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"/>
             <TextView
                     android:id="@+id/hot_label_2"
                     android:layout_weight="1"
+                    android:textColor="#FFFFFF"
+                    android:background="#EF6C00"
+                    android:layout_marginRight="5dp"
+                    android:layout_marginLeft="5dp"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"/>
             <TextView
                     android:id="@+id/hot_label_3"
                     android:layout_weight="1"
+                    android:textColor="#FFFFFF"
+                    android:background="#EF6C00"
+                    android:layout_marginRight="5dp"
+                    android:layout_marginLeft="5dp"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"/>
             <TextView
                     android:id="@+id/hot_label_4"
                     android:layout_weight="1"
+                    android:textColor="#FFFFFF"
+                    android:background="#EF6C00"
+                    android:layout_marginRight="5dp"
+                    android:layout_marginLeft="5dp"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"/>
         </LinearLayout>
         <TextView
                 android:id="@+id/hot_price"
                 android:text="@string/fail"
+                android:textColor="#D50000"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"/>
     </LinearLayout>
