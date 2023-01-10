@@ -20,7 +20,6 @@
     <FrameLayout
             android:id="@+id/more_fragment"
             android:layout_below="@+id/more_search"
-            android:layout_marginTop="@dimen/navi_dimens_15dp"
             android:layout_marginLeft="@dimen/dimens_10dp"
             android:layout_marginRight="@dimen/dimens_10dp"
             android:layout_width="match_parent"

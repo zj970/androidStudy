@@ -88,4 +88,14 @@
     <string name="search_hint_hot">Search for popular places</string>
     <string name="search_hint_exotic">search country</string>
     <string name="search_hint_free">search destination</string>
+    <string name="hot_latest_offers">Latest Offers</string>
+    <string name="hot_outdoor_selection">outdoor selection</string>
+    <string name="hot_single_day">One day back and forth</string>
+    <string name="exotic_tile">tiling</string>
+    <string name="exotic_horizontal">Horizontal row</string>
+    <string name="latest_shelves">new arrival</string>
+    <string name="highest_popularity">most popular</string>
+    <string name="editor_pick">Editor\'s Choice</string>
+    <string name="user_ratings">user rating</string>
+    <string name="travelogues">travelogue</string>
 </resources>

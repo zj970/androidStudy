@@ -88,4 +88,14 @@
     <string name="search_hint_hot">搜索热门地点</string>
     <string name="search_hint_exotic">搜索国家</string>
     <string name="search_hint_free">搜索目的地</string>
+    <string name="hot_latest_offers">最新优惠</string>
+    <string name="hot_outdoor_selection">户外精选</string>
+    <string name="hot_single_day">单日可来回</string>
+    <string name="exotic_tile">平铺</string>
+    <string name="exotic_horizontal">横排</string>
+    <string name="latest_shelves">最新上架</string>
+    <string name="highest_popularity">人气最高</string>
+    <string name="editor_pick">编辑精选</string>
+    <string name="user_ratings">用户评分</string>
+    <string name="travelogues">篇游记</string>
 </resources>

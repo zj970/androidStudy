@@ -1,11 +1,8 @@
 package com.zj970.tourism.entity;
 
-import android.graphics.Canvas;
-import android.graphics.drawable.Drawable;
-
 /**
  * <p>
- *
+ *  热门景点实体类，部分标签不一定需要，采取建造者模式
  * </p>
  *
  * @author: zj970
@@ -41,7 +38,6 @@ public class HotItem {
     public String getHotLabel4() {
         return hotLabel4;
     }
-
     final String hotItemContent;
     final String hotPrice;
     final String hotLabel1;

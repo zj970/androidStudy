@@ -1,6 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                                                   android:layout_width="match_parent"
-                                                   android:layout_height="match_parent">
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="vertical"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent">
+    <LinearLayout
+            android:layout_marginTop="@dimen/dimens_10dp"
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        <Spinner
+                android:id="@+id/arrangement"
+                android:layout_width="0dp"
+                android:layout_weight="2"
+                android:spinnerMode="dropdown"
+                android:entries="@array/arrangement_arr"
+                android:layout_height="wrap_content"/>
+        <TextView
+                android:layout_weight="3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"/>
+        <Spinner
+                android:id="@+id/exotic_type"
+                android:layout_width="0dp"
+                android:layout_weight="2"
+                android:spinnerMode="dropdown"
+                android:entries="@array/exotic_type_arr"
+                android:layout_height="wrap_content"/>
+    </LinearLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/exotic_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+</LinearLayout>

@@ -22,4 +22,14 @@
         <item>@string/array_age_group_1</item>
         <item>@string/array_age_group_2</item>
     </string-array>
+    <string-array name="arrangement_arr">
+        <item>@string/exotic_tile</item>
+        <item>@string/exotic_horizontal</item>
+    </string-array>
+    <string-array name="exotic_type_arr">
+        <item>@string/latest_shelves</item>
+        <item>@string/highest_popularity</item>
+        <item>@string/editor_pick</item>
+        <item>@string/user_ratings</item>
+    </string-array>
 </resources>
