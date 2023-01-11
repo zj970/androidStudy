@@ -35,15 +35,19 @@
             android:supportsRtl="true"
             android:theme="@style/Theme.Tourism.NoActionBar"
             tools:replace="android:icon,android:theme">
+        <activity android:name=".RouteDetailActivity">
+        </activity>
+        <activity android:name=".RouteActivity">
+        </activity>
         <activity android:name=".MoreActivity">
         </activity>
         <activity android:name=".SearchActivity">
         </activity>
-
+        <!--
         <meta-data
                 android:name="com.baidu.lbsapi.API_KEY"
                 android:value="zvr16i8hGaZ4NXFmpMFHpP4I1xcBQoZc"/>
-
+        -->
         <activity android:name=".MainActivity">
         </activity>
         <activity
@@ -57,11 +61,17 @@
         </activity>
         <activity android:name=".RegisteredActivity">
         </activity>
-
+        <!--
         <service
                 android:name="com.baidu.location.f"
                 android:enabled="true"
                 android:process=":remote"/>
+        --><!-- 定位service -->
+        <service android:name="com.amap.api.location.APSService" />
+        <!-- 设置高德Key -->
+        <meta-data
+                android:name="com.amap.api.v2.apikey"
+                android:value="48050b76b6e243fb0d0287f2b6c62cb7"/>
     </application>
 
 </manifest>

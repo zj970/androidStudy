@@ -35,6 +35,7 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
     CheckBox agreement;
     boolean authentication = false;
 
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -146,18 +147,19 @@ public class LoginActivity extends BaseActivity implements View.OnClickListener{
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode){
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
             case 1:
-                if (grantResults.length > 0){
-                    for (int result : grantResults){
-                        if (result != PackageManager.PERMISSION_GRANTED){
+                if (grantResults.length > 0) {
+                    for (int result : grantResults) {
+                        if (result != PackageManager.PERMISSION_GRANTED) {
                             Toast.makeText(this, "必须同意所有权限才能使用本程序", Toast.LENGTH_SHORT).show();
                             finish();
                             return;
                         }
                     }
                     requestLocation();
-                }else {
+                } else {
                     Toast.makeText(this, "发生未知错误", Toast.LENGTH_SHORT).show();
                     finish();
                 }

@@ -5,13 +5,13 @@
               android:layout_height="match_parent">
     <ImageView
             android:id="@+id/hot_item_icon"
-            android:layout_width="@dimen/navi_dimens_100dp"
-            android:layout_height="@dimen/navi_dimens_100dp"/>
+            android:layout_width="100dp"
+            android:layout_height="100dp"/>
     <LinearLayout
             android:layout_weight="1"
             android:layout_width="0dp"
             android:orientation="vertical"
-            android:layout_height="@dimen/navi_dimens_100dp">
+            android:layout_height="100dp">
         <TextView
                 android:id="@+id/hot_item_content"
                 android:maxLines="2"

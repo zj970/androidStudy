@@ -16,6 +16,7 @@ import com.google.android.material.navigation.NavigationView;
 import com.zj970.tourism.adapter.MyFragmentStateAdapter;
 import com.zj970.tourism.base.BaseActivity;
 import com.zj970.tourism.fragment.CustomizedTravelFragment;
+import com.zj970.tourism.fragment.GaoDeMapFragment;
 import com.zj970.tourism.fragment.MapFragment;
 import com.zj970.tourism.fragment.TravelsFragment;
 
@@ -29,6 +30,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
 
     private CustomizedTravelFragment customizedTravelFragment;
     private MapFragment mapFragment;
+    private GaoDeMapFragment gaoDeMapFragment;
     private TravelsFragment travelsFragment;
     private List<Fragment> mData = new ArrayList<>();
     private static ViewPager2 mViewPager2;
@@ -117,14 +119,17 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         findByAll();
         personal.setOnClickListener(this::onClick);
         customizedTravelFragment = new CustomizedTravelFragment();
-        mapFragment = new MapFragment();
+        //mapFragment = new MapFragment();
+        gaoDeMapFragment = new GaoDeMapFragment();
         travelsFragment = new TravelsFragment();
-        mData.add(customizedTravelFragment);
-        mData.add(mapFragment);
-        mData.add(travelsFragment);
+        mData.add(customizedTravelFragment);//0
+        mData.add(gaoDeMapFragment);//1
+        //mData.add(mapFragment);
+        mData.add(travelsFragment);//2
         mViewPager2.setAdapter(new MyFragmentStateAdapter(this, mData));
         mViewPager2.setOffscreenPageLimit(1);
         mViewPager2.registerOnPageChangeCallback(onPageChangeCallback);
+        mViewPager2.setCurrentItem(1, true);
         mViewPager2.setUserInputEnabled(false);
         bottomNavigationView.setOnNavigationItemSelectedListener(onNavigationItemSelected);
     }

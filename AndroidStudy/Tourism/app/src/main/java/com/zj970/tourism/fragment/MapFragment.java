@@ -1,20 +1,7 @@
 package com.zj970.tourism.fragment;
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.*;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import com.baidu.location.BDAbstractLocationListener;
-import com.baidu.location.BDLocation;
-import com.baidu.location.LocationClient;
-import com.baidu.location.LocationClientOption;
-import com.baidu.mapapi.map.*;
-import com.baidu.mapapi.model.LatLng;
-import com.zj970.tourism.R;
 
 /**
  * <p>
@@ -25,7 +12,11 @@ import com.zj970.tourism.R;
  * @date: 2023/1/3
  */
 public class MapFragment extends Fragment implements View.OnClickListener {
+    @Override
+    public void onClick(View v) {
 
+    }
+/*
     View rootView;
     MapView mapView;
     LinearLayout layout_2_1;
@@ -57,7 +48,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     //标点经度
     double markerLongitude = 0;
     //重置定位按钮
-    ImageButton ibLocation;
+    //ImageButton ibLocation;
     //标点也可以是说覆盖物
     Marker marker;
 
@@ -85,7 +76,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         //TODO:初始化控件
         if (rootView != null) {
             mapView = rootView.findViewById(R.id.map_view);
-            layout_2_1 = rootView.findViewById(R.id.layout_2_1);
+*//*            layout_2_1 = rootView.findViewById(R.id.layout_2_1);
             layout_2_2 = rootView.findViewById(R.id.layout_2_2);
             layout_3_1 = rootView.findViewById(R.id.layout_3_1);
             layout_3_2 = rootView.findViewById(R.id.layout_3_2);
@@ -102,25 +93,25 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             menu_2_icon = rootView.findViewById(R.id.menu_2_icon);
             menu_3_icon = rootView.findViewById(R.id.menu_3_icon);
 
-            ibLocation = rootView.findViewById(R.id.ib_location);
+            ibLocation = rootView.findViewById(R.id.ib_location);*//*
         }
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        btn_menu_2.setOnClickListener(this::onClick);
+*//*        btn_menu_2.setOnClickListener(this::onClick);
         btn_menu_3.setOnClickListener(this::onClick);
         ibLocation.setOnClickListener(this::resetLocation);
         menu_2_icon.setImageResource(R.drawable.arrow_right);
-        menu_3_icon.setImageResource(R.drawable.arrow_right);
+        menu_3_icon.setImageResource(R.drawable.arrow_right);*//*
         initLocation();
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
-            case R.id.btn_menu_2:
+         *//*   case R.id.btn_menu_2:
                 if (isMenu2){
                     isMenu2 = false;
                     layout_2_1.setVisibility(View.GONE);
@@ -148,13 +139,13 @@ public class MapFragment extends Fragment implements View.OnClickListener {
                     layout_3_3.setVisibility(View.VISIBLE);
                     menu_3_icon.setImageResource(R.drawable.arrow_down);
                 }
-                break;
+                break;*//*
         }
     }
 
-    /**
+    *//**
      * 定位初始化
-     */
+     *//*
     public void initLocation() {
         //添加隐私合规政策
         LocationClient.setAgreePrivacy(true);
@@ -216,9 +207,9 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         mBaiduMap.setMyLocationEnabled(false);
     }
 
-    /**
+    *//**
      * 定位SDK监听函数
-     */
+     *//*
     public class MyLocationListener extends BDAbstractLocationListener {
         @Override
         public void onReceiveLocation(BDLocation location){
@@ -233,11 +224,11 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             if (markerLatitude == 0) {//自动定位
                 resultLatitude = location.getLatitude();
                 resultLongitude = location.getLongitude();
-                ibLocation.setVisibility(View.GONE);
+                //ibLocation.setVisibility(View.GONE);
             } else {//标点定位
                 resultLatitude = markerLatitude;
                 resultLongitude = markerLongitude;
-                ibLocation.setVisibility(View.VISIBLE);
+                //ibLocation.setVisibility(View.VISIBLE);
             }
 
             MyLocationData locData = new MyLocationData.Builder()
@@ -256,11 +247,11 @@ public class MapFragment extends Fragment implements View.OnClickListener {
     }
 
 
-    /**
+    *//**
      * 点切换到其他标点位置时，重置定位显示，点击之后回到自动定位
      *
      * @param view
-     */
+     *//*
     public void resetLocation(View view) {
         markerLatitude = 0;
         initLocation();
@@ -269,9 +260,9 @@ public class MapFragment extends Fragment implements View.OnClickListener {
 
 
 
-    /**
+    *//**
      * 地图点击
-     */
+     *//*
     private void mapOnClick() {
         // 设置marker图标
         bitmap = BitmapDescriptorFactory.fromResource(R.drawable.icon_marka);
@@ -306,6 +297,6 @@ public class MapFragment extends Fragment implements View.OnClickListener {
             }
         });
 
-    }
+    }*/
 
 }
