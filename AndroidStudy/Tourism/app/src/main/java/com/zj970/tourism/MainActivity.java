@@ -67,13 +67,13 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         public boolean onNavigationItemSelected(@NonNull MenuItem item) {
             switch (item.getItemId()) {
                 case R.id.custom_travel_fragment:
-                    mViewPager2.setCurrentItem(0, true);
+                    mViewPager2.setCurrentItem(0, false);//false关闭滑动效果，true打开
                     return true;
                 case R.id.map_fragment:
-                    mViewPager2.setCurrentItem(1, true);
+                    mViewPager2.setCurrentItem(1, false);
                     return true;
                 case R.id.travels_fragment:
-                    mViewPager2.setCurrentItem(2, true);
+                    mViewPager2.setCurrentItem(2, false);
                     return true;
             }
             return false;
@@ -129,7 +129,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
         mViewPager2.setAdapter(new MyFragmentStateAdapter(this, mData));
         mViewPager2.setOffscreenPageLimit(1);
         mViewPager2.registerOnPageChangeCallback(onPageChangeCallback);
-        mViewPager2.setCurrentItem(1, true);
         mViewPager2.setUserInputEnabled(false);
         bottomNavigationView.setOnNavigationItemSelectedListener(onNavigationItemSelected);
     }
