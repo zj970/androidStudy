@@ -143,6 +143,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener {
     }
 
     public static void toThisMap() {
-        mViewPager2.setCurrentItem(1, true);
+        mViewPager2.setCurrentItem(1, false);
     }
 }
