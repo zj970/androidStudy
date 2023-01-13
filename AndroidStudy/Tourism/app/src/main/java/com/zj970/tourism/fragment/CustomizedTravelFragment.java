@@ -2,17 +2,17 @@ package com.zj970.tourism.fragment;
 
 import android.app.DatePickerDialog;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
-import android.widget.DatePicker;
-import android.widget.Spinner;
+import android.widget.*;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.zj970.tourism.MainActivity;
 import com.zj970.tourism.R;
+import com.zj970.tourism.RouteActivity;
 import com.zj970.tourism.base.BaseApplication;
 
 import java.util.Calendar;
@@ -35,6 +35,15 @@ public class CustomizedTravelFragment extends Fragment implements View.OnClickLi
      * 预算下拉选择框
      */
     private Spinner budget;
+
+    /**
+     * 起始地
+     */
+    private EditText startOrigin;
+    /**
+     * 目的地
+     */
+    private EditText destination;
 
     private Button startDate;
     private Button endDate;
@@ -59,6 +68,8 @@ public class CustomizedTravelFragment extends Fragment implements View.OnClickLi
             startDate = rootView.findViewById(R.id.start_date);
             endDate = rootView.findViewById(R.id.end_date);
             custom_travel_ok = rootView.findViewById(R.id.custom_travel_ok);
+            startOrigin = rootView.findViewById(R.id.start_origin);
+            destination = rootView.findViewById(R.id.destination);
             //通过Calendar对象来获取年、月、日信息
             calendar = Calendar.getInstance();
             year = calendar.get(Calendar.YEAR);
@@ -89,7 +100,12 @@ public class CustomizedTravelFragment extends Fragment implements View.OnClickLi
                     }, year, monthOfYear, dayOfMonth).show();
                     break;
             case R.id.custom_travel_ok:
-                MainActivity.toThisMap();
+                //MainActivity.toThisMap();
+                if (TextUtils.isEmpty(startOrigin.getText()) || TextUtils.isEmpty(destination.getText())){
+                    Toast.makeText(getContext(), "起始地或目的地为空", Toast.LENGTH_SHORT).show();
+                }else {
+                    RouteActivity.actionStartRouteActivity(getContext(),startOrigin.getText().toString(),destination.getText().toString());
+                }
                 break;
 
         }

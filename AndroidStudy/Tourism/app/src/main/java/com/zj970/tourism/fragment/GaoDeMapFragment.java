@@ -106,7 +106,6 @@ public class GaoDeMapFragment extends Fragment implements
 
 
 
-
     @Nullable
     @Override
     public View onCreateView(@NonNull @NotNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable  Bundle savedInstanceState) {
@@ -468,6 +467,11 @@ public class GaoDeMapFragment extends Fragment implements
     private void addMarker(LatLng latLng) {
         //显示浮动按钮
         fabClearMarker.show();
+        //标题
+        String title;
+        String Content;
+        Log.d(TAG, "addMarker: "+latLng.latitude);
+        Log.d(TAG, "addMarker: "+latLng.longitude);
         //添加标点
         Marker marker = aMap.addMarker(new MarkerOptions()
                 .draggable(true)//可拖动

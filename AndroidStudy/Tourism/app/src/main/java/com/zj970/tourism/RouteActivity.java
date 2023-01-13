@@ -47,6 +47,9 @@ public class RouteActivity extends AppCompatActivity implements
         GeocodeSearch.OnGeocodeSearchListener {
 
     private static final String TAG = "RouteActivity";
+    private static final String START = "start_origin";
+    private static final String END = "destination";
+
     //地图
     private MapView mapView;
     //地图控制器
@@ -98,6 +101,16 @@ public class RouteActivity extends AppCompatActivity implements
     //起点地址转坐标标识   1
     private int tag = -1;
 
+    String start;
+    String end;
+
+    public static void actionStartRouteActivity(Context context,String startOrigin, String destination){
+        Intent intent = new Intent(context,RouteActivity.class);
+        intent.putExtra(START,startOrigin);
+        intent.putExtra(END,destination);
+        context.startActivity(intent);
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -106,7 +119,12 @@ public class RouteActivity extends AppCompatActivity implements
         initLocation();
         //初始化地图
         initMap(savedInstanceState);
+        //定制专属路线跳转
+        start = getIntent().getStringExtra(START);
+        end = getIntent().getStringExtra(END);
 
+        Log.d(TAG, "onCreate: " + start);
+        Log.d(TAG, "onCreate: " + end);
         //启动定位
         mLocationClient.startLocation();
         //初始化路线
@@ -132,12 +150,20 @@ public class RouteActivity extends AppCompatActivity implements
         etStartAddress.setOnKeyListener(this);
         etEndAddress.setOnKeyListener(this);
 
+        if (end !=null&& !end.equals("")){
+            etEndAddress.setText(end);
+            Log.d(TAG, "initTravelMode: "+end);
+        }else {
+            Log.d(TAG, "initTravelMode:qqqqqqqqqqqq ");
+        }
+
         //将可选内容与ArrayAdapter连接起来
         arrayAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, travelModeArray);
         //设置下拉列表的风格
         arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         //将adapter 添加到spinner中
         spinner.setAdapter(arrayAdapter);
+        Log.d(TAG, "initTravelMode: "+etEndAddress.getText());
         //添加事件Spinner事件监听
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -636,7 +662,7 @@ public class RouteActivity extends AppCompatActivity implements
             String startAddress = etStartAddress.getText().toString().trim();
             //获取输入框的值 目的地（终点）
             String endAddress = etEndAddress.getText().toString().trim();
-
+            //String endAddress = getIntent().getStringExtra(END);
             //判断出发地是否有值  不管这个值是定位还是手动输入
             if (startAddress.isEmpty()) {
                 showMsg("请输入当前的出发地");
