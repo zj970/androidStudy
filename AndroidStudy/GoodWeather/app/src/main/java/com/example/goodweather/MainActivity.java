@@ -1,5 +1,6 @@
 package com.example.goodweather;
 
+import android.Manifest;
 import android.content.pm.PackageManager;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -11,6 +12,10 @@ import com.baidu.location.LocationClientOption;
 import com.example.goodweather.databinding.ActivityMainBinding;
 import com.example.goodweather.location.LocationCallback;
 import com.example.goodweather.location.MyLocationListener;
+import com.example.goodweather.util.LogUtil;
+import okhttp3.*;
+
+import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity implements LocationCallback{
     //使用ViewBinding
@@ -78,6 +83,27 @@ public class MainActivity extends AppCompatActivity implements LocationCallback{
     }
 
 
+    private void searchCity(String district) {
+        //使用Get异步请求
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                //拼接访问地址
+                .url("https://geoapi.qweather.com/v2/city/lookup?key=3906d8568ef8470d943c9765f5d891a8&location="+district)
+                .build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+            }
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if(response.isSuccessful()){//回调的方法执行在子线程。
+                    LogUtil.d("a","获取数据成功了");
+                    LogUtil.d("a","response.code()=="+response.code());
+                    LogUtil.d("a","response.body().string()=="+response.body().string());
+                }
+            }
+        });
+    }
 
 
     @Override
@@ -108,6 +134,7 @@ public class MainActivity extends AppCompatActivity implements LocationCallback{
         String street = bdLocation.getStreet();    //获取街道信息
         String locationDescribe = bdLocation.getLocationDescribe();    //获取位置描述信息
         binding.tvAddressDetail.setText(addr);//设置文本显示
+        searchCity(district);
     }
 
 }
