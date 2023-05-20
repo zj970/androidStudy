@@ -18,6 +18,8 @@ import okhttp3.*;
 import java.io.IOException;
 
 public class MainActivity extends AppCompatActivity implements LocationCallback{
+
+    private static final String TAG = MainActivity.class.getSimpleName();
     //使用ViewBinding
     private ActivityMainBinding binding;
     //权限数组
@@ -97,9 +99,9 @@ public class MainActivity extends AppCompatActivity implements LocationCallback{
             @Override
             public void onResponse(Call call, Response response) throws IOException {
                 if(response.isSuccessful()){//回调的方法执行在子线程。
-                    LogUtil.d("a","获取数据成功了");
-                    LogUtil.d("a","response.code()=="+response.code());
-                    LogUtil.d("a","response.body().string()=="+response.body().string());
+                    LogUtil.d(TAG,"获取数据成功了");
+                    LogUtil.d(TAG,"response.code()=="+response.code());
+                    LogUtil.d(TAG,"response.body().string()=="+response.body().string());
                 }
             }
         });

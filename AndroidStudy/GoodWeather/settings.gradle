@@ -16,4 +16,5 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "GoodWeather"
+include ':mylibrary'
 include ':app'

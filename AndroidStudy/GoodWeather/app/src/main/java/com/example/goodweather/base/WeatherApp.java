@@ -1,12 +1,13 @@
 package com.example.goodweather.base;
 
-import android.app.Application;
 import com.baidu.location.LocationClient;
+import com.example.mylibrary.base.BaseApplication;
+
 /**
  * @auther zj970
  * @create 2023-05-19 下午8:25
  */
-public class WeatherApp extends Application {
+public class WeatherApp extends BaseApplication {
     @Override
     public void onCreate() {
         super.onCreate();
