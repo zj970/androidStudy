@@ -4,63 +4,39 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.appcompat.app.AppCompatActivity;
-import android.os.Bundle;
+
+import androidx.appcompat.widget.DialogTitle;
+import androidx.lifecycle.ViewModelProvider;
 import com.baidu.location.BDLocation;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
+import com.example.goodweather.ViewModel.MainViewModel;
+import com.example.goodweather.bean.SearchCityResponse;
 import com.example.goodweather.databinding.ActivityMainBinding;
 import com.example.goodweather.location.LocationCallback;
 import com.example.goodweather.location.MyLocationListener;
 import com.example.goodweather.util.LogUtil;
-import okhttp3.*;
+import com.example.mylibrary.base.NetworkActivity;
 
-import java.io.IOException;
+import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements LocationCallback{
+public class MainActivity extends NetworkActivity<ActivityMainBinding> implements LocationCallback {
 
-    private static final String TAG = MainActivity.class.getSimpleName();
-    //使用ViewBinding
-    private ActivityMainBinding binding;
     //权限数组
     private final String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE};
     //请求权限意图
     private ActivityResultLauncher<String[]> requestPermissionIntent;
 
-    public LocationClient mLocationClient;
+    public LocationClient mLocationClient = null;
     private final MyLocationListener myListener = new MyLocationListener();
 
+    private MainViewModel viewModel;
+
     /**
-     * 初始化定位
+     * 注册意图
      */
-    private void initLocation(){
-        try {
-            mLocationClient = new LocationClient(getApplicationContext());
-        }catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        if (mLocationClient != null){
-            myListener.setCallback(this);
-            //注册定位监听
-            mLocationClient.registerLocationListener(myListener);
-            LocationClientOption option = new LocationClientOption();
-            //如果开发者需要获取当前点的地址信息，此处必须为true
-            option.setIsNeedAddress(true);
-            //可选，设置是否需要获取最新版本的地址信息，默认不需要，即参数为false
-            option.setNeedNewVersionRgc(true);
-            //将配置好的LocationClientOption对象，通过setLocOption方法传递给LocationClient对象使用
-            mLocationClient.setLocOption(option);
-
-        }
-    }
-
-    private void startLocation() {
-        if (mLocationClient != null) {
-            mLocationClient.start();
-        }
-    }
-    private void registerIntent() {
+    @Override
+    public void onRegister() {
         //请求权限意图
         requestPermissionIntent = registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
             boolean fineLocation = Boolean.TRUE.equals(result.get(Manifest.permission.ACCESS_FINE_LOCATION));
@@ -72,6 +48,35 @@ public class MainActivity extends AppCompatActivity implements LocationCallback{
         });
     }
 
+    /**
+     * 初始化
+     */
+    @Override
+    protected void onCreate() {
+        initLocation();
+        requestPermission();
+        viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+    }
+
+    /**
+     * 数据观察
+     */
+    @Override
+    protected void onObserveData() {
+        if (viewModel != null) {
+            viewModel.searchCityResponseMutableLiveData.observe(this, searchCityResponse -> {
+                List<SearchCityResponse.LocationBean> location = searchCityResponse.getLocationBeanList();
+                if (location != null && location.size() > 0) {
+                    String id = location.get(0).getId();
+                    LogUtil.d("TAG", "城市ID: " + id);
+                }
+            });
+        }
+    }
+
+    /**
+     * 请求权限
+     */
     private void requestPermission() {
         //因为项目的最低版本API是23，所以肯定需要动态请求危险权限，只需要判断权限是否拥有即可
         if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
@@ -85,40 +90,43 @@ public class MainActivity extends AppCompatActivity implements LocationCallback{
     }
 
 
-    private void searchCity(String district) {
-        //使用Get异步请求
-        OkHttpClient client = new OkHttpClient();
-        Request request = new Request.Builder()
-                //拼接访问地址
-                .url("https://geoapi.qweather.com/v2/city/lookup?key=3906d8568ef8470d943c9765f5d891a8&location="+district)
-                .build();
-        client.newCall(request).enqueue(new Callback() {
-            @Override
-            public void onFailure(Call call, IOException e) {
-            }
-            @Override
-            public void onResponse(Call call, Response response) throws IOException {
-                if(response.isSuccessful()){//回调的方法执行在子线程。
-                    LogUtil.d(TAG,"获取数据成功了");
-                    LogUtil.d(TAG,"response.code()=="+response.code());
-                    LogUtil.d(TAG,"response.body().string()=="+response.body().string());
-                }
-            }
-        });
+    /**
+     * 初始化定位
+     */
+    private void initLocation() {
+        try {
+            mLocationClient = new LocationClient(getApplicationContext());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        if (mLocationClient != null) {
+            myListener.setCallback(this);
+            //注册定位监听
+            mLocationClient.registerLocationListener(myListener);
+            LocationClientOption option = new LocationClientOption();
+            //如果开发者需要获得当前点的地址信息，此处必须为true
+            option.setIsNeedAddress(true);
+            //可选，设置是否需要最新版本的地址信息。默认不需要，即参数为false
+            option.setNeedNewVersionRgc(true);
+            //需将配置好的LocationClientOption对象，通过setLocOption方法传递给LocationClient对象使用
+            mLocationClient.setLocOption(option);
+        }
     }
 
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        registerIntent();
-        super.onCreate(savedInstanceState);
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
-
-        initLocation();
-        registerIntent();
+    /**
+     * 开始定位
+     */
+    private void startLocation() {
+        if (mLocationClient != null) {
+            mLocationClient.start();
+        }
     }
 
+    /**
+     * 接收定位信息
+     *
+     * @param bdLocation 定位数据
+     */
     @Override
     public void onReceiveLocation(BDLocation bdLocation) {
         double latitude = bdLocation.getLatitude();    //获取纬度信息
@@ -136,7 +144,14 @@ public class MainActivity extends AppCompatActivity implements LocationCallback{
         String street = bdLocation.getStreet();    //获取街道信息
         String locationDescribe = bdLocation.getLocationDescribe();    //获取位置描述信息
         binding.tvAddressDetail.setText(addr);//设置文本显示
-        searchCity(district);
+
+        if (viewModel != null && district != null) {
+            //搜索城市
+            viewModel.searchCity(district,false);
+        } else {
+            LogUtil.e("TAG", "district: " + district);
+        }
     }
 
 }
+

@@ -1,6 +1,5 @@
 pluginManagement {
     repositories {
-        maven {url 'https://jitpck.io'}//一个丰富的组件库
         google()
         mavenCentral()
         gradlePluginPortal()
@@ -10,7 +9,6 @@ dependencyResolutionManagement {
     repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
     repositories {
         //add
-        maven {url 'https://jitpck.io'}
         google()
         mavenCentral()
     }
@@ -18,3 +16,4 @@ dependencyResolutionManagement {
 rootProject.name = "GoodWeather"
 include ':mylibrary'
 include ':app'
+1
