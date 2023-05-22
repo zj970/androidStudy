@@ -1,8 +1,10 @@
 package com.example.goodweather.ViewModel;
 
 import androidx.lifecycle.MutableLiveData;
+import com.example.goodweather.bean.NowResponse;
 import com.example.goodweather.bean.SearchCityResponse;
 import com.example.goodweather.repository.SearchCityRepository;
+import com.example.goodweather.repository.WeatherRepository;
 import com.example.mylibrary.base.BaseViewModel;
 
 /**
@@ -14,13 +16,19 @@ public class MainViewModel extends BaseViewModel {
 
     public MutableLiveData<SearchCityResponse> searchCityResponseMutableLiveData = new MutableLiveData<>();
 
+    public MutableLiveData<NowResponse> nowResponseMutableLiveData = new MutableLiveData<>();
+
+    public void nowWeather(String cityId) {
+        new WeatherRepository().nowWeather(nowResponseMutableLiveData,failed, cityId);
+    }
+
+
     /**
      * 搜索成功
      * @param cityName 城市名称
-     * @param isExact 是否精准搜索
      */
-    public void searchCity(String cityName, boolean isExact) {
-        new SearchCityRepository().searchCity(searchCityResponseMutableLiveData, failed, cityName, isExact);
+    public void searchCity(String cityName) {
+        new SearchCityRepository().searchCity(searchCityResponseMutableLiveData, failed, cityName);
     }
 }
 

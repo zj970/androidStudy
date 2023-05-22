@@ -9,5 +9,5 @@ import androidx.lifecycle.ViewModel;
  * @create 2023-05-20 下午4:13
  */
 public class BaseViewModel extends ViewModel {
-    protected MutableLiveData<String> failed = new MutableLiveData<>();
+    public MutableLiveData<String> failed = new MutableLiveData<>();
 }
