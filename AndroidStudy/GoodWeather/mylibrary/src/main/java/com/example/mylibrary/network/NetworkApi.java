@@ -1,5 +1,6 @@
 package com.example.mylibrary.network;
 
+import android.util.Log;
 import com.example.mylibrary.network.errorhandler.ExceptionHandle;
 import com.example.mylibrary.network.errorhandler.HttpErrorHandler;
 import com.example.mylibrary.network.interceptor.RequestInterceptor;
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
  * @create 2023-05-19 下午11:26
  */
 public class NetworkApi {
+    private static final String TAG = NetworkApi.class.getSimpleName();
 
     //获取APP运行状态及版本信息，用于日志打印
     private static INetworkRequiredInfo iNetworkRequiredInfo;
@@ -150,7 +152,7 @@ public class NetworkApi {
                         .subscribeOn(Schedulers.io())//线程订阅
                         .observeOn(AndroidSchedulers.mainThread())//观察Android主线程
                         .map(NetworkApi.<T>getAppErrorHandler())//判断有没有500的错误，有则进入getAppErrorHandler
-                        .onErrorResumeNext((ObservableSource<? extends T>) new HttpErrorHandler<T>());//判断有没有400的错误
+                        .onErrorResumeNext(new HttpErrorHandler<T>());//判断有没有400的错误
                 //这里还少了对异常
                 //订阅观察者
                 observable.subscribe(observer);

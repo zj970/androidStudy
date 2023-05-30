@@ -2,6 +2,7 @@ package com.example.goodweather;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.util.Log;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 
@@ -22,6 +23,7 @@ import com.example.mylibrary.base.NetworkActivity;
 import java.util.List;
 
 public class MainActivity extends NetworkActivity<ActivityMainBinding> implements LocationCallback {
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     //权限数组
     private final String[] permissions = {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.WRITE_EXTERNAL_STORAGE};
@@ -150,6 +152,7 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
     public void onReceiveLocation(BDLocation bdLocation) {
         String city = bdLocation.getCity();             //获取城市
         String district = bdLocation.getDistrict();     //获取区县
+
         if (viewModel != null && district != null) {
             //显示当前定位城市
             binding.tvCity.setText(district);

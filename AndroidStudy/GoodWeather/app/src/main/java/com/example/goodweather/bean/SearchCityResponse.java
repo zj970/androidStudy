@@ -13,7 +13,7 @@ public class SearchCityResponse {
     private String code;
 
     private ReferBean referBean;
-    private List<LocationBean> locationBeanList;
+    private List<LocationBean> location;
 
     public String getCode() {
         return code;
@@ -32,11 +32,11 @@ public class SearchCityResponse {
     }
 
     public List<LocationBean> getLocationBeanList() {
-        return locationBeanList;
+        return location;
     }
 
     public void setLocationBeanList(List<LocationBean> locationBeanList) {
-        this.locationBeanList = locationBeanList;
+        this.location = locationBeanList;
     }
 
     /**

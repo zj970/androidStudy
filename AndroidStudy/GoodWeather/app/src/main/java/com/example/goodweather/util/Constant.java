@@ -9,7 +9,8 @@ public class Constant {
     /**
      * 和风天气的KEY
      */
-    public final static String API_KEY = "3906d8568ef8470d943c9765f5d891a8";
+    //public final static String API_KEY = "d4a619bfe3244190bfa84bb468c14316";
+    public final static String API_KEY = "d475e18df8d04fefb5e07d56c9dfb744";
 
     /**
      * 和风天气接口请求成功状态码

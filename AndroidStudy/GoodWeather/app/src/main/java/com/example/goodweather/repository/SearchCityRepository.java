@@ -1,6 +1,7 @@
 package com.example.goodweather.repository;
 
 import android.annotation.SuppressLint;
+import android.util.Log;
 import androidx.lifecycle.MutableLiveData;
 import com.example.goodweather.bean.SearchCityResponse;
 import com.example.goodweather.service.ApiService;
