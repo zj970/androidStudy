@@ -24,6 +24,16 @@ import com.example.mylibrary.network.observer.BaseObserver;
 public class SearchCityRepository {
 
     private static final String TAG = SearchCityRepository.class.getSimpleName();
+    /**
+     * 单例模式
+     */
+    private static final class SearchCityRepositoryHolder {
+        private static final SearchCityRepository mInstance = new SearchCityRepository();
+    }
+
+    public static SearchCityRepository getInstance() {
+        return SearchCityRepository.SearchCityRepositoryHolder.mInstance;
+    }
 
     /**
      * 搜索城市

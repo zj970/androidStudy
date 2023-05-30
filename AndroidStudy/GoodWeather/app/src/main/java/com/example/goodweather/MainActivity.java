@@ -8,18 +8,25 @@ import androidx.activity.result.contract.ActivityResultContracts;
 
 import androidx.appcompat.widget.DialogTitle;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import com.baidu.location.BDLocation;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.example.goodweather.ViewModel.MainViewModel;
+import com.example.goodweather.adapter.DailyAdapter;
+import com.example.goodweather.adapter.LifestyleAdapter;
+import com.example.goodweather.bean.DailyResponse;
+import com.example.goodweather.bean.LifestyleResponse;
 import com.example.goodweather.bean.NowResponse;
 import com.example.goodweather.bean.SearchCityResponse;
 import com.example.goodweather.databinding.ActivityMainBinding;
 import com.example.goodweather.location.LocationCallback;
 import com.example.goodweather.location.MyLocationListener;
+import com.example.goodweather.util.EasyDate;
 import com.example.goodweather.util.LogUtil;
 import com.example.mylibrary.base.NetworkActivity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends NetworkActivity<ActivityMainBinding> implements LocationCallback {
@@ -34,6 +41,12 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
     private final MyLocationListener myListener = new MyLocationListener();
 
     private MainViewModel viewModel;
+
+
+    private final List<DailyResponse.DailyBean> dailyBeanList = new ArrayList<>();
+    private final DailyAdapter dailyAdapter = new DailyAdapter(dailyBeanList);
+    private final List<LifestyleResponse.DailyBean> lifestyleList = new ArrayList<>();
+    private final LifestyleAdapter lifestyleAdapter = new LifestyleAdapter(lifestyleList);
 
     /**
      * 注册意图
@@ -59,6 +72,7 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
         setFullScreenImmersion();
         initLocation();
         requestPermission();
+        initView();
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
     }
 
@@ -77,6 +91,10 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
                     if (id != null) {
                         //通过城市ID查询城市实时天气
                         viewModel.nowWeather(id);
+                        //通过城市ID查询天气预报
+                        viewModel.dailyWeather(id);
+                        //通过城市ID查询生活指数
+                        viewModel.lifestyle(id);
                     }
                 }
             });
@@ -86,9 +104,32 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
                 if (now != null) {
                     binding.tvInfo.setText(now.getText());
                     binding.tvTemp.setText(now.getTemp());
-                    binding.tvUpdateTime.setText("最近更新时间：" + nowResponse.getUpdateTime());
+                    binding.tvUpdateTime.setText("最近更新时间：" + EasyDate.greenwichupToSimpleTime(nowResponse.getUpdateTime()));
                 }
             });
+            //天气预报返回
+            viewModel.dailyResponseMutableLiveData.observe(this, dailyResponse -> {
+                List<DailyResponse.DailyBean> daily = dailyResponse.getDaily();
+                if (daily != null) {
+                    if (dailyBeanList.size() > 0) {
+                        dailyBeanList.clear();
+                    }
+                    dailyBeanList.addAll(daily);
+                    dailyAdapter.notifyDataSetChanged();
+                }
+            });
+            //生活指数返回
+            viewModel.lifestyleResponseMutableLiveData.observe(this, lifestyleResponse -> {
+                List<LifestyleResponse.DailyBean> daily = lifestyleResponse.getDaily();
+                if (daily != null) {
+                    if (lifestyleList.size() > 0) {
+                        lifestyleList.clear();
+                    }
+                    lifestyleList.addAll(daily);
+                    lifestyleAdapter.notifyDataSetChanged();
+                }
+            });
+
             //错误信息返回
             viewModel.failed.observe(this, this::showLongMsg);
         }
@@ -163,5 +204,14 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
         }
     }
 
+    /**
+     * 初始化Recycler列表
+     */
+    private void initView() {
+        binding.rvDaily.setLayoutManager(new LinearLayoutManager(this));
+        binding.rvDaily.setAdapter(dailyAdapter);
+        binding.rvLifestyle.setLayoutManager(new LinearLayoutManager(this));
+        binding.rvLifestyle.setAdapter(lifestyleAdapter);
+    }
 }
 

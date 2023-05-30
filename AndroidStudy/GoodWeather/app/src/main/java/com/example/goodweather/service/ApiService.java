@@ -1,5 +1,7 @@
 package com.example.goodweather.service;
 
+import com.example.goodweather.bean.DailyResponse;
+import com.example.goodweather.bean.LifestyleResponse;
 import com.example.goodweather.bean.NowResponse;
 import com.example.goodweather.bean.SearchCityResponse;
 import io.reactivex.Observable;
@@ -32,5 +34,21 @@ public interface ApiService {
     @GET("/v7/weather/now?key=" + API_KEY)
     Observable<NowResponse> nowWeather(@Query("location") String location);
 
+    /**
+     * 未来7天的天气
+     * @param location
+     * @return
+     */
+    @GET("/v7/weather/7d?key=" + API_KEY)
+    Observable<DailyResponse> dailyWeather(@Query("location") String location);
+
+    /**
+     * 生活指数
+     * @param type
+     * @param location
+     * @return
+     */
+    @GET("/v7/indices/1d?key=" + API_KEY)
+    Observable<LifestyleResponse> lifestyle(@Query("type") String type, @Query("location") String location);
 
 }

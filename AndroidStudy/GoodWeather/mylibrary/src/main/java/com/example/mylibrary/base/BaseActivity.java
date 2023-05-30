@@ -81,6 +81,8 @@ public class BaseActivity extends AppCompatActivity {
         window.getDecorView().setSystemUiVisibility(option);
         window.setStatusBarColor(Color.TRANSPARENT);
         window.setNavigationBarColor(Color.TRANSPARENT);
+        //隐藏状态栏
+        window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
     }
 
 }
