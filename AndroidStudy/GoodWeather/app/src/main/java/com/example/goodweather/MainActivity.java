@@ -2,11 +2,17 @@ package com.example.goodweather;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.widget.DialogTitle;
+import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import com.baidu.location.BDLocation;
@@ -105,6 +111,12 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
                     binding.tvInfo.setText(now.getText());
                     binding.tvTemp.setText(now.getTemp());
                     binding.tvUpdateTime.setText("最近更新时间：" + EasyDate.greenwichupToSimpleTime(nowResponse.getUpdateTime()));
+
+                    binding.tvWindDirection.setText("风向     " + now.getWindDir());//风向
+                    binding.tvWindPower.setText("风力     " + now.getWindScale() + "级");//风力
+                    binding.wwBig.startRotate();//大风车开始转动
+                    binding.wwSmall.startRotate();//小风车开始转动
+
                 }
             });
             //天气预报返回
@@ -208,10 +220,34 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
      * 初始化Recycler列表
      */
     private void initView() {
+        setToolbarMoreIconCustom(binding.materialToolbar);
         binding.rvDaily.setLayoutManager(new LinearLayoutManager(this));
         binding.rvDaily.setAdapter(dailyAdapter);
         binding.rvLifestyle.setLayoutManager(new LinearLayoutManager(this));
         binding.rvLifestyle.setAdapter(lifestyleAdapter);
     }
+
+    public void setToolbarMoreIconCustom(Toolbar toolbar) {
+        if (toolbar == null) return;
+        toolbar.setTitle("");
+        Drawable moreIcon = ContextCompat.getDrawable(toolbar.getContext(), R.drawable.ic_round_add_32);
+        if (moreIcon != null) toolbar.setOverflowIcon(moreIcon);
+        setSupportActionBar(toolbar);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == R.id.item_switching_cities) {
+            showMsg("切换城市");
+        }
+        return true;
+    }
+
 }
 
