@@ -8,5 +8,11 @@
             android:icon="@drawable/ic_round_location_24"
             android:title="重新定位"
             app:showAsAction="ifRoom" />
+    <item
+            android:id="@+id/item_bing"
+            android:checkable="true"
+            android:orderInCategory="20"
+            android:title="必应壁纸" />
+
 
 </menu>

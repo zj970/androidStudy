@@ -65,6 +65,10 @@ public class NetworkApi {
                 break;
             case WEATHER:
                 mBaseUrl = "https://devapi.qweather.com";//和风天气API
+                break;
+            case BING:
+                mBaseUrl = "https://cn.bing.com";           //必应壁纸
+                break;
             default:
                 break;
         }

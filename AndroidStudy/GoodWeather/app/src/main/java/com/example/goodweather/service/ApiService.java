@@ -1,9 +1,6 @@
 package com.example.goodweather.service;
 
-import com.example.goodweather.bean.DailyResponse;
-import com.example.goodweather.bean.LifestyleResponse;
-import com.example.goodweather.bean.NowResponse;
-import com.example.goodweather.bean.SearchCityResponse;
+import com.example.goodweather.bean.*;
 import io.reactivex.Observable;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
@@ -50,5 +47,13 @@ public interface ApiService {
      */
     @GET("/v7/indices/1d?key=" + API_KEY)
     Observable<LifestyleResponse> lifestyle(@Query("type") String type, @Query("location") String location);
+
+
+    /**
+     * 每日一图
+     * @return
+     */
+    @GET("/HPImageArchive.aspx?format=js&idx=0&n=1")
+    Observable<BingResponse> bing();
 
 }

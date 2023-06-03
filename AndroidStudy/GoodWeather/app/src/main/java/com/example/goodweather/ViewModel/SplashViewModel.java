@@ -1,7 +1,9 @@
 package com.example.goodweather.ViewModel;
 
 import androidx.lifecycle.MutableLiveData;
+import com.example.goodweather.bean.BingResponse;
 import com.example.goodweather.bean.Province;
+import com.example.goodweather.repository.BingRepository;
 import com.example.goodweather.repository.CityRepository;
 import com.example.mylibrary.base.BaseViewModel;
 
@@ -14,6 +16,11 @@ import java.util.List;
 public class SplashViewModel extends BaseViewModel {
 
     public MutableLiveData<List<Province>> listMutableLiveData = new MutableLiveData<>();
+    public MutableLiveData<BingResponse> bingResponseMutableLiveData = new MutableLiveData<>();
+
+    public void bing() {
+        BingRepository.getInstance().bing(bingResponseMutableLiveData, failed);
+    }
 
     /**
      * 添加城市数据

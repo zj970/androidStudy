@@ -23,9 +23,7 @@ import com.example.goodweather.bean.adapter.LifestyleAdapter;
 import com.example.goodweather.databinding.ActivityMainBinding;
 import com.example.goodweather.location.GoodLocation;
 import com.example.goodweather.location.LocationCallback;
-import com.example.goodweather.util.CityDialog;
-import com.example.goodweather.util.EasyDate;
-import com.example.goodweather.util.LogUtil;
+import com.example.goodweather.util.*;
 import com.example.mylibrary.base.NetworkActivity;
 
 import java.util.ArrayList;
@@ -245,8 +243,11 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
         mMenu = menu;
         //根据cityFlag设置重新定位菜单项是否显示
         mMenu.findItem(R.id.item_relocation).setVisible(cityFlag == 1);
+        //根据使用必应壁纸的状态，设置item项是否选中
+        mMenu.findItem(R.id.item_bing).setChecked(MVUtils.getBoolean(Constant.USED_BING));
         return true;
     }
+
 
 
     @SuppressLint("NonConstantResourceId")
@@ -259,8 +260,22 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
             case R.id.item_relocation:
                 startLocation();//点击重新定位item时，再次定位一下。
                 break;
+            case R.id.item_bing:
+                item.setChecked(!item.isChecked());
+                MVUtils.put(Constant.USED_BING, item.isChecked());
+                String bingUrl = MVUtils.getString(Constant.BING_URL);
+                //更新壁纸
+                updateBgImage(item.isChecked(),bingUrl);
+                break;
         }
         return true;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //更新壁纸
+        updateBgImage(MVUtils.getBoolean(Constant.USED_BING), MVUtils.getString(Constant.BING_URL));
     }
 
 
@@ -273,6 +288,13 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
         binding.tvCity.setText(cityName);
     }
 
+    private void updateBgImage(boolean usedBing, String bingUrl) {
+        if (usedBing && !bingUrl.isEmpty()) {
+            GlideUtils.loadImg(this, bingUrl, binding.layRoot);
+        } else {
+            binding.layRoot.setBackground(ContextCompat.getDrawable(this, R.drawable.main_bg));
+        }
+    }
 
 }
 
