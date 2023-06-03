@@ -6,7 +6,7 @@
                                                    android:layout_height="match_parent"
                                                    android:background="@drawable/main_bg"
                                                    android:fitsSystemWindows="true"
-                                                   tools:context=".MainActivity">
+                                                   tools:context=".ui.MainActivity">
     <!--顶部标题-->
     <com.google.android.material.appbar.MaterialToolbar
             android:id="@+id/materialToolbar"

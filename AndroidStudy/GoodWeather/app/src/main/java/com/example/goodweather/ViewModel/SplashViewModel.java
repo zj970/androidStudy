@@ -1,0 +1,31 @@
+package com.example.goodweather.ViewModel;
+
+import androidx.lifecycle.MutableLiveData;
+import com.example.goodweather.bean.Province;
+import com.example.goodweather.repository.CityRepository;
+import com.example.mylibrary.base.BaseViewModel;
+
+import java.util.List;
+
+/**
+ * @auther zj970
+ * @create 2023-06-03 上午12:35
+ */
+public class SplashViewModel extends BaseViewModel {
+
+    public MutableLiveData<List<Province>> listMutableLiveData = new MutableLiveData<>();
+
+    /**
+     * 添加城市数据
+     */
+    public void addCityData(List<Province> provinceList) {
+        CityRepository.getInstance().addCityData(provinceList);
+    }
+
+    /**
+     * 获取所有城市数据
+     */
+    public void getAllCityData() {
+        CityRepository.getInstance().getCityData(listMutableLiveData);
+    }
+}

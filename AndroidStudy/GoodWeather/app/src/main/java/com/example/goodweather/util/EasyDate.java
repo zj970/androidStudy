@@ -1,5 +1,6 @@
 package com.example.goodweather.util;
 
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -407,5 +408,12 @@ public final class EasyDate {
         }
         return timeInfo;
     }
+
+    public static long getTodayTwelveTimestamp() {
+        long zero = getTimestamp() / (1000 * 3600 * 24) * (1000 * 3600 * 24) - TimeZone.getDefault().getRawOffset();//今天零点零分零秒的毫秒数
+        long twelve = zero + 24 * 60 * 60 * 1000 - 1;//今天23点59分59秒的毫秒数
+        return new Timestamp(twelve).getTime();
+    }
+
 }
 

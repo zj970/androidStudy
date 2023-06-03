@@ -45,26 +45,20 @@ dependencies {
     implementation 'com.google.android.material:material:1.4.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation project(path: ':mylibrary')
-
-    //butterknife  绑定视图依赖BindView，告别findById，不过你还得安装一个butterknife插件才行
-    //implementation 'com.jakewharton:butterknife:10.1.0' 这里新版直接可以使用ViewBinding\DataBinding
-    //annotationProcessor 'com.jakewharton:butterknife-compiler:10.1.0'
-    //Google Material控件,以及迁移到AndroidX下一些控件的依赖
-/*    implementation 'androidx.lifecycle:lifecycle-extensions:2.1.0'
-    implementation 'androidx.annotation:annotation:1.1.0'
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'*/
-
-    //RecyclerView最好的适配器，让你的适配器一目了然，告别代码冗余
-/*    implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.30'*/
-
-    //权限请求框架
-/*    implementation 'com.tbruyelle.rxpermissions2:rxpermissions:0.9.4@aar'*/
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.2'
     implementation "io.reactivex.rxjava2:rxjava:2.0.0"
     //状态栏
     implementation 'com.readystatesoftware.systembartint:systembartint:1.0.3'
     //支持okhttp-->子模块依赖了
+    //Room数据库
+    implementation 'androidx.room:room-runtime:2.4.2'
+    annotationProcessor 'androidx.room:room-compiler:2.4.2'
+    //Room 支持RxJava2
+    implementation 'androidx.room:room-rxjava2:2.4.2'
+    //腾讯MMKV
+    implementation 'com.tencent:mmkv:1.2.11'
+    //Gson
+    implementation 'com.google.code.gson:gson:2.9.0'
 
-    //implementation project(path: ':myLibrary')
 
 }
