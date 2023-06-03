@@ -53,13 +53,13 @@
         <!--省/直辖市列表-->
         <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_province"
-                android:layout_width="@dimen/dp_0"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1" />
         <!--市列表-->
         <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_city"
-                android:layout_width="@dimen/dp_0"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_marginStart="@dimen/dp_1"
                 android:layout_marginEnd="@dimen/dp_1"
@@ -68,7 +68,7 @@
         <!--区/县列表-->
         <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rv_area"
-                android:layout_width="@dimen/dp_0"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:visibility="gone" />

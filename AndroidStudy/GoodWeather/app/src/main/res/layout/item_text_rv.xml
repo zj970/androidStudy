@@ -11,4 +11,4 @@
           android:padding="@dimen/dp_16"
           android:singleLine="true"
           android:text="城市"
-          android:textColor="@color/unselect_tx_color" />
+          android:textColor="@color/tx_color" />
