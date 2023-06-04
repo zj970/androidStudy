@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 
@@ -56,6 +57,12 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
     private int cityFlag = 0;
 
 
+    //城市名称，定位和切换城市都会重新赋值。
+    private String mCityName;
+    //是否正在刷新
+    private boolean isRefresh;
+
+
     /**
      * 注册意图
      */
@@ -104,6 +111,15 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
                     String id = location.get(0).getId();
                     //根据cityFlag设置重新定位菜单项是否显示
                     mMenu.findItem(R.id.item_relocation).setVisible(cityFlag == 1);
+
+                    //检查正在刷新
+                    if(isRefresh)
+                    {
+                        showMsg("刷新完成");
+                        binding.layRefresh.setRefreshing(false);
+                        isRefresh = false;
+                    }
+
                     //获取到城市的ID
                     if (id != null) {
                         //通过城市ID查询城市实时天气
@@ -209,6 +225,7 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
         String district = bdLocation.getDistrict();     //获取区县
 
         if (viewModel != null && district != null) {
+            mCityName = district;//定位后重新赋值
             //显示当前定位城市
             binding.tvCity.setText(district);
             //搜索城市
@@ -227,6 +244,34 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
         binding.rvDaily.setAdapter(dailyAdapter);
         binding.rvLifestyle.setLayoutManager(new LinearLayoutManager(this));
         binding.rvLifestyle.setAdapter(lifestyleAdapter);
+        //下拉刷新监听
+        binding.layRefresh.setOnRefreshListener(() -> {
+            if (mCityName == null) {
+                binding.layRefresh.setRefreshing(false);
+                return;
+            }
+            //设置正在刷新
+            isRefresh = true;
+            //搜索城市
+            viewModel.searchCity(mCityName);
+        });
+
+        //滑动监听
+        binding.layScroll.setOnScrollChangeListener((View.OnScrollChangeListener) (v, scrollX, scrollY, oldScrollX, oldScrollY) -> {
+            if (scrollY > oldScrollY) {
+                //getMeasuredHeight() 表示控件的绘制高度
+                if (scrollY > binding.layScrollHeight.getMeasuredHeight()) {
+                    binding.tvTitle.setText((mCityName == null ? "城市天气" : mCityName));
+                }
+            } else if (scrollY < oldScrollY) {
+                if (scrollY < binding.layScrollHeight.getMeasuredHeight()) {
+                    //改回原来的
+                    binding.tvTitle.setText("城市天气");
+                }
+            }
+        });
+
+
     }
 
     public void setToolbarMoreIconCustom(Toolbar toolbar) {
@@ -282,6 +327,7 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
     @Override
     public void selectedCity(String cityName) {
         cityFlag = 1;//切换城市
+        mCityName = cityName;//切换城市后赋值
         //搜索城市
         viewModel.searchCity(cityName);
         //显示所选城市
