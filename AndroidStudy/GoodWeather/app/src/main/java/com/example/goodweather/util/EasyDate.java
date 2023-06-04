@@ -409,6 +409,40 @@ public final class EasyDate {
         return timeInfo;
     }
 
+    /**
+     * 是否当天
+     * @param time 时间戳
+     */
+    public static boolean isToday(long time) {
+        return isToday(stampToDate(time));
+    }
+
+    /**
+     * 是否当天
+     * @param day 时间格式字符串
+     */
+    public static boolean isToday(String day) {
+        Calendar pre = Calendar.getInstance();
+        Date predate = new Date(System.currentTimeMillis());
+        pre.setTime(predate);
+        Calendar cal = Calendar.getInstance();
+        Date date = null;
+        try {
+            date = new SimpleDateFormat("yyyy-MM-dd", Locale.CHINA).parse(day);
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        cal.setTime(date);
+
+        if (cal.get(Calendar.YEAR) == (pre.get(Calendar.YEAR))) {
+            int diffDay = cal.get(Calendar.DAY_OF_YEAR)
+                    - pre.get(Calendar.DAY_OF_YEAR);
+            return diffDay == 0;
+        }
+        return false;
+    }
+
+
     public static long getTodayTwelveTimestamp() {
         long zero = getTimestamp() / (1000 * 3600 * 24) * (1000 * 3600 * 24) - TimeZone.getDefault().getRawOffset();//今天零点零分零秒的毫秒数
         long twelve = zero + 24 * 60 * 60 * 1000 - 1;//今天23点59分59秒的毫秒数
