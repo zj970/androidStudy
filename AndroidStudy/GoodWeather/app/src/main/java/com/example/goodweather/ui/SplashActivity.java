@@ -2,6 +2,7 @@ package com.example.goodweather.ui;
 
 import android.annotation.SuppressLint;
 import android.os.Handler;
+import android.util.Log;
 import androidx.lifecycle.ViewModelProvider;
 import com.example.goodweather.ViewModel.SplashViewModel;
 import com.example.goodweather.bean.Province;
@@ -75,7 +76,6 @@ public class SplashActivity extends NetworkActivity<ActivitySplashBinding> {
                 LogUtil.d(TAG, "onObserveData: 有数据了");
             }
         });
-
         //必应壁纸数据返回
         viewModel.bingResponseMutableLiveData.observe(this, bingResponse -> {
             if (bingResponse.getImages() == null) {

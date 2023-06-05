@@ -1,5 +1,6 @@
 package com.example.goodweather.ViewModel;
 
+import android.util.Log;
 import androidx.lifecycle.MutableLiveData;
 import com.example.goodweather.bean.BingResponse;
 import com.example.goodweather.bean.Province;
@@ -14,7 +15,7 @@ import java.util.List;
  * @create 2023-06-03 上午12:35
  */
 public class SplashViewModel extends BaseViewModel {
-
+    private static final String TAG = "SplashViewModel";
     public MutableLiveData<List<Province>> listMutableLiveData = new MutableLiveData<>();
     public MutableLiveData<BingResponse> bingResponseMutableLiveData = new MutableLiveData<>();
 

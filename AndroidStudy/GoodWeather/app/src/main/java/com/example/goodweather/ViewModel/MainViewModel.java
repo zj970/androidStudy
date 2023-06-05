@@ -1,5 +1,6 @@
 package com.example.goodweather.ViewModel;
 
+import android.util.Log;
 import androidx.lifecycle.MutableLiveData;
 import com.example.goodweather.bean.*;
 import com.example.goodweather.repository.CityRepository;

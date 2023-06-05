@@ -181,11 +181,13 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
                     lifestyleAdapter.notifyDataSetChanged();
                 }
             });
+
             viewModel.cityMutableLiveData.observe(this, provinces -> {
                 //城市弹窗初始化
                 cityDialog = CityDialog.getInstance(MainActivity.this, provinces);
                 cityDialog.setSelectedCityCallback(this);
             });
+
             //逐小时天气预报
             viewModel.hourlyResponseMutableLiveData.observe(this, hourlyResponse -> {
                 List<HourlyResponse.HourlyBean> hourly = hourlyResponse.getHourly();
@@ -360,7 +362,9 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.item_switching_cities:
-                if (cityDialog != null) cityDialog.show();
+                if (cityDialog != null && !cityDialog.getProvinceList().isEmpty()) {
+                    cityDialog.show();
+                }
                 break;
             case R.id.item_relocation:
                 startLocation();//点击重新定位item时，再次定位一下。

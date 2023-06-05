@@ -2,6 +2,7 @@ package com.example.goodweather.util;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -30,6 +31,7 @@ public class CityDialog implements AdministrativeClickCallback {
     private DialogCityBinding binding;
 
     private final List<Province> provinceList = new ArrayList<>();
+
     private final List<Province.City> cityList = new ArrayList<>();
     private final List<Province.City.Area> areaList = new ArrayList<>();
 
@@ -39,6 +41,9 @@ public class CityDialog implements AdministrativeClickCallback {
     private SelectedCityCallback selectedCityCallback;
 
     private String provinceName, cityName, areaName;
+    public List<Province> getProvinceList() {
+        return provinceList;
+    }
 
     public CityDialog(Context context, List<Province> provinces) {
         mContext = context;

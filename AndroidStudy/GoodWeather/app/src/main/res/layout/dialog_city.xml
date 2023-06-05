@@ -18,7 +18,8 @@
                 android:layout_height="wrap_content"
                 android:background="@null"
                 android:padding="@dimen/dp_16"
-                android:src="@drawable/ic_round_close_24" />
+                android:src="@drawable/ic_round_close_24"
+                android:contentDescription="@string/app_name"/>
 
         <TextView
                 android:id="@+id/tv_title"
