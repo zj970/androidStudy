@@ -46,6 +46,8 @@ public class WeatherUtil {
                 weatherStateIcon.setBackgroundResource(R.mipmap.icon_153);
                 break;
             //阴 晚上  V7
+            case 151:
+            case 152:
             case 154:
                 weatherStateIcon.setBackgroundResource(R.mipmap.icon_154);
                 break;

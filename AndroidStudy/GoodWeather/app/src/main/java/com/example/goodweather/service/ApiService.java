@@ -56,4 +56,12 @@ public interface ApiService {
     @GET("/HPImageArchive.aspx?format=js&idx=0&n=1")
     Observable<BingResponse> bing();
 
+    /**
+     * 逐小时
+     * @param location
+     * @return
+     */
+    @GET("/v7/weather/24h?key=" + API_KEY)
+    Observable<HourlyResponse> hourlyWeather(@Query("location") String location);
+
 }

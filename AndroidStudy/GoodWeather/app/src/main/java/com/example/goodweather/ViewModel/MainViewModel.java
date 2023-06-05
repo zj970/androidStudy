@@ -27,6 +27,7 @@ public class MainViewModel extends BaseViewModel {
 
     public MutableLiveData<List<Province>> cityMutableLiveData = new MutableLiveData<>();
 
+    public MutableLiveData<HourlyResponse> hourlyResponseMutableLiveData = new MutableLiveData<>();
 
     /**
      * 搜索城市
@@ -69,5 +70,10 @@ public class MainViewModel extends BaseViewModel {
         CityRepository.getInstance().getCityData(cityMutableLiveData);
     }
 
+
+
+    public void hourlyWeather(String cityId) {
+        WeatherRepository.getInstance().hourlyWeather(hourlyResponseMutableLiveData, failed, cityId);
+    }
 
 }

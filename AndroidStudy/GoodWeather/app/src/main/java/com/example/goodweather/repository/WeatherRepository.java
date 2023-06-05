@@ -3,6 +3,7 @@ package com.example.goodweather.repository;
 import android.annotation.SuppressLint;
 import androidx.lifecycle.MutableLiveData;
 import com.example.goodweather.bean.DailyResponse;
+import com.example.goodweather.bean.HourlyResponse;
 import com.example.goodweather.bean.LifestyleResponse;
 import com.example.goodweather.bean.NowResponse;
 import com.example.goodweather.service.ApiService;
@@ -134,5 +135,33 @@ public class WeatherRepository {
                     }
                 }));
     }
+
+    public void hourlyWeather(MutableLiveData<HourlyResponse> responseLiveData,
+                              MutableLiveData<String> failed, String cityId) {
+        String type = "逐小时天气预报-->";
+        NetworkApi.createService(ApiService.class, ApiType.WEATHER).hourlyWeather(cityId)
+                .compose(NetworkApi.applySchedulers(new BaseObserver<>() {
+                    @Override
+                    public void onSuccess(HourlyResponse hourlyResponse) {
+                        if (hourlyResponse == null) {
+                            failed.postValue("逐小时天气预报数据为null，请检查城市ID是否正确。");
+                            return;
+                        }
+                        //请求接口成功返回数据，失败返回状态码
+                        if (Constant.SUCCESS.equals(hourlyResponse.getCode())) {
+                            responseLiveData.postValue(hourlyResponse);
+                        } else {
+                            failed.postValue(type + hourlyResponse.getCode());
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Throwable e) {
+                        LogUtil.e(TAG, "onFailure: " + e.getMessage());
+                        failed.postValue(type + e.getMessage());
+                    }
+                }));
+    }
+
 
 }

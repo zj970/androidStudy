@@ -15,11 +15,13 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import com.baidu.location.BDLocation;
 import com.example.goodweather.R;
 import com.example.goodweather.ViewModel.MainViewModel;
 import com.example.goodweather.bean.*;
 import com.example.goodweather.bean.adapter.DailyAdapter;
+import com.example.goodweather.bean.adapter.HourlyAdapter;
 import com.example.goodweather.bean.adapter.LifestyleAdapter;
 import com.example.goodweather.databinding.ActivityMainBinding;
 import com.example.goodweather.location.GoodLocation;
@@ -45,7 +47,8 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
     private final DailyAdapter dailyAdapter = new DailyAdapter(dailyBeanList);
     private final List<LifestyleResponse.DailyBean> lifestyleList = new ArrayList<>();
     private final LifestyleAdapter lifestyleAdapter = new LifestyleAdapter(lifestyleList);
-
+    private final List<HourlyResponse.HourlyBean> hourlyBeanList = new ArrayList<>();
+    private final HourlyAdapter hourlyAdapter = new HourlyAdapter(hourlyBeanList);
     //城市弹窗
     private CityDialog cityDialog;
 
@@ -61,6 +64,7 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
     private String mCityName;
     //是否正在刷新
     private boolean isRefresh;
+
 
 
     /**
@@ -128,6 +132,8 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
                         viewModel.dailyWeather(id);
                         //通过城市ID查询生活指数
                         viewModel.lifestyle(id);
+                        //通过城市ID查询逐小时天气预报
+                        viewModel.hourlyWeather(id);
                     }
                 }
             });
@@ -155,6 +161,10 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
                     }
                     dailyBeanList.addAll(daily);
                     dailyAdapter.notifyDataSetChanged();
+                    //显示当天的最高温和最低温
+                    binding.tvHeight.setText(String.format("%s℃", daily.get(0).getTempMax()));
+                    binding.tvLow.setText(String.format(" / %s℃", daily.get(0).getTempMin()));
+
                 }
             });
             //生活指数返回
@@ -172,6 +182,17 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
                 //城市弹窗初始化
                 cityDialog = CityDialog.getInstance(MainActivity.this, provinces);
                 cityDialog.setSelectedCityCallback(this);
+            });
+            //逐小时天气预报
+            viewModel.hourlyResponseMutableLiveData.observe(this, hourlyResponse -> {
+                List<HourlyResponse.HourlyBean> hourly = hourlyResponse.getHourly();
+                if (hourly != null) {
+                    if (hourlyBeanList.size() > 0) {
+                        hourlyBeanList.clear();
+                    }
+                    hourlyBeanList.addAll(hourly);
+                    hourlyAdapter.notifyDataSetChanged();
+                }
             });
 
             //错误信息返回
@@ -244,6 +265,12 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
         binding.rvDaily.setAdapter(dailyAdapter);
         binding.rvLifestyle.setLayoutManager(new LinearLayoutManager(this));
         binding.rvLifestyle.setAdapter(lifestyleAdapter);
+        //逐小时天气预报列表
+        LinearLayoutManager hourlyLayoutManager = new LinearLayoutManager(this);
+        hourlyLayoutManager.setOrientation(RecyclerView.HORIZONTAL);
+        binding.rvHourly.setLayoutManager(hourlyLayoutManager);
+        binding.rvHourly.setAdapter(hourlyAdapter);
+
         //下拉刷新监听
         binding.layRefresh.setOnRefreshListener(() -> {
             if (mCityName == null) {
@@ -270,6 +297,7 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
                 }
             }
         });
+
 
 
     }
