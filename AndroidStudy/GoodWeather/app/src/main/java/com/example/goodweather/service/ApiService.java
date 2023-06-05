@@ -64,4 +64,13 @@ public interface ApiService {
     @GET("/v7/weather/24h?key=" + API_KEY)
     Observable<HourlyResponse> hourlyWeather(@Query("location") String location);
 
+    /**
+     * 空气质量API
+     * @param location
+     * @return
+     */
+    @GET("/v7/air/now?key=" + API_KEY)
+    Observable<AirResponse> airWeather(@Query("location") String location);
+
+
 }

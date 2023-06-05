@@ -29,6 +29,12 @@ public class MainViewModel extends BaseViewModel {
 
     public MutableLiveData<HourlyResponse> hourlyResponseMutableLiveData = new MutableLiveData<>();
 
+    public MutableLiveData<AirResponse> airResponseMutableLiveData = new MutableLiveData<>();
+
+    public void airWeather(String cityId) {
+        WeatherRepository.getInstance().airWeather(airResponseMutableLiveData, failed, cityId);
+    }
+
     /**
      * 搜索城市
      *
