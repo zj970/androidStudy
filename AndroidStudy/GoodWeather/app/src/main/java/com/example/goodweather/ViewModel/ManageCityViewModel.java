@@ -21,4 +21,12 @@ public class ManageCityViewModel extends BaseViewModel {
     public void getAllCityData() {
         CityRepository.getInstance().getMyCityData(listMutableLiveData);
     }
+
+    /**
+     * 添加我的城市数据，在定位之后添加数据
+     */
+    public void addMyCityData(String cityName) {
+        CityRepository.getInstance().addMyCityData(new MyCity(cityName));
+    }
+
 }

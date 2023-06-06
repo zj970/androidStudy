@@ -9,10 +9,12 @@ import com.example.goodweather.ViewModel.ManageCityViewModel;
 import com.example.goodweather.bean.MyCity;
 import com.example.goodweather.bean.adapter.MyCityAdapter;
 import com.example.goodweather.databinding.ActivityManageCityBinding;
+import com.example.goodweather.util.AddCityDialog;
 import com.example.goodweather.util.Constant;
 import com.example.mylibrary.base.NetworkActivity;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ManageCityActivity extends NetworkActivity<ActivityManageCityBinding> {
@@ -31,16 +33,18 @@ public class ManageCityActivity extends NetworkActivity<ActivityManageCityBindin
     private void initView() {
         backAndFinish(binding.toolbar);
         setStatusBar(true);
-        myCityAdapter.setOnClickItemCallback(position -> {
-            Intent intent = new Intent();
-            intent.putExtra(Constant.CITY_RESULT, myCityList.get(position).getCityName());
-            setResult(Activity.RESULT_OK, intent);
-            finish();
-        });
+        myCityAdapter.setOnClickItemCallback(position -> setPageResult(myCityList.get(position).getCityName()));
 
         binding.rvCity.setLayoutManager(new LinearLayoutManager(ManageCityActivity.this));
         binding.rvCity.setAdapter(myCityAdapter);
-        binding.btnAddCity.setOnClickListener(v -> showMsg("添加城市"));
+        binding.btnAddCity.setOnClickListener(v ->
+                AddCityDialog.show(ManageCityActivity.this, Arrays.asList(Constant.CITY_ARRAY), cityName -> {
+                    //保存到数据库中
+                    viewModel.addMyCityData(cityName);
+                    //设置页面返回数据
+                    setPageResult(cityName);
+                }));
+
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -56,4 +60,16 @@ public class ManageCityActivity extends NetworkActivity<ActivityManageCityBindin
             }
         });
     }
+
+    /**
+     * 设置页面返回数据
+     * @param cityName 城市名
+     */
+    private void setPageResult(String cityName) {
+        Intent intent = new Intent();
+        intent.putExtra(Constant.CITY_RESULT, cityName);
+        setResult(Activity.RESULT_OK, intent);
+        finish();
+    }
+
 }
