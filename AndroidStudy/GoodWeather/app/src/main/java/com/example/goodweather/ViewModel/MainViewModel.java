@@ -83,4 +83,14 @@ public class MainViewModel extends BaseViewModel {
         WeatherRepository.getInstance().hourlyWeather(hourlyResponseMutableLiveData, failed, cityId);
     }
 
+
+
+    /**
+     * 添加我的城市数据，在定位之后添加数据
+     */
+    public void addMyCityData(String cityName) {
+        MyCity myCity = new MyCity(cityName);
+        CityRepository.getInstance().addMyCityData(myCity);
+    }
+
 }

@@ -2,6 +2,9 @@
     <item
             android:id="@+id/item_switching_cities"
             android:title="切换城市" />
+    <item
+            android:id="@+id/item_manage_city"
+            android:title="管理城市" />
 
     <item
             android:id="@+id/item_relocation"

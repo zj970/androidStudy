@@ -3,6 +3,7 @@ package com.example.goodweather.repository;
 import android.util.Log;
 import androidx.lifecycle.MutableLiveData;
 import com.example.goodweather.base.WeatherApp;
+import com.example.goodweather.bean.MyCity;
 import com.example.goodweather.bean.Province;
 import io.reactivex.Completable;
 import io.reactivex.Flowable;
@@ -41,4 +42,34 @@ public class CityRepository {
         Flowable<List<Province>> listFlowable = WeatherApp.getDb().provinceDao().getAll();
         CustomDisposable.addDisposable(listFlowable, listMutableLiveData::postValue);
     }
+
+
+    /**
+     * 获取我的城市所有数据
+     */
+    public void getMyCityData(MutableLiveData<List<MyCity>> listMutableLiveData) {
+        CustomDisposable.addDisposable(WeatherApp.getDb().myCityDao().getAllCity(), listMutableLiveData::postValue);
+    }
+
+    /**
+     * 添加我的城市数据
+     */
+    public void addMyCityData(MyCity myCity) {
+        CustomDisposable.addDisposable(WeatherApp.getDb().myCityDao().insertCity(myCity), () -> Log.d(TAG, "addMyCityData: 插入数据成功。"));
+    }
+
+    /**
+     * 删除我的城市数据
+     */
+    public void deleteMyCityData(String cityName) {
+        CustomDisposable.addDisposable(WeatherApp.getDb().myCityDao().deleteCity(cityName), () -> Log.d(TAG, "deleteMyCityData: 删除数据成功"));
+    }
+
+    /**
+     * 删除我的城市数据
+     */
+    public void deleteMyCityData(MyCity myCity) {
+        CustomDisposable.addDisposable(WeatherApp.getDb().myCityDao().deleteCity(myCity), () -> Log.d(TAG, "deleteMyCityData: 删除数据成功"));
+    }
+
 }

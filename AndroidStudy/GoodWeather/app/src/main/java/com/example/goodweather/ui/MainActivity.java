@@ -2,6 +2,7 @@ package com.example.goodweather.ui;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.view.LayoutInflater;
@@ -30,6 +31,7 @@ import com.example.goodweather.databinding.DialogDailyDetailBinding;
 import com.example.goodweather.databinding.DialogHourlyDetailBinding;
 import com.example.goodweather.location.GoodLocation;
 import com.example.goodweather.location.LocationCallback;
+import com.example.goodweather.repository.CityRepository;
 import com.example.goodweather.util.*;
 import com.example.mylibrary.base.NetworkActivity;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
@@ -70,6 +72,7 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
     //是否正在刷新
     private boolean isRefresh;
 
+    private ActivityResultLauncher<Intent> jumpActivityIntent;
 
     /**
      * 注册意图
@@ -85,6 +88,22 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
                 startLocation();
             }
         });
+
+        jumpActivityIntent = registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+            if (result.getResultCode() == RESULT_OK && result.getData() != null) {
+                //获取上个页面返回的数据
+                String city = result.getData().getStringExtra(Constant.CITY_RESULT);
+                //检查返回的城市 , 如果返回的城市是当前定位城市，并且当前定位标志为0，则不需要请求
+                if (city.equals(MVUtils.getString(Constant.LOCATION_CITY)) && cityFlag == 0) {
+                    LogUtil.d(TAG, "onRegister: 管理城市页面返回不需要进行天气查询");
+                    return;
+                }
+                //反之就直接调用选中城市的方法进行城市天气搜索
+                LogUtil.d(TAG, "onRegister: 管理城市页面返回进行天气查询");
+                selectedCity(city);
+            }
+        });
+
     }
 
     /**
@@ -284,6 +303,10 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
 
         if (viewModel != null && district != null) {
             mCityName = district;//定位后重新赋值
+            //保存定位城市
+            MVUtils.put(Constant.LOCATION_CITY,district);
+            //保存到我的城市数据表中
+            viewModel.addMyCityData(district);
             //显示当前定位城市
             binding.tvCity.setText(district);
             //搜索城市
@@ -371,6 +394,9 @@ public class MainActivity extends NetworkActivity<ActivityMainBinding> implement
                 break;
             case R.id.item_relocation:
                 startLocation();//点击重新定位item时，再次定位一下。
+                break;
+            case R.id.item_manage_city:
+                jumpActivityIntent.launch(new Intent(mContext,ManageCityActivity.class));
                 break;
             case R.id.item_bing:
                 item.setChecked(!item.isChecked());
