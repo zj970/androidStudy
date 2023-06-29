@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">RemoteSimulation</string>
+    <string name="nec">NEC</string>
+    <string name="samsung">SAMSUNG</string>
+    <string name="sony">SONY</string>
+    <string name="user">头码</string>
+    <string name="send">SEND</string>
+</resources>
