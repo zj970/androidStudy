@@ -93,7 +93,7 @@ public class MainActivity extends AppCompatActivity implements IOnClickItemCallb
 
 
     private void init() {
-        for (int i = 0; i < 255; i++) {
+        for (int i = 0; i <= 0xFF; i++) {
             keyList.add("0x"+String.format("%02x", i));
         }
         consumerIrManagerApi = ConsumerIrManagerApi.getConsumerIrManager(this);
@@ -187,10 +187,8 @@ public class MainActivity extends AppCompatActivity implements IOnClickItemCallb
         mainBinding.editUser.setText(String.format("%02x", address));
         mainBinding.editUser.setHint(String.format("%02x", address));
         keyList.clear();
-        for (int i = 0; i < 0x7; i++) {
-            for (int j = 0; j <= 0xF; j++) {
-                keyList.add("0x" + String.format("%02x", (1<<i)+j));
-            }
+        for (int i = 0; i <= 0x7F; i++) {
+                keyList.add("0x" + String.format("%02x", i));
         }
         adapter.notifyDataSetChanged();
     }
