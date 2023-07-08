@@ -1,6 +1,9 @@
 package com.example.remote;
 
+import android.annotation.SuppressLint;
 import android.os.Bundle;
+import android.text.InputFilter;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -17,9 +20,11 @@ import com.example.remote.databinding.ActivityMainBinding;
 import com.example.remote.protocol.EProtocol;
 import com.example.remote.protocol.NecPattern;
 import com.example.remote.protocol.SANSUNGPattern;
+import com.example.remote.protocol.SIRCPattern;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class MainActivity extends AppCompatActivity implements IOnClickItemCallback {
 
@@ -31,9 +36,16 @@ public class MainActivity extends AppCompatActivity implements IOnClickItemCallb
 
     List<String> keyList = new ArrayList<>();
 
+    /**
+     * NEC or SANSUNG
+     */
     int userCodeH = 0x00;
-
     int userCodeL = 0xBF;
+
+    /**
+     * SONY
+     */
+    int address = 0x01;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,8 +54,7 @@ public class MainActivity extends AppCompatActivity implements IOnClickItemCallb
         setContentView(mainBinding.getRoot());
         setSupportActionBar(mainBinding.toolbar);
         init();
-        if (!consumerIrManagerApi.hasIrEmitter())
-        {
+        if (!consumerIrManagerApi.hasIrEmitter()) {
             Toast.makeText(this, "手机不支持红外遥控", Toast.LENGTH_LONG).show();
             finish();
         }
@@ -52,14 +63,13 @@ public class MainActivity extends AppCompatActivity implements IOnClickItemCallb
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.toolbar_menu,menu);
+        getMenuInflater().inflate(R.menu.toolbar_menu, menu);
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId())
-        {
+        switch (item.getItemId()) {
             case R.id.nec:
                 protocol = EProtocol.NEC;
                 mainBinding.toolbar.setTitle(R.string.nec);
@@ -71,6 +81,7 @@ public class MainActivity extends AppCompatActivity implements IOnClickItemCallb
             case R.id.sony:
                 protocol = EProtocol.SONY;
                 mainBinding.toolbar.setTitle(R.string.sony);
+                notifyDataSonyButton();
                 break;
             default:
                 protocol = EProtocol.NEC;
@@ -81,9 +92,9 @@ public class MainActivity extends AppCompatActivity implements IOnClickItemCallb
     }
 
 
-    private void init(){
+    private void init() {
         for (int i = 0; i < 255; i++) {
-            keyList.add("0x"+Integer.toHexString(i));
+            keyList.add("0x"+String.format("%02x", i));
         }
         consumerIrManagerApi = ConsumerIrManagerApi.getConsumerIrManager(this);
         adapter = new RecyclerKeyAdapter(keyList);
@@ -94,33 +105,54 @@ public class MainActivity extends AppCompatActivity implements IOnClickItemCallb
         mainBinding.editUser.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
-                if (mainBinding.editUser.getText().length() == 4)
-                {
+                if (protocol == EProtocol.SONY && mainBinding.editUser.getText().length() > 2){
+                    mainBinding.editUser.setText(String.format("%02x", address));
+                }
+
+                if (mainBinding.editUser.getText().length() == 4) {
                     //4位头码处理
                     String text = mainBinding.editUser.getText().toString();
-                    String codeH = "0x"+text.substring(0,2);
-                    String codeL = "0x"+text.substring(2);
+                    String codeH = "0x" + text.substring(0, 2);
+                    String codeL = "0x" + text.substring(2);
                     userCodeH = Integer.decode(codeH);
                     userCodeL = Integer.decode(codeL);
+                } else if ((mainBinding.editUser.getText().length() == 2)) {
+                    String text = mainBinding.editUser.getText().toString();
+                    address = Integer.decode("0x" + text);
                 }
                 return false;
             }
         });
 
+        mainBinding.editInput.setOnEditorActionListener((v, actionId, event) -> {
+            if (protocol == EProtocol.SONY)
+            {
+                String text = mainBinding.editInput.getText().toString();
+                int  command = Integer.decode( "0x" + text);
+                if (command > 0x7F)
+                {
+                    mainBinding.editInput.setText("");
+                }
+            }
+            return false;
+        });
+
         mainBinding.send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!TextUtils.isEmpty(mainBinding.editInput.getText()))
-                {
-                    switch (protocol)
-                    {
+                if (!TextUtils.isEmpty(mainBinding.editInput.getText())) {
+                    switch (protocol) {
                         case NEC:
-                            consumerIrManagerApi.transmit(38000, NecPattern.buildPattern(userCodeH,userCodeL,Integer.decode(mainBinding.editInput.getText().toString())));
+                            consumerIrManagerApi.transmit(38000, NecPattern.buildPattern(
+                                    userCodeH, userCodeL, Integer.decode("0x" + mainBinding.editInput.getText().toString())));
                             break;
                         case SAMSUNG:
-                            consumerIrManagerApi.transmit(38000, SANSUNGPattern.buildPattern(userCodeH,userCodeL,Integer.decode(mainBinding.editInput.getText().toString())));
+                            consumerIrManagerApi.transmit(38000, SANSUNGPattern.buildPattern(
+                                    userCodeH, userCodeL, Integer.decode("0x" + mainBinding.editInput.getText().toString())));
                             break;
                         case SONY:
+                            consumerIrManagerApi.transmit(40000, SIRCPattern.buildPattern(
+                                    address, Integer.decode("0x" + mainBinding.editInput.getText().toString())));
                             break;
                         default:
                             break;
@@ -132,18 +164,34 @@ public class MainActivity extends AppCompatActivity implements IOnClickItemCallb
 
     @Override
     public void onItemClick(int position) {
-        switch (protocol)
-        {
+        switch (protocol) {
             case NEC:
-                consumerIrManagerApi.transmit(38000, NecPattern.buildPattern(userCodeH,userCodeL,Integer.decode(keyList.get(position))));
+                consumerIrManagerApi.transmit(38000, NecPattern.buildPattern(
+                        userCodeH, userCodeL, Integer.decode(keyList.get(position))));
                 break;
             case SAMSUNG:
-                consumerIrManagerApi.transmit(38000, SANSUNGPattern.buildPattern(userCodeH,userCodeL,Integer.decode(keyList.get(position))));
+                consumerIrManagerApi.transmit(38000, SANSUNGPattern.buildPattern(
+                        userCodeH, userCodeL, Integer.decode(keyList.get(position))));
                 break;
             case SONY:
+                consumerIrManagerApi.transmit(40000, SIRCPattern.buildPattern(
+                        address, Integer.decode(keyList.get(position))));
                 break;
             default:
                 break;
         }
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private void notifyDataSonyButton(){
+        mainBinding.editUser.setText(String.format("%02x", address));
+        mainBinding.editUser.setHint(String.format("%02x", address));
+        keyList.clear();
+        for (int i = 0; i < 0x7; i++) {
+            for (int j = 0; j <= 0xF; j++) {
+                keyList.add("0x" + String.format("%02x", (1<<i)+j));
+            }
+        }
+        adapter.notifyDataSetChanged();
     }
 }

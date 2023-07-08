@@ -16,6 +16,27 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
 
+    //build system signature
+    signingConfigs{
+        def KEY_ALIAS = "sign"
+        def KEY_PSWD = "123456"
+        def STORE_FILE = "platform.jks"
+        def STORE_FILE_PSWD = "123456"
+
+        debug{
+            storeFile file(STORE_FILE)
+            storePassword STORE_FILE_PSWD
+            keyAlias KEY_ALIAS
+            keyPassword KEY_PSWD
+        }
+        release{
+            storeFile file(STORE_FILE)
+            storePassword STORE_FILE_PSWD
+            keyAlias KEY_ALIAS
+            keyPassword KEY_PSWD
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
@@ -25,6 +46,11 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+        applicationVariants.all { variant ->
+            variant.outputs.all {
+                outputFileName = "RemotwSimulation.apk"
+            }
+        }
     }
     viewBinding{
         enable = true
