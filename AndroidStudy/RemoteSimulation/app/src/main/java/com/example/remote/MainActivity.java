@@ -73,10 +73,12 @@ public class MainActivity extends AppCompatActivity implements IOnClickItemCallb
             case R.id.nec:
                 protocol = EProtocol.NEC;
                 mainBinding.toolbar.setTitle(R.string.nec);
+                notifyDataButton();
                 break;
             case R.id.samsung:
                 protocol = EProtocol.SAMSUNG;
                 mainBinding.toolbar.setTitle(R.string.samsung);
+                notifyDataButton();
                 break;
             case R.id.sony:
                 protocol = EProtocol.SONY;
@@ -86,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements IOnClickItemCallb
             default:
                 protocol = EProtocol.NEC;
                 mainBinding.toolbar.setTitle(R.string.nec);
+                notifyDataButton();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -189,6 +192,17 @@ public class MainActivity extends AppCompatActivity implements IOnClickItemCallb
         keyList.clear();
         for (int i = 0; i <= 0x7F; i++) {
                 keyList.add("0x" + String.format("%02x", i));
+        }
+        adapter.notifyDataSetChanged();
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private void notifyDataButton(){
+        mainBinding.editUser.setText("00BF");
+        mainBinding.editUser.setHint("00BF");
+        keyList.clear();
+        for (int i = 0; i <= 0xFF; i++) {
+            keyList.add("0x" + String.format("%02x", i));
         }
         adapter.notifyDataSetChanged();
     }
