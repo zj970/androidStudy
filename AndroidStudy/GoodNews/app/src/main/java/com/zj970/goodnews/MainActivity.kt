@@ -1,17 +1,32 @@
 package com.zj970.goodnews
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.zj970.goodnews.bean.ListItem
 import com.zj970.goodnews.ui.theme.GoodNewsTheme
+import com.zj970.goodnews.utils.showToast
 import com.zj970.goodnews.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -33,6 +48,7 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    //MainScreen()
                     initDate()
                     //Greeting("Compose")
                 }
@@ -42,13 +58,90 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
+private fun MainScreen(news: List<ListItem>){
+    //Scaffold 可让您实现具有基本 Material Design 布局结构的界面。
+    //Scaffold 可以为最常见的顶层 Material 组件
+    // 例如 TopAppBar、BottomAppBar、FloatingActionButton 和 Drawer）提供槽位
+    // 使用 Scaffold 时，您可以确保这些组件能够正确放置并协同工作
+    Scaffold (
+        topBar = {
+            //顶部应用栏
+            TopAppBar(
+                title = {
+                    Text(
+                        text = stringResource(id = R.string.app_name),
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onSecondary
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = { "Person".showToast() }){
+                        Icon(
+                            imageVector = Icons.Filled.Person,
+                            contentDescription = "Person",
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {"Settings".showToast()}){
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = "Settings",
+                        )
+                    }
+                }
+            )
+    }){
+        innerPadding ->
+        BodyContent(news,Modifier.padding(innerPadding))
+    }
+}
+
+
+@Composable
+fun BodyContent(news: List<ListItem>, modifier: Modifier = Modifier) {
+    LazyColumn(
+        state = rememberLazyListState(),
+        modifier = modifier.padding(8.dp)
+    ) {
+        items(news) { new ->
+            Column(modifier = Modifier.padding(8.dp)) {
+                Text(
+                    text = new.title,
+                    fontWeight = FontWeight.ExtraBold,
+                    fontSize = 16.sp,
+                    modifier = Modifier.padding(0.dp, 10.dp)
+                )
+                Text(text = new.summary, fontSize = 12.sp)
+                Row(modifier = Modifier.padding(0.dp, 10.dp)) {
+                    Text(text = new.infoSource, fontSize = 12.sp)
+                    Text(
+                        text = new.pubDateStr,
+                        fontSize = 12.sp,
+                        modifier = Modifier.padding(8.dp, 0.dp)
+                    )
+                }
+            }
+            Divider(
+                modifier = Modifier.padding(horizontal = 8.dp),
+                color = colorResource(id = R.color.black).copy(alpha = 0.08f)
+            )
+        }
+    }
+}
+
+
+@Composable
 fun initDate(viewModel: MainViewModel = viewModel()) {
     val dataState = viewModel.result.observeAsState()
     dataState.value?.let {
-        var orNull = it.getOrNull()
+/*        var orNull = it.getOrNull()
         if (orNull != null) {
             Greeting(name = orNull.msg)
-        }
+        }*/
+        retsult ->
+        retsult.getOrNull()?.result?.list?.let { MainScreen(it) }
     }
 }
 
@@ -61,8 +154,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
     )
 }
 
-/*
-@Preview(showBackground = true)
+/*@Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
     GoodNewsTheme {
