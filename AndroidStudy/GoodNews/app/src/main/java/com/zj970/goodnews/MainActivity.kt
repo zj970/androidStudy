@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberImagePainter
-import com.zj970.goodnews.bean.ListItem
+import com.zj970.goodnews.database.bean.ListItem
 import com.zj970.goodnews.ui.theme.GoodNewsTheme
 import com.zj970.goodnews.utils.showToast
 import com.zj970.goodnews.viewmodel.MainViewModel
@@ -63,14 +63,21 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun initDate(viewModel: MainViewModel = viewModel()) {
-    val dataState = viewModel.result.observeAsState()
-    dataState.value?.let {
-        /*        var orNull = it.getOrNull()
+    /*    val dataState = viewModel.result.observeAsState()
+        dataState.value?.let {
+            *//*        var orNull = it.getOrNull()
                 if (orNull != null) {
                     Greeting(name = orNull.msg)
-                }*/
+                }*//*
             result ->
         result.getOrNull()?.result?.list?.let { MainScreen(it) }
+    }*/
+    //MainScreen(news = App.db.newsItemDao().getAll())
+    val dataState = viewModel.result.observeAsState()
+    dataState.value?.let { result ->
+        result.getOrNull()?.result?.list.let {
+            it?.let { it1 -> MainScreen(it1) }
+        }
     }
 }
 
@@ -124,21 +131,19 @@ fun BodyContent(news: List<ListItem>, modifier: Modifier = Modifier) {
         modifier = modifier.padding(8.dp)
     ) {
 
-        items(news){
-            new ->
-            Column(modifier = Modifier.padding(8.dp)){
+        items(news) { new ->
+            Column(modifier = Modifier.padding(8.dp)) {
                 Text(
                     text = new.title,
                     fontWeight = FontWeight.ExtraBold,
                     fontSize = 16.sp,
-                    modifier = Modifier.padding(0.dp,10.dp)
+                    modifier = Modifier.padding(0.dp, 10.dp)
                 )
                 Text(text = new.description, fontSize = 12.sp)
 
-                if (new.picUrl != null && !TextUtils.isEmpty(new.picUrl))
-                {
+                if (new.picUrl != null && !TextUtils.isEmpty(new.picUrl)) {
                     Image(
-                        modifier = Modifier.size(120.dp,120.dp),
+                        modifier = Modifier.size(120.dp, 120.dp),
                         painter = rememberImagePainter(
                             data = new.picUrl,
                             builder = {
@@ -149,12 +154,12 @@ fun BodyContent(news: List<ListItem>, modifier: Modifier = Modifier) {
                         contentScale = ContentScale.Crop
                     )
                 }
-                Row(modifier = Modifier.padding(0.dp,10.dp)){
+                Row(modifier = Modifier.padding(0.dp, 10.dp)) {
                     Text(text = new.source, fontSize = 12.sp)
                     Text(
                         text = new.ctime,
                         fontSize = 12.sp,
-                        modifier = Modifier.padding(8.dp,0.dp)
+                        modifier = Modifier.padding(8.dp, 0.dp)
                     )
                 }
                 Divider(

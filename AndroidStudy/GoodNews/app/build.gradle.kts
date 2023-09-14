@@ -83,4 +83,14 @@ dependencies {
     //Jetpack Compose——Image使用Coli加载网络图片
     implementation("io.coil-kt:coil:2.4.0")
     implementation("io.coil-kt:coil-compose:2.4.0")
+
+    //Room数据库
+    implementation("androidx.room:room-runtime:2.4.3")
+    implementation("androidx.room:room-ktx:2.4.3")
+    kapt("androidx.room:room-compiler:2.4.3")
+
+    //DataStore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation("androidx.datastore:datastore-preferences-core:1.0.0")
+
 }

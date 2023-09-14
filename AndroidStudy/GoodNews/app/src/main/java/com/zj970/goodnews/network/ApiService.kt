@@ -1,6 +1,6 @@
 package com.zj970.goodnews.network
 
-import com.zj970.goodnews.bean.TodayNews
+import com.zj970.goodnews.database.bean.TodayNews
 import com.zj970.goodnews.network.Constant.API_KEY
 import retrofit2.Call
 import retrofit2.http.GET
